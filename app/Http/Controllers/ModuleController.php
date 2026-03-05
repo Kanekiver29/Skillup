@@ -15,7 +15,7 @@ class ModuleController extends Controller
         
         $this->authorize('view', $course);
 
-        $userProgress = Module::find($module->id)->getProgress(auth()->id());
+        $userProgress = $module->getProgress(auth()->id());
         $quizzes = $module->quizzes()->where('is_published', true)->get();
 
         return view('courses.modules.show', [

@@ -13,8 +13,6 @@ class UserManagementController extends Controller
      */
     public function showAdmins()
     {
-        $this->authorizeAdmin();
-
         // simply fetch all users marked as admin
         $admins = User::where('is_admin', true)->get();
 
@@ -28,8 +26,6 @@ class UserManagementController extends Controller
      */
     public function showUsers()
     {
-        $this->authorizeAdmin();
-
         $users = User::where('is_admin', false)->latest()->paginate(15);
 
         return view('Admin.users.list', [
@@ -42,8 +38,6 @@ class UserManagementController extends Controller
      */
     public function makeAdmin(User $user)
     {
-        $this->authorizeAdmin();
-
         $user->update(['is_admin' => true]);
 
         return back()->with('success', "{$user->name} is now an admin.");
@@ -54,8 +48,6 @@ class UserManagementController extends Controller
      */
     public function removeAdmin(User $user)
     {
-        $this->authorizeAdmin();
-
         if ($user->id === auth()->id()) {
             return back()->with('error', 'You cannot remove your own admin privileges.');
         }
@@ -70,8 +62,6 @@ class UserManagementController extends Controller
      */
     public function editUser(User $user)
     {
-        $this->authorizeAdmin();
-
         return view('Admin.users.edit', [
             'user' => $user,
         ]);
@@ -82,12 +72,9 @@ class UserManagementController extends Controller
      */
     public function updateUser(Request $request, User $user)
     {
-        $this->authorizeAdmin();
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $user->id,
-            'username' => 'required|string|max:255|unique:users,username,' . $user->id,
         ]);
 
         $user->update($validated);
@@ -100,8 +87,6 @@ class UserManagementController extends Controller
      */
     public function deleteUser(User $user)
     {
-        $this->authorizeAdmin();
-
         if ($user->id === auth()->id()) {
             return back()->with('error', 'You cannot delete your own account.');
         }
@@ -110,15 +95,5 @@ class UserManagementController extends Controller
         $user->delete();
 
         return redirect()->route('admin.users')->with('success', "{$userName} has been deleted successfully.");
-    }
-
-    /**
-     * Authorize that the current user is an admin.
-     */
-    private function authorizeAdmin()
-    {
-        if (!auth()->check() || !auth()->user()->is_admin) {
-            abort(403, 'Unauthorized');
-        }
     }
 }

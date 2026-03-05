@@ -70,8 +70,6 @@ class CourseController extends Controller
      */
     public function enroll($slug)
     {
-        $this->middleware('auth');
-
         $course = Course::where('slug', $slug)->firstOrFail();
 
         $enrollment = Enrollment::firstOrCreate(
@@ -90,8 +88,6 @@ class CourseController extends Controller
      */
     public function myLearning()
     {
-        $this->middleware('auth');
-
         $enrollments = Enrollment::where('user_id', auth()->id())
             ->with('course')
             ->get();

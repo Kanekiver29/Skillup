@@ -82,8 +82,8 @@ class ProfileController extends Controller
                 unlink($uploadPath . '/' . $user->profile_image);
             }
 
-            // Generate unique filename
-            $filename = time() . '_' . $user->id . '.' . $file->getClientOriginalExtension();
+            // Generate unique filename using MIME-derived extension (safe)
+            $filename = time() . '_' . $user->id . '.' . $file->guessExtension();
             
             // Save the file
             $file->move($uploadPath, $filename);

@@ -65,8 +65,10 @@ Route::middleware(['auth'])->group(function () {
     
     // Roadmap Route
     Route::get('/roadmap', [RoadmapController::class, 'index'])->name('userpage.roadmap');
+});
 
-    // Admin Routes
+// Admin Routes — require both authentication and admin role
+Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/admin', [DashboardController::class, 'index'])->name('admin.dashboard');
     Route::get('/admin/accounts', [UserManagementController::class, 'showAdmins'])->name('admin.admins');
     Route::get('/admin/users', [UserManagementController::class, 'showUsers'])->name('admin.users');
