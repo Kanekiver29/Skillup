@@ -8,8 +8,8 @@
 </p>
 
 ## TEAM MEMBERS
-Christian John L. Agustin
-Aguinaldo, Jomarie F.
+Agustin, Christian John L., 
+Aguinaldo, Jomarie F.,
 Domingo, Emyose P.
 
 ## About Laravel
