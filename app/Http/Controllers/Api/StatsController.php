@@ -112,7 +112,7 @@ class StatsController extends Controller
 
         $stats = [
             'user_id' => $user->id,
-            'user_name' => $user->full_name,
+            'user_name' => $user->name,
             'total_courses_enrolled' => $enrollments->count(),
             'completed_courses' => 0,
             'in_progress_courses' => 0,
@@ -207,7 +207,7 @@ class StatsController extends Controller
 
             $stats['user_progress'][] = [
                 'user_id' => $enrollment->user->id,
-                'user_name' => $enrollment->user->full_name,
+                'user_name' => $enrollment->user->name,
                 'email' => $enrollment->user->email,
                 'overall_progress' => round($moduleProgress),
             ];

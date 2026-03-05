@@ -14,13 +14,6 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
-        $user = $request->user();
-
-        // Check if user is admin
-        if (! $user || ! $user->is_admin) {
-            abort(403, 'Forbidden');
-        }
-
         $userCount = User::count();
         $recentUsers = User::latest()->take(6)->get();
 
