@@ -8,20 +8,11 @@ use Illuminate\Http\Request;
 
 class EnrollmentController extends Controller
 {
-    private function authorizeAdmin()
-    {
-        if (!auth()->check() || !auth()->user()->is_admin) {
-            abort(403, 'Unauthorized');
-        }
-    }
-
     /**
      * Show all enrollments (optionally filter by course).
      */
     public function index(Request $request)
     {
-        $this->authorizeAdmin();
-
         $query = Enrollment::with(['user', 'course']);
 
         if ($request->has('course_id') && $request->course_id) {

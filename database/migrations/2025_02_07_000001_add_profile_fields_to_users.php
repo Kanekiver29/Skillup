@@ -35,6 +35,7 @@ return new class extends Migration
             $table->dropColumn([
                 'bio',
                 'location',
+                'portfolio_url',
                 'skills',
                 'profile_public',
                 'hours_spent',

@@ -71,6 +71,10 @@ class Quiz extends Model
 
     public function canUserRetry($userId)
     {
+        if ($this->attempt_limit === null) {
+            return true;
+        }
+
         $attemptCount = $this->getUserAttemptCount($userId);
         return $attemptCount < $this->attempt_limit;
     }
