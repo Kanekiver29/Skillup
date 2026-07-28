@@ -1,0 +1,404 @@
+
+<?php $__env->startSection('title','Edit User'); ?>
+<?php $__env->startSection('content'); ?>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+    .amc {
+        --amc-void: #090c12;
+        --amc-panel: #10141d;
+        --amc-panel-soft: #131826;
+        --amc-line: #212739;
+        --amc-line-bright: #384260;
+        --amc-cyan: #5eead4;
+        --amc-violet: #8b7cf6;
+        --amc-text: #e8ebf4;
+        --amc-muted: #838da3;
+        --amc-success: #34d399;
+        --amc-danger: #fb7185;
+        --amc-font-display: 'Space Grotesk', sans-serif;
+        --amc-font-body: 'Inter', sans-serif;
+        --amc-font-mono: 'JetBrains Mono', monospace;
+
+        background: var(--amc-void);
+        color: var(--amc-text);
+        font-family: var(--amc-font-body);
+        border-radius: 16px;
+        padding: 28px;
+        position: relative;
+        overflow: hidden;
+        isolation: isolate;
+    }
+
+    .amc::before {
+        content: '';
+        position: absolute; inset: 0; z-index: -2;
+        background:
+            radial-gradient(circle at 12% -10%, rgba(139,124,246,0.16), transparent 42%),
+            radial-gradient(circle at 100% 10%, rgba(94,234,212,0.10), transparent 40%);
+    }
+    .amc::after {
+        content: '';
+        position: absolute; inset: 0; z-index: -1;
+        background-image:
+            linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+        background-size: 34px 34px;
+        mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black 30%, transparent 75%);
+    }
+
+    .amc-back {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-family: var(--amc-font-mono); font-size: 12px;
+        color: var(--amc-muted); text-decoration: none;
+        margin-bottom: 14px; transition: color .15s ease, gap .15s ease;
+    }
+    .amc-back:hover { color: var(--amc-cyan); gap: 9px; }
+
+    .amc-eyebrow {
+        font-family: var(--amc-font-mono);
+        font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+        color: var(--amc-cyan);
+        display: flex; align-items: center; gap: 8px;
+    }
+    .amc-eyebrow .dot {
+        width: 6px; height: 6px; border-radius: 50%;
+        background: var(--amc-cyan);
+        box-shadow: 0 0 0 3px rgba(94,234,212,0.15);
+        animation: amc-pulse 2.2s ease-in-out infinite;
+    }
+
+    .amc-header { display: flex; align-items: center; gap: 16px; margin: 2px 0 26px; flex-wrap: wrap; }
+    .amc-avatar-lg {
+        width: 52px; height: 52px; border-radius: 14px; flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-family: var(--amc-font-display); font-weight: 600; font-size: 18px; color: #06120f;
+        box-shadow: 0 8px 24px -8px rgba(94,234,212,0.35);
+    }
+    .amc-title {
+        font-family: var(--amc-font-display); font-weight: 700; font-size: 28px; letter-spacing: -0.01em;
+        background: linear-gradient(120deg, #ffffff 10%, var(--amc-cyan) 60%, var(--amc-violet) 100%);
+        -webkit-background-clip: text; background-clip: text; color: transparent;
+        margin: 2px 0 2px;
+    }
+    .amc-subtitle { color: var(--amc-muted); font-size: 13px; font-family: var(--amc-font-mono); }
+
+    .amc-panel {
+        position: relative;
+        background: linear-gradient(180deg, var(--amc-panel), var(--amc-panel-soft));
+        border: 1px solid var(--amc-line);
+        border-radius: 14px;
+        padding: 26px;
+    }
+    .amc-panel .corner { position: absolute; width: 16px; height: 16px; border: 2px solid var(--amc-cyan); opacity: .6; }
+    .amc-panel .corner.tl { top: -1px; left: -1px; border-right: none; border-bottom: none; border-top-left-radius: 12px; }
+    .amc-panel .corner.tr { top: -1px; right: -1px; border-left: none; border-bottom: none; border-top-right-radius: 12px; }
+    .amc-panel .corner.bl { bottom: -1px; left: -1px; border-right: none; border-top: none; border-bottom-left-radius: 12px; }
+    .amc-panel .corner.br { bottom: -1px; right: -1px; border-left: none; border-top: none; border-bottom-right-radius: 12px; }
+
+    .amc-section-label {
+        font-family: var(--amc-font-mono); font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--amc-muted);
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 18px;
+    }
+    .amc-section-label::after { content: ''; flex: 1; height: 1px; background: var(--amc-line); }
+
+    .amc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px 20px; }
+    @media (max-width: 720px) { .amc-grid { grid-template-columns: 1fr; } }
+
+    .amc-field { display: flex; flex-direction: column; gap: 7px; }
+    .amc-label {
+        font-family: var(--amc-font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+        color: var(--amc-muted);
+        display: flex; align-items: center; gap: 6px;
+    }
+    .amc-label svg { opacity: .7; }
+
+    .amc-input-shell { position: relative; }
+    .amc-input, .amc-select {
+        width: 100%;
+        font-family: var(--amc-font-body); font-size: 13.5px;
+        background: var(--amc-void);
+        border: 1px solid var(--amc-line);
+        color: var(--amc-text);
+        border-radius: 9px;
+        padding: 11px 13px;
+        transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+        appearance: none;
+    }
+    .amc-select {
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23838da3' stroke-width='2.4'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 13px center;
+        padding-right: 34px;
+    }
+    .amc-input:hover, .amc-select:hover { border-color: var(--amc-line-bright); }
+    .amc-input:focus, .amc-select:focus {
+        outline: none; border-color: var(--amc-cyan); background: #0b0f17;
+        box-shadow: 0 0 0 3px rgba(94,234,212,0.12);
+    }
+    .amc-input.has-error, .amc-select.has-error { border-color: var(--amc-danger); }
+    .amc-input.has-error:focus, .amc-select.has-error:focus { box-shadow: 0 0 0 3px rgba(251,113,133,0.14); }
+
+    .amc-error {
+        font-family: var(--amc-font-mono); font-size: 11.5px; color: var(--amc-danger);
+        display: flex; align-items: center; gap: 5px;
+    }
+
+    .amc-hint { font-size: 11.5px; color: var(--amc-muted); }
+
+    .amc-actions {
+        display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+        margin-top: 26px; padding-top: 20px; border-top: 1px solid var(--amc-line);
+    }
+    .amc-actions-left { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    .amc-btn {
+        font-family: var(--amc-font-body); font-weight: 600; font-size: 13.5px;
+        display: inline-flex; align-items: center; gap: 7px;
+        padding: 10px 18px; border-radius: 9px; border: 1px solid transparent;
+        cursor: pointer; transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+        text-decoration: none; white-space: nowrap;
+    }
+    .amc-btn:focus-visible { outline: 2px solid var(--amc-cyan); outline-offset: 2px; }
+    .amc-btn--primary {
+        color: #06120f;
+        background: linear-gradient(135deg, var(--amc-cyan), #7ef0d8);
+        box-shadow: 0 4px 18px -6px rgba(94,234,212,0.55);
+    }
+    .amc-btn--primary:hover { transform: translateY(-1px); box-shadow: 0 6px 22px -6px rgba(94,234,212,0.75); }
+    .amc-btn--primary:disabled { opacity: .7; cursor: default; transform: none; }
+    .amc-btn--ghost {
+        color: var(--amc-text); background: rgba(255,255,255,0.02); border-color: var(--amc-line-bright);
+    }
+    .amc-btn--ghost:hover { border-color: var(--amc-violet); background: rgba(139,124,246,0.08); transform: translateY(-1px); }
+    .amc-btn--danger-outline {
+        color: var(--amc-danger); background: rgba(251,113,133,0.05); border-color: rgba(251,113,133,0.35);
+    }
+    .amc-btn--danger-outline:hover { background: rgba(251,113,133,0.12); border-color: var(--amc-danger); transform: translateY(-1px); }
+
+    .amc-spinner {
+        width: 13px; height: 13px; border-radius: 50%;
+        border: 2px solid rgba(6,18,15,0.25); border-top-color: #06120f;
+        animation: amc-spin .7s linear infinite; display: none;
+    }
+    .amc-btn--primary.is-loading .amc-spinner { display: inline-block; }
+    .amc-btn--primary.is-loading .amc-btn-label { opacity: .85; }
+
+    @keyframes amc-pulse { 0%, 100% { opacity: 1; } 50% { opacity: .45; } }
+    @keyframes amc-spin { to { transform: rotate(360deg); } }
+
+    @media (prefers-reduced-motion: reduce) {
+        .amc-eyebrow .dot, .amc-spinner { animation: none; }
+        .amc-btn, .amc-back, .amc-input, .amc-select { transition: none; }
+    }
+</style>
+
+<div class="amc">
+    <a href="<?php echo e(route('staff.users.index')); ?>" class="amc-back">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Back to users
+    </a>
+
+    <div class="amc-header">
+        <?php
+            $hue = crc32($user->name) % 360;
+            $initials = collect(explode(' ', trim($user->name)))->map(fn($p) => mb_substr($p, 0, 1))->take(2)->implode('');
+        ?>
+        <div class="amc-avatar-lg" style="background: linear-gradient(135deg, hsl(<?php echo e($hue); ?>,75%,68%), hsl(<?php echo e(($hue + 50) % 360); ?>,75%,60%));"><?php echo e(strtoupper($initials)); ?></div>
+        <div>
+            <div class="amc-eyebrow"><span class="dot"></span> Access Control / Edit Record</div>
+            <h1 class="amc-title"><?php echo e($user->name); ?></h1>
+            <p class="amc-subtitle"><?php echo e($user->email); ?></p>
+        </div>
+    </div>
+
+    <form action="<?php echo e(route('staff.users.update', $user)); ?>" method="POST" id="amc-edit-form" class="amc-panel">
+        <div class="corner tl"></div><div class="corner tr"></div>
+        <div class="corner bl"></div><div class="corner br"></div>
+        <?php echo csrf_field(); ?>
+        <?php echo method_field('PUT'); ?>
+
+        <div class="amc-section-label">Identity</div>
+        <div class="amc-grid" style="margin-bottom: 26px;">
+            <div class="amc-field">
+                <label class="amc-label" for="name">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Full name
+                </label>
+                <input id="name" name="name" value="<?php echo e(old('name', $user->name)); ?>" class="amc-input <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> has-error <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><span class="amc-error"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><?php echo e($message); ?></span><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+            </div>
+            <div class="amc-field">
+                <label class="amc-label" for="email">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></svg>
+                    Email
+                </label>
+                <input id="email" name="email" type="email" value="<?php echo e(old('email', $user->email)); ?>" class="amc-input <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> has-error <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><span class="amc-error"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><?php echo e($message); ?></span><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+            </div>
+            <div class="amc-field">
+                <label class="amc-label" for="username">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 20V10l8-6 8 6v10"/><path d="M9 20v-6h6v6"/></svg>
+                    Username
+                </label>
+                <input id="username" name="username" value="<?php echo e(old('username', $user->username)); ?>" class="amc-input <?php $__errorArgs = ['username'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> has-error <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                <?php $__errorArgs = ['username'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><span class="amc-error"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><?php echo e($message); ?></span><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+            </div>
+            <div class="amc-field">
+                <label class="amc-label" for="department">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 21h18M6 21V7l6-4 6 4v14M9 9h1m-1 4h1m4-4h1m-1 4h1"/></svg>
+                    Department
+                </label>
+                <input id="department" name="department" value="<?php echo e(old('department', $user->department)); ?>" class="amc-input <?php $__errorArgs = ['department'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> has-error <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                <?php $__errorArgs = ['department'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><span class="amc-error"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><?php echo e($message); ?></span><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+            </div>
+        </div>
+
+        <div class="amc-section-label">Access &amp; assignment</div>
+        <div class="amc-grid">
+            <div class="amc-field">
+                <label class="amc-label" for="role">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 2 3 7v6c0 5 4 9 9 9s9-4 9-9V7l-9-5z"/></svg>
+                    Role
+                </label>
+                <select id="role" name="role" class="amc-select <?php $__errorArgs = ['role'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> has-error <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                    <?php $__currentLoopData = $roles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $r): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($r); ?>" <?php echo e($user->role === $r ? 'selected' : ''); ?>><?php echo e(ucfirst($r)); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </select>
+                <?php $__errorArgs = ['role'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><span class="amc-error"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><?php echo e($message); ?></span><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+            </div>
+            <div class="amc-field">
+                <label class="amc-label" for="assigned_course_id">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    Assign course <span style="text-transform:none;color:var(--amc-muted);font-family:var(--amc-font-body);">(optional)</span>
+                </label>
+                <select id="assigned_course_id" name="assigned_course_id" class="amc-select <?php $__errorArgs = ['assigned_course_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> has-error <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>">
+                    <option value="">-- none --</option>
+                    <?php $__currentLoopData = $courses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($c->id); ?>" <?php echo e((int) old('assigned_course_id', $user->assigned_course_id) === $c->id ? 'selected' : ''); ?>><?php echo e($c->title); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </select>
+                <?php $__errorArgs = ['assigned_course_id'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><span class="amc-error"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><?php echo e($message); ?></span><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+            </div>
+        </div>
+
+        <div class="amc-actions">
+            <div class="amc-actions-left">
+                <button type="submit" class="amc-btn amc-btn--primary" id="amc-save-btn">
+                    <span class="amc-spinner"></span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                    <span class="amc-btn-label">Save changes</span>
+                </button>
+                <a href="<?php echo e(route('staff.users.index')); ?>" class="amc-btn amc-btn--ghost">Cancel</a>
+            </div>
+        </div>
+    </form>
+
+    <form action="<?php echo e(route('staff.users.reset-password', $user)); ?>" method="POST" style="margin-top:14px;">
+        <?php echo csrf_field(); ?>
+        <button type="submit" class="amc-btn amc-btn--danger-outline" onclick="return confirm('Reset password for <?php echo e($user->name); ?>?')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            Reset password
+        </button>
+    </form>
+</div>
+
+<script>
+    document.getElementById('amc-edit-form').addEventListener('submit', function () {
+        var btn = document.getElementById('amc-save-btn');
+        btn.classList.add('is-loading');
+        btn.disabled = true;
+    });
+</script>
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('staff.layouts.masters', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\skilluplastest\resources\views/staff/users/edit.blade.php ENDPATH**/ ?>

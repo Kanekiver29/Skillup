@@ -30,22 +30,29 @@ class RoadmapController extends Controller
             ->get();
 
         // Separate enrollments by status
-        $completedCourses = $enrollments->where('completed', true);
-        $inProgressCourses = $enrollments->where('completed', false)->where('progress', '>', 0);
-        $notStartedCourses = $enrollments->where('progress', 0);
+        $completedCourses = $enrollments->where('completed', true)->values();
+        $inProgressCourses = $enrollments->where('completed', false)->where('progress', '>', 0)->values();
+        $notStartedCourses = $enrollments->where('completed', false)->where('progress', '<=', 0)->values();
 
         // Get courses grouped by category for skill development
         $coursesByCategory = Course::where('is_published', true)
             ->get()
             ->groupBy('category');
 
-        // Calculate overall progress
         $totalEnrolled = $enrollments->count();
         $totalCompleted = $completedCourses->count();
-        $overallProgress = $totalEnrolled > 0 ? round(($totalCompleted / $totalEnrolled) * 100) : 0;
+        $completionRate = $totalEnrolled > 0 ? round(($totalCompleted / $totalEnrolled) * 100) : 0;
+        $averageProgress = $totalEnrolled > 0
+            ? (int) round($enrollments->avg(fn ($e) => (int) $e->progress))
+            : 0;
+
+        // Suggest the best course to continue (in progress, sorted by progress desc)
+        $nextEnrollment = $inProgressCourses->sortByDesc('progress')->first();
 
         // Get user's skills from profile
-        $userSkills = $user->skills ?? [];
+        $userSkills = is_array($user->skills ?? null)
+            ? $user->skills
+            : (is_string($user->skills ?? null) ? array_filter(array_map('trim', explode(',', $user->skills))) : []);
 
         return view('Userpage.roadmap', [
             'user' => $user,
@@ -56,7 +63,10 @@ class RoadmapController extends Controller
             'coursesByCategory' => $coursesByCategory,
             'totalEnrolled' => $totalEnrolled,
             'totalCompleted' => $totalCompleted,
-            'overallProgress' => $overallProgress,
+            'completionRate' => $completionRate,
+            'averageProgress' => $averageProgress,
+            'overallProgress' => $averageProgress,
+            'nextEnrollment' => $nextEnrollment,
             'userSkills' => $userSkills,
         ]);
     }

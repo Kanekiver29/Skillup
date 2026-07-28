@@ -24,21 +24,72 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // Validate input
-        $credentials = $request->validate([
+        $validated = $request->validate([
             'email' => 'required|email',
             'password' => 'required|min:6',
+            'login_as' => 'required|in:admin,staff,teacher,student',
         ]);
+
+        $credentials = [
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+        ];
 
         // Attempt to authenticate
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
-            
-            return redirect()->intended('/')->with('success', 'Login successful!');
+
+            $user = Auth::user();
+            $loginAs = $validated['login_as'];
+
+            // Validate role matches the selected login type
+            if ($loginAs === 'admin') {
+                if (!$user->isAdmin()) {
+                    Auth::logout();
+                    return back()
+                        ->withInput($request->only('email', 'login_as'))
+                        ->withErrors(['login_as' => 'This account does not have Administrator access.']);
+                }
+                return redirect('/admin')->with('success', 'Welcome back, Admin!');
+            }
+
+            if ($loginAs === 'teacher') {
+                if (!method_exists($user, 'isTeacher') || !$user->isTeacher()) {
+                    Auth::logout();
+                    return back()
+                        ->withInput($request->only('email', 'login_as'))
+                        ->withErrors(['login_as' => 'This account is not registered as an Instructor.']);
+                }
+
+                return redirect()->route('teacher.dashboard')->with('success', 'Welcome back, Instructor!');
+            }
+
+            if ($loginAs === 'staff') {
+                // Allow users with staff role or admin flag to sign in as staff
+                if (!($user->role === 'staff' || $user->hasStaffAccess())) {
+                    Auth::logout();
+                    return back()
+                        ->withInput($request->only('email', 'login_as'))
+                        ->withErrors(['login_as' => 'This account is not registered as Staff.']);
+                }
+
+                return redirect()->route('staff.dashboard')->with('success', 'Welcome back, Staff!');
+            }
+
+            if ($loginAs === 'student') {
+                if ($user->hasStaffAccess()) {
+                    Auth::logout();
+                    return back()
+                        ->withInput($request->only('email', 'login_as'))
+                        ->withErrors(['login_as' => 'Please use a student account or choose the correct role.']);
+                }
+                return redirect()->intended('/')->with('success', 'Login successful!');
+            }
         }
 
         // Authentication failed
         return back()
-            ->withInput($request->only('email'))
+            ->withInput($request->only('email', 'login_as'))
             ->withErrors([
                 'email' => 'The provided credentials do not match our records.',
             ]);
@@ -65,6 +116,9 @@ class AuthController extends Controller
                 'required',
                 'confirmed',
             ],
+            'age' => 'required|integer|min:1|max:120',
+            'birthday' => 'required|date|before:today',
+            'address' => 'required|string|max:255',
             'terms' => 'required|accepted',
         ]);
 
@@ -73,6 +127,9 @@ class AuthController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
+            'age' => $validated['age'],
+            'birthday' => $validated['birthday'],
+            'location' => $validated['address'],
         ]);
 
         // Log the user in

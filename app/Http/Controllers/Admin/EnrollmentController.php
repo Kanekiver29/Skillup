@@ -10,7 +10,7 @@ class EnrollmentController extends Controller
 {
     private function authorizeAdmin()
     {
-        if (!auth()->check() || !auth()->user()->is_admin) {
+        if (!auth()->check() || !auth()->user()->hasStaffAccess()) {
             abort(403, 'Unauthorized');
         }
     }

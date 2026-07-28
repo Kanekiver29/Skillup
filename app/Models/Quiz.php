@@ -11,6 +11,7 @@ class Quiz extends Model
 
     protected $fillable = [
         'module_id',
+        'lms_local_id',
         'title',
         'slug',
         'description',
@@ -19,14 +20,20 @@ class Quiz extends Model
         'attempt_limit',
         'randomize_questions',
         'show_correct_answers',
+        'media_type',
+        'media_url',
         'order',
         'is_published',
+        'is_archived',
+        'archived_at',
     ];
 
     protected $casts = [
         'randomize_questions' => 'boolean',
         'show_correct_answers' => 'boolean',
         'is_published' => 'boolean',
+        'is_archived' => 'boolean',
+        'archived_at' => 'datetime',
     ];
 
     public function module()

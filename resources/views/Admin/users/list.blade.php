@@ -15,55 +15,43 @@
     </div>
   @endif
 
-  <div class="bg-white shadow rounded">
-    <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead class="bg-gray-100 border-b">
-          <tr>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Name</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Email</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
-            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Joined</th>
-            <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($users as $user)
-            <tr class="border-b hover:bg-gray-50">
-              <td class="px-6 py-4 text-sm font-medium">{{ $user->name }}</td>
-              <td class="px-6 py-4 text-sm text-gray-600">{{ $user->email }}</td>
-              <td class="px-6 py-4 text-sm">
-                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Regular User</span>
-              </td>
-              <td class="px-6 py-4 text-sm text-gray-600">{{ $user->created_at->format('M d, Y') }}</td>
-              <td class="px-6 py-4 text-right text-sm space-x-2">
-                <a href="{{ route('admin.users.edit', $user) }}" class="text-blue-600 hover:text-blue-800 text-xs font-semibold">
-                  Edit
-                </a>
-                <form action="{{ route('admin.make-admin', $user) }}" method="POST" class="inline">
-                  @csrf
-                  <button type="submit" class="text-green-600 hover:text-green-800 text-xs font-semibold">
-                    Make Admin
-                  </button>
-                </form>
-                <form action="{{ route('admin.users.delete', $user) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure? This will delete the user account.');">
-                  @csrf
-                  @method('DELETE')
-                  <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-semibold">
-                    Delete
-                  </button>
-                </form>
-              </td>
-            </tr>
-          @empty
-            <tr>
-              <td colspan="5" class="px-6 py-4 text-center text-gray-500">No regular users found.</td>
-            </tr>
-          @endforelse
-        </tbody>
-      </table>
-    </div>
-  </div>
+  <div class="glass-table overflow-x-auto">
+  <table class="w-full glass-table">
+    <thead class="bg-gray-100 border-b">
+      <tr class="glass-card">
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Name</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Email</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
+        <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Joined</th>
+        <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      @forelse($users as $user)
+        <tr class="border-b hover:bg-gray-50">
+          <td class="px-6 py-4 text-sm font-medium">{{ $user->name }}</td>
+          <td class="px-6 py-4 text-sm text-gray-600">{{ $user->email }}</td>
+          <td class="px-6 py-4 text-sm"><span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">Regular User</span></td>
+          <td class="px-6 py-4 text-sm text-gray-600">{{ $user->created_at->format('M d, Y') }}</td>
+          <td class="px-6 py-4 text-right text-sm space-x-2">
+            <a href="{{ route('admin.users.edit', $user) }}" class="glass-button text-xs font-semibold">Edit</a>
+            <form action="{{ route('admin.make-admin', $user) }}" method="POST" class="inline">
+              @csrf
+              <button type="submit" class="glass-button text-xs font-semibold bg-green-600 hover:bg-green-700">Make Admin</button>
+            </form>
+            <form action="{{ route('admin.users.delete', $user) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure? This will archive the user account. You can restore it later from the Archive Center.');">
+              @csrf
+              @method('DELETE')
+              <button type="submit" class="glass-button text-xs font-semibold bg-red-600 hover:bg-red-700">Archive</button>
+            </form>
+          </td>
+        </tr>
+      @empty
+        <tr><td colspan="5" class="px-6 py-4 text-center text-gray-500">No regular users found.</td></tr>
+      @endforelse
+    </tbody>
+  </table>
+</div>
 
   <div class="mt-4">
     {{ $users->links() }}

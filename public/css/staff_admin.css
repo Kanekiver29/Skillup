@@ -1,0 +1,6 @@
+/* Staff admin styles (minimal placeholder) */
+:root{
+  --admin-header-h:64px;
+}
+body{background:#071227;color:#0f1724}
+.admin-btn{display:inline-flex}

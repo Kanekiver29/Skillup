@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 300" width="440" height="300">
+  <defs>
+    <linearGradient id="bg-ship-operations" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0277BD;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#01579B;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="440" height="300" rx="0" fill="url(#bg-ship-operations)"/>
+  <!-- Decorative circles -->
+  <circle cx="115" cy="74" r="80" fill="white" opacity="0.06"/>
+  <circle cx="365" cy="226" r="120" fill="white" opacity="0.04"/>
+  <circle cx="220" cy="280" r="180" fill="white" opacity="0.03"/>
+  <!-- Category Icon -->
+  <path d="M180 150 Q200 130 220 150 Q240 130 260 150" fill="none" stroke="white" stroke-width="3" opacity="0.4"/><path d="M175 160 Q200 140 225 160 Q250 140 275 160" fill="none" stroke="white" stroke-width="2" opacity="0.25"/><polygon points="220,95 220,145 250,145" fill="white" opacity="0.3"/><line x1="220" y1="90" x2="220" y2="150" stroke="white" stroke-width="3" opacity="0.5"/>
+  <!-- Title -->
+    <text x="220" y="210" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">Ship Operations and</text>
+    <text x="220" y="232" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">Management</text>
+
+  <!-- Category Label -->
+  <rect x="155" y="262" width="130" height="24" rx="12" fill="white" opacity="0.2"/>
+  <text x="220" y="262" dy="16" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="10" opacity="0.9">Maritime</text>
+</svg>

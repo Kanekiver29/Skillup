@@ -1,0 +1,41 @@
+/* Staff dashboard basic styles - responsive and minimal */
+:root{--bg:#f7fafc;--card:#ffffff;--muted:#6b7280;--accent:#2563eb;--accent-2:#10b981}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial;color:#111827;background:var(--bg)}
+.staff-header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:#fff;border-bottom:1px solid #e6edf3}
+.brand{font-weight:700;color:var(--accent)}
+.brand-light{color:#374151;margin-left:8px;font-weight:500}
+.staff-nav{display:flex;gap:12px}
+.staff-nav .nav-item{color:#374151;text-decoration:none;padding:6px 8px;border-radius:6px}
+.staff-nav .nav-item:hover{background:#f1f5f9}
+.staff-actions{display:flex;gap:10px;align-items:center}
+.staff-body{display:flex;gap:16px;padding:18px;max-width:1200px;margin:0 auto}
+.staff-sidebar{width:220px;background:var(--card);border:1px solid #e6edf3;padding:12px;border-radius:8px;height:calc(100vh - 120px);overflow:auto}
+.staff-content{flex:1;min-height:60vh}
+.staff-footer{text-align:center;padding:18px;color:var(--muted);font-size:13px}
+
+/* cards and layout used by dashboard */
+.container{max-width:1200px;margin:0 auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.topbar-title{font-size:20px;font-weight:700}
+.topbar-sub{color:var(--muted);font-size:13px}
+.card{background:var(--card);border:1px solid #e6edf3;border-radius:8px;padding:14px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.stat-card{padding:10px;border-radius:6px;background:linear-gradient(180deg,#fff,#fbfdff);box-shadow:0 1px 2px rgba(16,24,40,0.03)}
+.stat-label{font-size:13px;color:var(--muted)}
+.stat-value{font-size:20px;font-weight:700;margin-top:6px}
+.stat-delta{font-size:13px;color:var(--muted);margin-top:4px}
+
+.layout-grid{display:grid;grid-template-columns:1fr 360px;gap:12px}
+.section-title{font-weight:700;margin-bottom:8px}
+.list{display:flex;flex-direction:column;gap:8px}
+.list-item{display:flex;justify-content:space-between;align-items:center;padding:8px;border-radius:6px;border:1px solid #f0f5f9}
+.muted{color:var(--muted);font-size:13px}
+.btn{background:var(--accent);color:#fff;padding:6px 10px;border-radius:6px;text-decoration:none}
+.btn-ghost{background:transparent;border:1px solid #e6edf3;padding:6px 10px;border-radius:6px;text-decoration:none;color:#374151}
+
+/* Responsive */
+@media(max-width:900px){
+  .staff-body{padding:12px;flex-direction:column}
+  .staff-sidebar{width:100%;height:auto}
+  .layout-grid{grid-template-columns:1fr}
+}

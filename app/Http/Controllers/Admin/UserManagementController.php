@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\Enrollment;
 use Illuminate\Http\Request;
 
 class UserManagementController extends Controller
@@ -92,11 +93,11 @@ class UserManagementController extends Controller
 
         $user->update($validated);
 
-        return redirect()->route('admin.users')->with('success', "{$user->name} has been updated successfully.");
+        return redirect()->route('admin.users.index')->with('success', "{$user->name} has been updated successfully.");
     }
 
     /**
-     * Delete a user.
+     * Delete a user (soft delete — moves to archive).
      */
     public function deleteUser(User $user)
     {
@@ -109,7 +110,79 @@ class UserManagementController extends Controller
         $userName = $user->name;
         $user->delete();
 
-        return redirect()->route('admin.users')->with('success', "{$userName} has been deleted successfully.");
+        // Broadcast user archived
+        try {
+            event(new \App\Events\UserArchived($user));
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        return redirect()->route('admin.users.index')->with('success', "{$userName} has been archived successfully.");
+    }
+
+    /**
+     * Restore a soft-deleted user from the archive.
+     */
+    public function restoreUser($id)
+    {
+        $this->authorizeAdmin();
+
+        $user = User::onlyTrashed()->findOrFail($id);
+        $user->restore();
+
+        try {
+            event(new \App\Events\UserRestored($user));
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        return redirect()->route('admin.archive')->with('success', "{$user->name} has been restored successfully.");
+    }
+
+    /**
+     * Permanently delete a user from the archive.
+     */
+    public function forceDeleteUser($id)
+    {
+        $this->authorizeAdmin();
+
+        $user = User::onlyTrashed()->findOrFail($id);
+        $userName = $user->name;
+        $user->forceDelete();
+
+        try {
+            event(new \App\Events\UserForceDeleted($id));
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        return redirect()->route('admin.archive')->with('success', "{$userName} has been permanently deleted.");
+    }
+
+    /**
+     * Show archived user detail with course enrollment history.
+     */
+    public function showArchivedUser($id)
+    {
+        $this->authorizeAdmin();
+
+        // allow finding the user whether or not they're currently trashed,
+        // then verify they are actually archived; provide a friendly redirect
+        // instead of letting findOrFail raise a 404 for a non-archived id.
+        $user = User::withTrashed()->find($id);
+
+        if (!$user || !$user->trashed()) {
+            return redirect()->route('admin.archive')->with('error', 'Archived user not found.');
+        }
+
+        $enrollments = Enrollment::where('user_id', $user->id)
+            ->with('course')
+            ->get();
+
+        return view('Admin.users.archived-detail', [
+            'user' => $user,
+            'enrollments' => $enrollments,
+        ]);
     }
 
     /**

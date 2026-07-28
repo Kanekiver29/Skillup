@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 300" width="440" height="300">
+  <defs>
+    <linearGradient id="bg-halal-principles" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00897B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00695C;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="440" height="300" rx="0" fill="url(#bg-halal-principles)"/>
+  <!-- Decorative circles -->
+  <circle cx="121" cy="54" r="80" fill="white" opacity="0.06"/>
+  <circle cx="371" cy="246" r="120" fill="white" opacity="0.04"/>
+  <circle cx="220" cy="280" r="180" fill="white" opacity="0.03"/>
+  <!-- Category Icon -->
+  <circle cx="220" cy="130" r="35" fill="none" stroke="white" stroke-width="3" opacity="0.5"/><path d="M210 115 L220 110 L230 115 L230 145 L210 145 Z" fill="white" opacity="0.3"/><path d="M205 150 L235 150" stroke="white" stroke-width="2" opacity="0.4"/>
+  <!-- Title -->
+    <text x="220" y="210" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">Halal Principles and</text>
+    <text x="220" y="232" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">Compliance</text>
+
+  <!-- Category Label -->
+  <rect x="155" y="262" width="130" height="24" rx="12" fill="white" opacity="0.2"/>
+  <text x="220" y="262" dy="16" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="10" opacity="0.9">Halal Awareness Program</text>
+</svg>

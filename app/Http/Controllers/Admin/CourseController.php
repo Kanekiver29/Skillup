@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Course;
+use App\Events\CourseCreated;
 use App\Models\Enrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -12,8 +13,10 @@ class CourseController extends Controller
 {
     /**
      * Ensure the current user is an admin.
+     *
+     * Made `protected` so subclasses (e.g. staff controllers) can reuse this check.
      */
-    private function authorizeAdmin()
+    protected function authorizeAdmin()
     {
         if (!auth()->check() || !auth()->user()->is_admin) {
             abort(403, 'Unauthorized');
@@ -45,7 +48,7 @@ class CourseController extends Controller
      */
     public function store(Request $request)
     {
-        $this->authorizeAdmin();
+        $this->authorize('create', \App\Models\Course::class);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -62,7 +65,14 @@ class CourseController extends Controller
 
         $validated['slug'] = Str::slug($validated['title']);
 
-        Course::create($validated);
+        $course = Course::create($validated);
+
+        // Broadcast course creation for realtime dashboards
+        try {
+            event(new CourseCreated($course));
+        } catch (\Throwable $e) {
+            // non-fatal if broadcasting not configured
+        }
 
         return redirect()->route('admin.courses.index')->with('success', 'Course created successfully.');
     }
@@ -81,7 +91,7 @@ class CourseController extends Controller
      */
     public function update(Request $request, Course $course)
     {
-        $this->authorizeAdmin();
+        $this->authorize('update', $course);
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -110,7 +120,7 @@ class CourseController extends Controller
      */
     public function destroy(Course $course)
     {
-        $this->authorizeAdmin();
+        $this->authorize('delete', $course);
 
         $title = $course->title;
         $course->delete();

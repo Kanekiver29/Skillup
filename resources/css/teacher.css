@@ -1,0 +1,83 @@
+/* resources/css/teacher.css */
+/* Dark mode base */
+:root {
+    --navbar-bg: rgba(15, 23, 42, 0.85); /* dark navy with translucency */
+    --navbar-accent: #4f8ef7;
+    --modal-bg: rgba(15, 23, 42, 0.95);
+    --fab-bg: #4f8ef7;
+    --fab-color: #fff;
+}
+
+/* Sticky navbar */
+.sticky-navbar {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--navbar-bg);
+    backdrop-filter: blur(8px);
+    color: var(--clr-text);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+.sticky-navbar .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* FAB */
+.fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--fab-bg);
+    color: var(--fab-color);
+    font-size: 2rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    transition: transform var(--transition);
+}
+.fab:hover { transform: scale(1.08); }
+
+/* Modal */
+.modal {
+    display: none; /* hidden by default */
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.5);
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+}
+.modal.show { display: flex; }
+.modal-content {
+    background: var(--modal-bg);
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 90%;
+    width: 400px;
+    color: var(--clr-text);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.close-modal {
+    background: none;
+    border: none;
+    color: var(--clr-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 1rem;
+}
+
+/* Hero carousel overrides */
+.hero {
+    margin: 1rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+}
+.swiper-pagination-bullet {
+    background: var(--clr-muted);
+    opacity: 0.8;
+}
+.swiper-pagination-bullet-active {
+    background: var(--navbar-accent);
+}

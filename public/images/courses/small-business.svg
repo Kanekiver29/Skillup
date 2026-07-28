@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 300" width="440" height="300">
+  <defs>
+    <linearGradient id="bg-small-business" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8E44AD;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6C3483;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="440" height="300" rx="0" fill="url(#bg-small-business)"/>
+  <!-- Decorative circles -->
+  <circle cx="60" cy="85" r="80" fill="white" opacity="0.06"/>
+  <circle cx="310" cy="249" r="120" fill="white" opacity="0.04"/>
+  <circle cx="220" cy="280" r="180" fill="white" opacity="0.03"/>
+  <!-- Category Icon -->
+  <path d="M195 160 L195 115 Q195 100 210 100 L230 100 Q245 100 245 115 L245 160" fill="none" stroke="white" stroke-width="3" opacity="0.5"/><line x1="195" y1="125" x2="245" y2="125" stroke="white" stroke-width="2" opacity="0.3"/><circle cx="220" cy="90" r="5" fill="white" opacity="0.4"/>
+  <!-- Title -->
+    <text x="220" y="210" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">Small Business</text>
+    <text x="220" y="232" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">Management and Growth</text>
+
+  <!-- Category Label -->
+  <rect x="155" y="262" width="130" height="24" rx="12" fill="white" opacity="0.2"/>
+  <text x="220" y="262" dy="16" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="10" opacity="0.9">Entrepreneurship</text>
+</svg>

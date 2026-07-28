@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Course;
 use App\Models\Enrollment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Events\EnrollmentCreated;
 
 class CourseController extends Controller
 {
@@ -35,7 +37,7 @@ class CourseController extends Controller
             $query->where('category', $request->category);
         }
 
-        $courses = $query->paginate(12);
+        $courses = $query->withCount('likes')->paginate(12);
         
         // Get all unique categories for filter dropdown
         $categories = Course::where('is_published', true)
@@ -52,17 +54,29 @@ class CourseController extends Controller
     public function show($slug)
     {
         $course = Course::where('slug', $slug)
-            ->with(['lessons' => function ($query) {
-                $query->where('is_published', true)->orderBy('order');
-            }])
+            ->with([
+                'lessons' => function ($query) {
+                    $query->where('is_published', true)->orderBy('order');
+                },
+                'modules' => function ($query) {
+                    $query->where('is_published', true)
+                          ->orderBy('order')
+                          ->with(['lessons' => function ($query) {
+                              $query->where('is_published', true);
+                          }]);
+                },
+            ])
             ->firstOrFail();
 
-        $isEnrolled = auth()->check() ? 
-            Enrollment::where('user_id', auth()->id())
+        $enrollment = Auth::check()
+            ? Enrollment::where('user_id', Auth::id())
                 ->where('course_id', $course->id)
-                ->exists() : false;
+                ->first()
+            : null;
 
-        return view('courses.show', compact('course', 'isEnrolled'));
+        $isEnrolled = (bool) $enrollment;
+
+        return view('courses.show', compact('course', 'isEnrolled', 'enrollment'));
     }
 
     /**
@@ -70,18 +84,32 @@ class CourseController extends Controller
      */
     public function enroll($slug)
     {
-        $this->middleware('auth');
-
         $course = Course::where('slug', $slug)->firstOrFail();
 
         $enrollment = Enrollment::firstOrCreate(
             [
-                'user_id' => auth()->id(),
+                'user_id' => Auth::id(),
                 'course_id' => $course->id,
             ]
         );
 
-        return redirect()->route('courses.show', $slug)
+        // Broadcast enrollment for realtime dashboards
+        try {
+            event(new EnrollmentCreated($enrollment));
+        } catch (\Throwable $e) {
+            // ignore broadcast failures
+        }
+
+        // If the course has modules, send the user directly into the first published module
+        $firstModule = $course->modules()->where('is_published', true)->orderBy('order')->first();
+
+        if ($firstModule) {
+            return redirect()->route('modules.show', [$course->slug, $firstModule->slug])
+                ->with('success', 'Enrolled and entering ' . $course->title);
+        }
+
+        // Fallback: send user to their learning dashboard
+        return redirect()->route('courses.my-learning')
             ->with('success', 'Successfully enrolled in ' . $course->title);
     }
 
@@ -90,12 +118,36 @@ class CourseController extends Controller
      */
     public function myLearning()
     {
-        $this->middleware('auth');
-
-        $enrollments = Enrollment::where('user_id', auth()->id())
+        $enrollments = Enrollment::where('user_id', Auth::id())
             ->with('course')
             ->get();
 
         return view('courses.my-learning', compact('enrollments'));
     }
+    /**
+    * Show edit form for a course.
+    */
+    public function edit(Course $course)
+    {
+        return view('staff.courses.edit', compact('course'));
+    }
+
+    /**
+     * Update a course.
+     */
+    public function update(Request $request, Course $course)
+    {
+        $data = $request->validate([
+            'title' => 'required|string|max:255',
+            'short_description' => 'nullable|string|max:500',
+            'description' => 'nullable|string',
+            'is_published' => 'sometimes|boolean',
+        ]);
+
+        $course->update($data);
+
+        return redirect()->route('staff.dashboard')
+            ->with('success', 'Course updated successfully.');
+    }
+
 }

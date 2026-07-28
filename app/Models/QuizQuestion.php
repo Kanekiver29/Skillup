@@ -11,6 +11,7 @@ class QuizQuestion extends Model
 
     protected $fillable = [
         'quiz_id',
+        'lms_local_id',
         'type',
         'question_text',
         'explanation',

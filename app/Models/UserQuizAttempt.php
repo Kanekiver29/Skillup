@@ -14,6 +14,7 @@ class UserQuizAttempt extends Model
         'quiz_id',
         'attempt_number',
         'total_questions',
+        'xp_awarded',
         'correct_answers',
         'score_percentage',
         'passed',
@@ -26,6 +27,7 @@ class UserQuizAttempt extends Model
         'passed' => 'boolean',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'xp_awarded' => 'integer',
     ];
 
     public function user()

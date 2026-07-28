@@ -17,18 +17,69 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create an admin user for local/dev use
-        User::factory()->create([
-            'name' => 'admin',
-            'email' => 'admin@skillup.test',
-            'password' => 'admin1234',
-            'is_admin' => true,
-        ]);
-          //Create a for the user
-         User::factory()->create([
-            'name' => '(user_name)',
-            'email' => '(user_email)',
-            'password' => '(user_password)',
-        ]);
+        User::updateOrCreate(
+            ['email' => 'admin@skillup.test'],
+            [
+                'name' => 'Admin User',
+                'password' => Hash::make('admin1234?'),
+                'is_admin' => true,
+            ]
+        );
+
+        // Create a staff admin user (Admin with staff permissions)
+        User::updateOrCreate(
+            ['email' => 'staffadmin@skillup.test'],
+            [
+                'name' => 'Staff Admin',
+                'password' => Hash::make('staffadmin1234?'),
+                'is_admin' => true,
+                'staff_type' => 'content_manager',
+            ]
+        );
+
+        // Create a staff user (Teacher)
+        User::updateOrCreate(
+            ['email' => 'staff@skillup.test'],
+            [
+                'name' => 'Staff Teacher',
+                'password' => Hash::make('staff1234?'),
+                'is_admin' => false,
+                'staff_type' => 'teacher',
+            ]
+        );
+
+        // Create an instructor account (staff_type 'teacher' standard)
+        User::updateOrCreate(
+            ['email' => 'instructor@skillup.test'],
+            [
+                'name' => 'Instructor One',
+                'password' => Hash::make('instructor1234?'),
+                'is_admin' => false,
+                'staff_type' => 'teacher',
+                'role' => 'staff',
+            ]
+        );
+
+        // Create an additional staff user (Teacher)
+        User::updateOrCreate(
+            ['email' => 'staff2@skillup.test'],
+            [
+                'name' => 'Staff Two',
+                'password' => Hash::make('staff2345?'),
+                'is_admin' => false,
+                'staff_type' => 'teacher',
+            ]
+        );
+
+        // Create a regular user
+        User::updateOrCreate(
+            ['email' => 'user@skillup.test'],
+            [
+                'name' => 'Regular User',
+                'password' => Hash::make('user1234?'),
+                'is_admin' => false,
+            ]
+        );
 
         // Seed additional demo users
         User::factory(10)->create();

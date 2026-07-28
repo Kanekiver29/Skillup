@@ -1,0 +1,171 @@
+/* staff-dashboard.css */
+/* Premium teal‑accented dashboard styling */
+
+/* Layout: flex container with sidebar */
+.flex-container {
+    display: flex;
+    min-height: 100vh;
+    background: #f5fbf9; /* subtle teal‑tinted background */
+}
+
+/* Sidebar uses existing admin sidebar styling; ensure it stays 240px */
+.flex-container > .sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    background: var(--color-background-primary, #ffffff);
+    border-right: 1px solid var(--color-border-tertiary, #e0e0e0);
+    overflow-y: auto;
+}
+
+/* Main content area */
+.main-content {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    overflow-x: hidden;
+    background: linear-gradient(135deg, #e6f7f2 0%, #ffffff 100%);
+}
+
+/* Top bar */
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(6px);
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.topbar h1 {
+    margin: 0;
+    font-family: var(--font-sans, 'Inter', sans-serif);
+    font-size: 1.5rem;
+    color: #1D9E75;
+}
+.topbar .controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.topbar .controls select,
+.topbar .controls .btn {
+    padding: 6px 12px;
+    border: 1px solid #1D9E75;
+    border-radius: 4px;
+    background: #fff;
+    color: #1D9E75;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.topbar .controls .btn:hover {
+    background: #1D9E75;
+    color: #fff;
+}
+
+/* Widget grid */
+.widget-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+}
+.widget {
+    background: rgba(255,255,255,0.9);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    backdrop-filter: blur(4px);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.widget:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+.widget h3 {
+    margin-top: 0;
+    margin-bottom: 8px;
+    font-size: 1.2rem;
+    color: #1D9E75;
+}
+
+/* Courses grid */
+#coursesList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* Fade-in keyframes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Apply fade-in to cards */
+#coursesList .card {
+    animation: fadeIn 0.5s ease forwards;
+    opacity: 0; /* start hidden */
+    background: rgba(255,255,255,0.95);
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+/* Fade-in class for widgets */
+.fade-in {
+    animation: fadeIn 0.6s ease forwards;
+    opacity: 0;
+}
+
+#coursesList .card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+}
+#coursesList .card h3 {
+    margin: 0 0 8px;
+    font-size: 1.1rem;
+    color: #333;
+}
+#coursesList .card .badges .status {
+    font-size: 0.85rem;
+    background: #1D9E75;
+    color: #fff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+}
+#coursesList .card p {
+    margin: 4px 0;
+    color: #555;
+    font-size: 0.9rem;
+}
+#coursesList .card p.muted {
+    color: #888;
+    font-size: 0.8rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .flex-container {
+        flex-direction: column;
+    }
+    .flex-container > .sidebar {
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border-tertiary, #e0e0e0);
+    }
+    .topbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .topbar .controls {
+        justify-content: space-between;
+    }
+}

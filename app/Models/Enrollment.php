@@ -15,11 +15,16 @@ class Enrollment extends Model
         'completed',
         'progress',
         'completed_at',
+        'year_level',
+        'section',
+        'enrolled_at',
+        'status',
     ];
 
     protected $casts = [
         'completed' => 'boolean',
         'completed_at' => 'datetime',
+        'enrolled_at' => 'datetime',
     ];
 
     public function user()

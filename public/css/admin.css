@@ -1,0 +1,65 @@
+:root{
+  --bg:#0f1724; /* slate/navy */
+  --panel:#0b1220;
+  --muted:#94a3b8;
+  --accent-cyan:#06b6d4;
+  --accent-teal:#14b8a6;
+  --accent-purple:#7c3aed;
+  --accent-amber:#f59e0b;
+  --glass: rgba(255,255,255,0.03);
+}
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@600;700;800&display=swap');
+html,body{height:100%}
+body{background:linear-gradient(180deg,var(--bg),#071125);color:var(--muted);font-family:'DM Sans',system-ui,Arial,Helvetica,sans-serif}
+h1,h2,h3,h4,h5{font-family:'Syne',system-ui,Helvetica,Arial}
+
+/* Sidebar text overrides to ensure good contrast */
+.sidebar{color:#ffffff}
+.sidebar .admin-sidebar-link{color:rgba(255,255,255,0.95)}
+.sidebar .admin-sidebar-link i{color:rgba(255,255,255,0.85)}
+.sidebar p.text-slate-500, .sidebar .text-slate-500{color:rgba(255,255,255,0.6) !important}
+.sidebar .text-slate-400, .sidebar .text-slate-300{color:rgba(255,255,255,0.55) !important}
+.sidebar .admin-sidebar-link:hover{color:var(--accent-cyan);border-left-color:var(--accent-cyan)}
+.sidebar .admin-sidebar-link.active{color:var(--accent-cyan);border-left-color:var(--accent-cyan)}
+
+/* Top nav brand pulse */
+.brand-pulse{position:relative}
+.brand-pulse:after{content:'';position:absolute;inset:0;border-radius:8px;box-shadow:0 0 18px rgba(6,182,212,0.12);animation:brandPulse 2.4s infinite}
+@keyframes brandPulse{0%{box-shadow:0 0 0 0 rgba(6,182,212,0.14)}70%{box-shadow:0 0 18px 8px rgba(6,182,212,0.02)}100%{box-shadow:0 0 0 0 rgba(6,182,212,0)}}
+
+/* Sidebar link slide-in */
+.sidebar .admin-sidebar-link{opacity:0;transform:translateX(-12px)}
+.sidebar .admin-sidebar-link.show{opacity:1;transform:translateX(0);transition:transform 420ms cubic-bezier(.22,.9,.35,1),opacity 320ms}
+
+/* Stat card shimmer */
+.stat-card{background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border:1px solid rgba(255,255,255,0.03);backdrop-filter: blur(6px);border-radius:12px;padding:16px;position:relative;overflow:hidden}
+.stat-card:before{content:'';position:absolute;left:-60%;top:0;width:60%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.04),transparent);transform:skewX(-12deg);transition:all .9s ease;opacity:0}
+.stat-card:hover:before{left:120%;opacity:1}
+
+/* Shimmer sweep */
+.shimmer{position:relative;overflow:hidden}
+.shimmer:after{content:'';position:absolute;left:-100%;top:0;height:100%;width:80%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.02),transparent);transform:skewX(-10deg);transition:all .9s ease}
+.shimmer:hover:after{left:120%}
+
+/* Card fade-up */
+.card{opacity:0;transform:translateY(8px);transition:opacity .45s ease,transform .45s cubic-bezier(.22,.9,.35,1)}
+.card.show{opacity:1;transform:translateY(0)}
+
+/* Progress bar fill animation */
+.progress-wrap{background:rgba(255,255,255,0.03);border-radius:999px;height:10px;overflow:hidden}
+.progress-bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent-cyan),var(--accent-purple));transition:width .9s cubic-bezier(.22,.9,.35,1)}
+
+/* Table row stagger */
+table tr{opacity:0;transform:translateY(6px);transition:opacity .35s,transform .35s}
+table tr.show{opacity:1;transform:translateY(0)}
+
+/* Tooltip */
+[data-tooltip]{position:relative}
+[data-tooltip]:hover::after{content:attr(data-tooltip);position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 8px);background:#0b1220;color:#cbd5e1;padding:6px 8px;border-radius:6px;font-size:12px;white-space:nowrap;box-shadow:0 6px 18px rgba(2,6,23,0.6)}
+
+/* Small helpers */
+.glow{box-shadow:0 6px 24px rgba(6,182,212,0.08)}
+.live-dot{width:10px;height:10px;border-radius:999px;background:var(--accent-teal);box-shadow:0 0 8px rgba(20,184,166,0.18)}
+
+/* Responsive tweaks */
+/* Sidebar intentionally visible on all viewports. Remove any hide rules to keep it shown. */

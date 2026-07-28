@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 300" width="440" height="300">
+  <defs>
+    <linearGradient id="bg-vocational-entrepreneurship" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#546E7A;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#37474F;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="440" height="300" rx="0" fill="url(#bg-vocational-entrepreneurship)"/>
+  <!-- Decorative circles -->
+  <circle cx="127" cy="54" r="80" fill="white" opacity="0.06"/>
+  <circle cx="377" cy="239" r="120" fill="white" opacity="0.04"/>
+  <circle cx="220" cy="280" r="180" fill="white" opacity="0.03"/>
+  <!-- Category Icon -->
+  <rect x="190" y="105" width="20" height="55" fill="white" opacity="0.3"/><rect x="215" y="120" width="20" height="40" fill="white" opacity="0.25"/><rect x="240" y="95" width="20" height="65" fill="white" opacity="0.2"/><line x1="185" y1="160" x2="265" y2="160" stroke="white" stroke-width="2" opacity="0.5"/>
+  <!-- Title -->
+    <text x="220" y="210" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">Vocational</text>
+    <text x="220" y="232" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">Entrepreneurship and</text>
+    <text x="220" y="254" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">Self-Employment</text>
+
+  <!-- Category Label -->
+  <rect x="155" y="284" width="130" height="24" rx="12" fill="white" opacity="0.2"/>
+  <text x="220" y="284" dy="16" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="10" opacity="0.9">TVET</text>
+</svg>

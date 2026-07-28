@@ -1,243 +1,242 @@
 {{--
-    Legacy dashboard view. The new consolidated admin dashboard is located at
-    resources/views/Admin/dashboard.blade.php.
-    This file is retained for reference but no longer used by routes.
+    Legacy admin users dashboard. Admins are now redirected to the main
+    admin dashboard. This view is kept only for backward compatibility or
+    reference and is not linked from the navigation.
 --}}
 @extends('layout.Admin.system')
 
-@section('title', 'Admin Dashboard')
+@section('title', 'Users Dashboard')
 
 @section('content')
-<div class="min-h-screen bg-gray-50">
-  <!-- Header Section -->
-  <div class="bg-white border-b border-gray-200">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p class="text-gray-600 mt-1">Welcome back, <span class="font-semibold">{{ auth()->user()->name }}</span></p>
-        </div>
-        <div class="flex items-center space-x-4">
-          <div class="text-right">
-            <p class="text-sm text-gray-600">Last updated</p>
-            <p class="text-sm font-semibold text-gray-900">{{ now()->format('M d, Y - h:i A') }}</p>
-          </div>
-        </div>
+<div class="container mx-auto p-6">
+  <!-- Header -->
+  <header class="flex items-center justify-between mb-6">
+    <div>
+      <h1 class="text-3xl font-semibold">Users Management</h1>
+      <p class="text-sm text-gray-600">View and manage all user accounts</p>
+    </div>
+    <div>
+      <span class="text-sm text-gray-700">Signed in as <strong>{{ auth()->user()->name }}</strong> (Admin)</span>
+    </div>
+  </header>
+
+  <!-- Stats Section -->
+  <section class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+    <div class="p-4 bg-white shadow rounded">
+      <div class="text-sm text-gray-500 mb-1">Total Users</div>
+      <div class="text-3xl font-bold text-blue-600">{{ $userCount }}</div>
+    </div>
+    <div class="p-4 bg-white shadow rounded">
+      <div class="text-sm text-gray-500 mb-1">Admin Users</div>
+      <div class="text-3xl font-bold text-purple-600">
+        @php
+          $adminCount = $users->where('is_admin', true)->count();
+        @endphp
+        {{ $adminCount }}
       </div>
     </div>
-  </div>
-
-  @if(auth()->user()->is_admin)
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      
-      <!-- Stats Cards Grid -->
-      <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Total Users Card -->
-        <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-medium text-gray-600">Total Users</h3>
-              <div class="p-2 bg-blue-100 rounded-lg">
-                <i class="fas fa-users text-blue-600"></i>
-              </div>
-            </div>
-            <div class="text-3xl font-bold text-gray-900">{{ $userCount ?? 0 }}</div>
-            <p class="text-xs text-gray-500 mt-2">Active user accounts</p>
-          </div>
-        </div>
-
-        <!-- Active Courses Card -->
-        <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-medium text-gray-600">Active Courses</h3>
-              <div class="p-2 bg-purple-100 rounded-lg">
-                <i class="fas fa-book text-purple-600"></i>
-              </div>
-            </div>
-            <div class="text-3xl font-bold text-gray-900">{{ $activePaths ?? 0 }}</div>
-            <p class="text-xs text-gray-500 mt-2">Courses available</p>
-          </div>
-        </div>
-
-        <!-- Achievements Card -->
-        <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-medium text-gray-600">Achievements</h3>
-              <div class="p-2 bg-yellow-100 rounded-lg">
-                <i class="fas fa-trophy text-yellow-600"></i>
-              </div>
-            </div>
-            <div class="text-3xl font-bold text-gray-900">{{ $badges ?? 0 }}</div>
-            <p class="text-xs text-gray-500 mt-2">Total badges issued</p>
-          </div>
-        </div>
-
-        <!-- Learning Hours Card -->
-        <div class="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow border border-gray-100">
-          <div class="p-6">
-            <div class="flex items-center justify-between mb-4">
-              <h3 class="text-sm font-medium text-gray-600">Learning Hours</h3>
-              <div class="p-2 bg-green-100 rounded-lg">
-                <i class="fas fa-clock text-green-600"></i>
-              </div>
-            </div>
-            <div class="text-3xl font-bold text-gray-900">{{ $hours ?? 0 }}</div>
-            <p class="text-xs text-gray-500 mt-2">Total platform usage</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- Main Content Grid -->
-      <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        
-        <!-- Engagement Chart Section -->
-        <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-100">
-          <div class="p-6 border-b border-gray-100">
-            <h2 class="text-lg font-bold text-gray-900">Engagement Overview</h2>
-            <p class="text-sm text-gray-600 mt-1">Platform activity and user engagement trends</p>
-          </div>
-          <div class="p-6">
-            <div class="h-64 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center border border-gray-100">
-              <div class="text-center">
-                <i class="fas fa-chart-line text-4xl text-gray-300 mb-3"></i>
-                <p class="text-gray-500">Chart integration coming soon</p>
-                <p class="text-xs text-gray-400 mt-2">Add Chart.js or ApexCharts for analytics</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Recent Signups Sidebar -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-100">
-          <div class="p-6 border-b border-gray-100">
-            <h3 class="text-lg font-bold text-gray-900 flex items-center">
-              <i class="fas fa-user-check text-purple-600 mr-2"></i>
-              Recent Signups
-            </h3>
-          </div>
-          <div class="divide-y divide-gray-100">
-            @forelse($recentUsers ?? [] as $user)
-              <div class="p-4 hover:bg-gray-50 transition-colors">
-                <div class="flex items-center space-x-3">
-                  @if($user->profile_image)
-                    <img src="{{ asset('uploads/profiles/' . $user->profile_image) }}" 
-                         alt="{{ $user->name }}" 
-                         class="w-8 h-8 rounded-full object-cover">
-                  @else
-                    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center text-white text-xs font-bold">
-                      {{ substr($user->name, 0, 1) }}
-                    </div>
-                  @endif
-                  <div class="flex-1 min-w-0">
-                    <p class="text-sm font-medium text-gray-900 truncate">{{ $user->name }}</p>
-                    <p class="text-xs text-gray-500 truncate">{{ $user->email }}</p>
-                  </div>
-                </div>
-              </div>
-            @empty
-              <div class="p-4 text-center">
-                <p class="text-sm text-gray-500">No recent signups</p>
-              </div>
-            @endforelse
-          </div>
-        </div>
-      </section>
-
-      <!-- Quick Actions Section -->
-      <section class="bg-white rounded-lg shadow-sm border border-gray-100 p-6 mb-8">
-        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center">
-          <i class="fas fa-lightning-bolt text-yellow-500 mr-2"></i>
-          Quick Actions
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <a href="{{ route('admin.admins') }}" 
-             class="group p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all">
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="font-semibold text-gray-900">Admin Accounts</h4>
-              <i class="fas fa-arrow-right text-gray-400 group-hover:text-blue-600 transition-colors"></i>
-            </div>
-            <p class="text-sm text-gray-600">View and manage admin users</p>
-          </a>
-
-          <a href="{{ route('admin.users') }}" 
-             class="group p-4 border border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all">
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="font-semibold text-gray-900">Manage Users</h4>
-              <i class="fas fa-arrow-right text-gray-400 group-hover:text-green-600 transition-colors"></i>
-            </div>
-            <p class="text-sm text-gray-600">Edit or delete user accounts</p>
-          </a>
-
-          <a href="/admin/reports" 
-             class="group p-4 border border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
-            <div class="flex items-center justify-between mb-2">
-              <h4 class="font-semibold text-gray-900">Export Report</h4>
-              <i class="fas fa-arrow-right text-gray-400 group-hover:text-purple-600 transition-colors"></i>
-            </div>
-            <p class="text-sm text-gray-600">Generate platform analytics</p>
-          </a>
-        </div>
-      </section>
-
-      <!-- System Stats Footer -->
-      <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-sm text-white p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-blue-100 text-sm">Admin Users</p>
-              <p class="text-3xl font-bold mt-2">
-                @php
-                  $adminCount = isset($users) ? $users->where('is_admin', true)->count() : 0;
-                @endphp
-                {{ $adminCount }}
-              </p>
-            </div>
-            <i class="fas fa-shield-alt text-4xl text-blue-300"></i>
-          </div>
-        </div>
-
-        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-lg shadow-sm text-white p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-green-100 text-sm">Regular Users</p>
-              <p class="text-3xl font-bold mt-2">
-                @php
-                  $regularCount = isset($users) ? $users->where('is_admin', false)->count() : 0;
-                @endphp
-                {{ $regularCount }}
-              </p>
-            </div>
-            <i class="fas fa-user-circle text-4xl text-green-300"></i>
-          </div>
-        </div>
-
-        <div class="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg shadow-sm text-white p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-purple-100 text-sm">Platform Status</p>
-              <p class="text-3xl font-bold mt-2">Live</p>
-            </div>
-            <i class="fas fa-server text-4xl text-purple-300"></i>
-          </div>
-        </div>
-      </section>
+    <div class="p-4 bg-white shadow rounded">
+      <div class="text-sm text-gray-500 mb-1">Regular Users</div>
+      <div class="text-3xl font-bold text-green-600">{{ $userCount - $adminCount }}</div>
     </div>
-
-  @else
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div class="p-6 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
-        <div class="flex items-center">
-          <i class="fas fa-exclamation-triangle text-yellow-600 text-2xl mr-4"></i>
-          <div>
-            <h3 class="font-semibold text-yellow-800">Access Denied</h3>
-            <p class="text-yellow-700 text-sm mt-1">You do not have admin access to this page. Please contact a system administrator.</p>
-          </div>
-        </div>
+    <div class="p-4 bg-white shadow rounded">
+      <div class="text-sm text-gray-500 mb-1">New This Month</div>
+      <div class="text-3xl font-bold text-orange-600">
+        @php
+          $thisMonth = $users->filter(function($u) {
+            return $u->created_at->isCurrentMonth();
+          })->count();
+        @endphp
+        {{ $thisMonth }}
       </div>
+    </div>
+    <div class="p-4 bg-white shadow rounded">
+      <div class="text-sm text-gray-500 mb-1">Archived</div>
+      <div class="text-3xl font-bold text-red-600">
+        @php
+          $archivedCount = \App\Models\User::onlyTrashed()->count();
+        @endphp
+        {{ $archivedCount }}
+      </div>
+    </div>
+  </section>
+
+  @if(session('success'))
+    <div class="mb-4 p-4 bg-green-100 text-green-700 rounded">
+      {{ session('success') }}
     </div>
   @endif
 
+  @if(session('info'))
+    <div class="mb-4 p-4 bg-blue-100 text-blue-700 rounded">
+      {{ session('info') }}
+    </div>
+  @endif
+
+  <!-- Users Table -->
+  <div class="bg-white shadow rounded overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead class="bg-gray-100 border-b">
+          <tr>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Name</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Email</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Username</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Role</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Status</th>
+            <th class="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase">Joined</th>
+            <th class="px-6 py-3 text-right text-xs font-medium text-gray-700 uppercase">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @forelse($users as $user)
+            <tr class="border-b hover:bg-gray-50 transition {{ $user->trashed() ? 'bg-red-50 opacity-75' : '' }}">
+              <td class="px-6 py-4 text-sm font-medium">
+                @if($user->profile_image)
+                  <div class="flex items-center gap-2">
+                    <img src="{{ asset('uploads/profiles/' . $user->profile_image) }}" 
+                         alt="{{ $user->name }}" 
+                         class="w-8 h-8 rounded-full object-cover {{ $user->trashed() ? 'grayscale' : '' }}">
+                    <span>{{ $user->name }}</span>
+                  </div>
+                @else
+                  <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center {{ $user->trashed() ? 'grayscale' : '' }}">
+                      <svg class="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                      </svg>
+                    </div>
+                    <span>{{ $user->name }}</span>
+                  </div>
+                @endif
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ $user->email }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ $user->username }}</td>
+              <td class="px-6 py-4 text-sm">
+                @if($user->is_admin)
+                  <span class="px-3 py-1 bg-purple-100 text-purple-700 text-xs rounded-full font-semibold">
+                    Admin
+                  </span>
+                @else
+                  <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                    User
+                  </span>
+                @endif
+              </td>
+              <td class="px-6 py-4 text-sm">
+                @if($user->trashed())
+                  <span class="px-3 py-1 bg-red-100 text-red-700 text-xs rounded-full font-semibold flex items-center gap-1 w-fit">
+                    <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                    </svg>
+                    Archived
+                  </span>
+                  <div class="text-xs text-gray-500 mt-1">
+                    {{ $user->deleted_at->format('M d, Y') }}
+                  </div>
+                @else
+                  <span class="px-3 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                    Active
+                  </span>
+                @endif
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ $user->created_at->format('M d, Y') }}</td>
+              <td class="px-6 py-4 text-right text-sm space-x-2">
+                @if(!$user->trashed())
+                  {{-- Active User Actions --}}
+                  <a href="{{ route('admin.users.edit', $user) }}" 
+                     class="text-blue-600 hover:text-blue-800 font-semibold text-xs py-1 px-2 rounded hover:bg-blue-50 inline-block">
+                    Edit
+                  </a>
+                  
+                  @if($user->is_admin && auth()->user()->id !== $user->id)
+                    <form action="{{ route('admin.remove-admin', $user) }}" method="POST" class="inline" onsubmit="return confirm('Remove admin privileges?');">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit" class="text-yellow-600 hover:text-yellow-800 font-semibold text-xs py-1 px-2 rounded hover:bg-yellow-50">
+                        Remove Admin
+                      </button>
+                    </form>
+                  @elseif(!$user->is_admin && auth()->user()->id !== $user->id)
+                    <form action="{{ route('admin.make-admin', $user) }}" method="POST" class="inline" onsubmit="return confirm('Make this user admin?');">
+                      @csrf
+                      <button type="submit" class="text-green-600 hover:text-green-800 font-semibold text-xs py-1 px-2 rounded hover:bg-green-50">
+                        Make Admin
+                      </button>
+                    </form>
+                  @endif
+
+                  @if(auth()->user()->id !== $user->id)
+                    <form action="{{ route('admin.users.archive', $user) }}" method="POST" class="inline" onsubmit="return confirm('Archive this user? They will be hidden from normal views but can be restored later.');">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit" class="text-red-600 hover:text-red-800 font-semibold text-xs py-1 px-2 rounded hover:bg-red-50 flex items-center gap-1">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                        </svg>
+                        Archive
+                      </button>
+                    </form>
+                  @endif
+                @else
+                  {{-- Archived User Actions --}}
+                  <form action="{{ route('admin.users.restore', $user) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="text-green-600 hover:text-green-800 font-semibold text-xs py-1 px-2 rounded hover:bg-green-50 flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                      </svg>
+                      Restore
+                    </button>
+                  </form>
+
+                  <form action="{{ route('admin.users.archive', $user) }}" method="POST" class="inline" onsubmit="return confirm('Are you sure? This will archive the user account.');">
+                 @csrf
+               @method('PATCH')
+              <button type="submit" class="text-red-600 hover:text-red-800 font-semibold text-xs py-1 px-2 rounded hover:bg-red-50">
+                Delete
+                 </button>
+                  </form>
+                @endif
+              </td>
+            </tr>
+          @empty
+            <tr>
+              <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                No users found.
+              </td>
+            </tr>
+          @endforelse
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  @if($users->hasPages())
+    <div class="mt-4">
+      {{ $users->links() }}
+    </div>
+  @endif
+
+  <!-- View Toggle & Quick Links -->
+  <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+    <a href="{{ route('admin.dashboard') }}" class="p-4 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 transition">
+      <h3 class="font-semibold text-blue-800 mb-1">Admin Dashboard</h3>
+      <p class="text-sm text-blue-700">View platform statistics</p>
+    </a>
+    <a href="{{ route('admin.admins') }}" class="p-4 bg-purple-50 border border-purple-200 rounded hover:bg-purple-100 transition">
+      <h3 class="font-semibold text-purple-800 mb-1">Admin Accounts</h3>
+      <p class="text-sm text-purple-700">Manage admin users</p>
+    </a>
+    <a href="{{ route('admin.users.index', ['view' => 'archived']) }}" class="p-4 bg-red-50 border border-red-200 rounded hover:bg-red-100 transition">
+      <h3 class="font-semibold text-red-800 mb-1">View Archived</h3>
+      <p class="text-sm text-red-700">See archived users</p>
+    </a>
+    <a href="{{ route('userpage.dashboard') }}" class="p-4 bg-gray-50 border border-gray-200 rounded hover:bg-gray-100 transition">
+      <h3 class="font-semibold text-gray-800 mb-1">My Dashboard</h3>
+      <p class="text-sm text-gray-700">View your profile</p>
+    </a>
+  </div>
 </div>
 @endsection

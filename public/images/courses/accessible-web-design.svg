@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 300" width="440" height="300">
+  <defs>
+    <linearGradient id="bg-accessible-web-design" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00ACC1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#00838F;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="440" height="300" rx="0" fill="url(#bg-accessible-web-design)"/>
+  <!-- Decorative circles -->
+  <circle cx="85" cy="57" r="80" fill="white" opacity="0.06"/>
+  <circle cx="335" cy="241" r="120" fill="white" opacity="0.04"/>
+  <circle cx="220" cy="280" r="180" fill="white" opacity="0.03"/>
+  <!-- Category Icon -->
+  <circle cx="220" cy="120" r="25" fill="none" stroke="white" stroke-width="3" opacity="0.5"/><circle cx="220" cy="120" r="8" fill="white" opacity="0.4"/><path d="M220 145 L220 175" stroke="white" stroke-width="3" opacity="0.5"/><path d="M220 175 L200 195" stroke="white" stroke-width="3" opacity="0.4"/><path d="M220 155 L245 165" stroke="white" stroke-width="3" opacity="0.4"/>
+  <!-- Title -->
+    <text x="220" y="210" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">Accessible Web Design</text>
+    <text x="220" y="232" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="bold">for Everyone</text>
+
+  <!-- Category Label -->
+  <rect x="155" y="262" width="130" height="24" rx="12" fill="white" opacity="0.2"/>
+  <text x="220" y="262" dy="16" text-anchor="middle" fill="white" font-family="'Segoe UI', Arial, sans-serif" font-size="10" opacity="0.9">TOP Courses with Accessibil...</text>
+</svg>
