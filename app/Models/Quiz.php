@@ -11,6 +11,7 @@ class Quiz extends Model
 
     protected $fillable = [
         'module_id',
+        'subject_id',
         'lms_local_id',
         'title',
         'slug',
@@ -20,6 +21,12 @@ class Quiz extends Model
         'attempt_limit',
         'randomize_questions',
         'show_correct_answers',
+        'is_trivia',
+        'major_id',
+        'difficulty',
+        'question_count',
+        'question_time_limit_seconds',
+        'scheduled_at',
         'media_type',
         'media_url',
         'order',
@@ -31,6 +38,10 @@ class Quiz extends Model
     protected $casts = [
         'randomize_questions' => 'boolean',
         'show_correct_answers' => 'boolean',
+        'is_trivia' => 'boolean',
+        'question_count' => 'integer',
+        'question_time_limit_seconds' => 'integer',
+        'scheduled_at' => 'datetime',
         'is_published' => 'boolean',
         'is_archived' => 'boolean',
         'archived_at' => 'datetime',
@@ -39,6 +50,16 @@ class Quiz extends Model
     public function module()
     {
         return $this->belongsTo(Module::class);
+    }
+
+    public function subject()
+    {
+        return $this->belongsTo(Subject::class);
+    }
+
+    public function major()
+    {
+        return $this->belongsTo(Major::class);
     }
 
     public function questions()

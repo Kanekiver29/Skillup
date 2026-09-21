@@ -34,6 +34,24 @@
             </div>
         @endif
 
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Automatic backup</p>
+                <p class="mt-2 text-lg font-semibold text-emerald-700">Enabled</p>
+                <p class="text-sm text-gray-500">Daily at 02:00, retention {{ (int) env('BACKUP_RETENTION_DAYS', 30) }} days</p>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Last successful backup</p>
+                <p class="mt-2 text-lg font-semibold text-gray-900">{{ $lastSuccessfulBackup?->completed_at?->format('M d, Y H:i') ?? 'None yet' }}</p>
+                <p class="text-sm text-gray-500">{{ $lastSuccessfulBackup?->filename ?? 'Create the first backup now' }}</p>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Recovery audit</p>
+                <p class="mt-2 text-lg font-semibold text-gray-900">{{ $recentRecoveryLogs->count() }} recent events</p>
+                <p class="text-sm text-gray-500">Restore, upload, and delete operations are logged.</p>
+            </div>
+        </div>
+
         @if(session('error'))
             <div class="bg-rose-50 border border-rose-200 rounded-lg p-5 text-rose-900">
                 <div class="flex items-start gap-3">
@@ -62,15 +80,13 @@
                             </label>
                             <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">
                                 <i class="fas fa-file-archive"></i>
-                                Full Backup
+                                Backup Now
                             </button>
                         </form>
-                        <form action="{{ route('admin.backup.store') }}" method="POST" class="inline-flex">
+                        <form action="{{ route('admin.backup.upload') }}" method="POST" enctype="multipart/form-data" class="inline-flex items-center gap-2">
                             @csrf
-                            <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-cyan-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-cyan-700">
-                                <i class="fas fa-database"></i>
-                                DB Backup Only
-                            </button>
+                            <input type="file" name="backup" accept=".zip,.7z,.tar,.gz,.tgz" required class="max-w-[190px] text-xs">
+                            <button type="submit" class="inline-flex items-center gap-2 rounded-lg border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-semibold text-cyan-700 hover:bg-cyan-100"><i class="fas fa-upload"></i> Upload</button>
                         </form>
                     </div>
                 </div>
@@ -87,62 +103,48 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-100">
-                            @forelse($backupFiles as $file)
+                            @forelse($backups as $backup)
                                 <tr class="hover:bg-slate-50 transition">
                                     <td class="px-5 py-4 text-gray-900 font-medium">
-                                        <i class="fas {{ $file['type'] === 'Full Backup' ? 'fa-box' : 'fa-database' }} text-gray-400 mr-2"></i>
-                                        {{ $file['name'] }}
+                                        <i class="fas fa-box text-gray-400 mr-2"></i>
+                                        {{ $backup->filename }}
                                     </td>
                                     <td class="px-5 py-4 text-gray-700">
-                                        <span class="inline-flex items-center gap-1 rounded-full {{ $file['type'] === 'Full Backup' ? 'bg-emerald-100 text-emerald-800 px-3 py-1' : 'bg-cyan-100 text-cyan-800 px-3 py-1' }} text-xs font-semibold">
-                                            {{ $file['type'] }}
+                                        <span class="inline-flex items-center gap-1 rounded-full bg-cyan-100 text-cyan-800 px-3 py-1 text-xs font-semibold">
+                                            {{ ucfirst($backup->type) }} / {{ ucfirst($backup->status) }}
                                         </span>
                                     </td>
                                     <td class="px-5 py-4 text-gray-700">
-                                        @if($file['size'] > 1024*1024*1024)
-                                            {{ number_format($file['size'] / (1024*1024*1024), 2) }} GB
-                                        @elseif($file['size'] > 1024*1024)
-                                            {{ number_format($file['size'] / (1024*1024), 2) }} MB
+                                        @if($backup->size > 1024*1024*1024)
+                                            {{ number_format($backup->size / (1024*1024*1024), 2) }} GB
+                                        @elseif($backup->size > 1024*1024)
+                                            {{ number_format($backup->size / (1024*1024), 2) }} MB
                                         @else
-                                            {{ number_format($file['size'] / 1024, 2) }} KB
+                                            {{ number_format($backup->size / 1024, 2) }} KB
                                         @endif
                                     </td>
-                                    <td class="px-5 py-4 text-gray-700">{{ \Carbon\Carbon::createFromTimestamp($file['modified'])->format('M d, Y H:i') }}</td>
+                                    <td class="px-5 py-4 text-gray-700">{{ optional($backup->completed_at ?? $backup->created_at)->format('M d, Y H:i') }}</td>
                                     <td class="px-5 py-4 text-right space-x-2">
-                                        <a href="{{ route('admin.backup.download', urlencode($file['name'])) }}" class="inline-flex items-center gap-2 rounded-lg border border-cyan-100 bg-cyan-50 px-4 py-2 text-xs font-semibold text-cyan-700 hover:bg-cyan-100">
+                                        <a href="{{ route('admin.backup.download', urlencode($backup->filename)) }}" class="inline-flex items-center gap-2 rounded-lg border border-cyan-100 bg-cyan-50 px-4 py-2 text-xs font-semibold text-cyan-700 hover:bg-cyan-100">
                                             <i class="fas fa-download"></i>
                                             Download
                                         </a>
-                                                        @if($file['type'] === 'Database')
-                                            <form action="{{ route('admin.backup.restore') }}" method="POST" class="inline-block">
+                                        @if($backup->status === 'success')
+                                            <form action="{{ route('admin.backup.restore') }}" method="POST" class="inline-flex items-center gap-2">
                                                 @csrf
-                                                <input type="hidden" name="backup_file" value="{{ $file['name'] }}">
-                                                <button type="submit" onclick="return confirm('Restore database from {{ $file['name'] }}? This will overwrite current data.')" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800">
+                                                <input type="hidden" name="backup_file" value="{{ $backup->filename }}">
+                                                <input type="password" name="password" placeholder="Archive password" class="w-32 rounded border border-slate-200 px-2 py-2 text-xs">
+                                                <label class="inline-flex items-center gap-1 text-xs"><input type="checkbox" name="confirm" value="1" required> Confirm overwrite</label>
+                                                <button type="submit" onclick="return confirm('Restore this backup? Existing database and uploaded files may be replaced.')" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800">
                                                     <i class="fas fa-undo"></i>
                                                     Restore
                                                 </button>
                                             </form>
                                         @endif
-                                        @if($file['type'] === 'Full Backup')
-                                            <form action="{{ route('admin.backup.restore') }}" method="POST" class="inline-block">
-                                                @csrf
-                                                <input type="hidden" name="backup_file" value="{{ $file['name'] }}">
-                                                <div class="flex flex-wrap items-center gap-2 mb-2 text-xs text-slate-600">
-                                                    <label class="inline-flex items-center gap-2">
-                                                        <input type="checkbox" name="confirm" value="yes" class="h-4 w-4" required>
-                                                        <span>I understand this will overwrite files</span>
-                                                    </label>
-                                                    <label class="inline-flex items-center gap-2">
-                                                        <input type="checkbox" name="overwrite_env" value="1" class="h-4 w-4">
-                                                        <span>Overwrite .env</span>
-                                                    </label>
-                                                </div>
-                                                <button type="submit" onclick="return confirm('Perform full restore from {{ $file['name'] }}? This will overwrite application files. Proceed?')" class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-800">
-                                                    <i class="fas fa-undo"></i>
-                                                    Restore
-                                                </button>
-                                            </form>
-                                        @endif
+                                        <form action="{{ route('admin.backup.delete', $backup) }}" method="POST" class="inline-block" onsubmit="return confirm('Delete this backup permanently?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="inline-flex items-center gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-semibold text-rose-700 hover:bg-rose-100"><i class="fas fa-trash"></i> Delete</button>
+                                        </form>
                                     </td>
                                 </tr>
                             @empty
@@ -153,6 +155,7 @@
                         </tbody>
                     </table>
                 </div>
+                <div class="px-5 py-4">{{ $backups->links() }}</div>
             </div>
 
             <aside class="bg-white rounded-xl border border-gray-100 shadow-sm p-6 space-y-5">
@@ -173,10 +176,10 @@
                             <li><strong>backup dir writable:</strong> <span class="font-medium">{{ $diagnostics['backup_dir_writable'] ? 'yes' : 'no' }}</span></li>
                         </ul>
                     </div>
-                    @if($diagnostics['log_tail'])
+                    @if($diagnostics['log_summary'])
                         <div class="rounded-lg border border-rose-100 bg-rose-50 p-3">
-                            <p class="font-semibold text-rose-800">Recent log (tail)</p>
-                            <pre class="mt-2 text-xs text-rose-900 whitespace-pre-wrap">{{ $diagnostics['log_tail'] }}</pre>
+                            <p class="font-semibold text-rose-800">Latest error summary</p>
+                            <p class="mt-2 text-xs text-rose-900 break-words">{{ $diagnostics['log_summary'] }}</p>
                         </div>
                     @endif
                 @endif

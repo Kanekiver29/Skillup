@@ -1,0 +1,1 @@
+<?php /**PATH C:\xampp\htdocs\skillupv2\resources\views\teacher\SUBJECT\modules\quiz\index.blade.php ENDPATH**/ ?>

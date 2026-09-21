@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Courses | SIAS Admin')
+@section('page_title', 'Courses')
+@section('subtitle', 'Creates and manages programs and courses offered by the institution.')
+@section('content')
+@php($title = 'Courses')
+@php($purpose = 'Creates and manages programs and courses offered by the institution.')
+@php($items = ['Course List', 'Add Course', 'Edit Course', 'Course Status'])
+@include('sias.admin.modules._workspace')
+@endsection

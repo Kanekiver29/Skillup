@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Admin & Staff Management | SIAS Admin')
+@section('page_title', 'Admin & Staff Management')
+@section('subtitle', 'Creates administrative and staff accounts and controls their roles and permissions.')
+@section('content')
+@php($title = 'Admin & Staff Management')
+@php($purpose = 'Creates administrative/staff accounts and controls their roles and permissions.')
+@php($items = ['Add Admin', 'Add Staff', 'Roles', 'Permissions'])
+@include('sias.admin.modules._workspace')
+@endsection

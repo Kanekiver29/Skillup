@@ -12,12 +12,78 @@ use Illuminate\Support\Str;
 
 class ModuleController extends Controller
 {
+    private function userOwnsCourse($course): bool
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        // Admins, staff, and teachers are authorized to manage modules
+        if ($user->is_admin || (method_exists($user, 'isAdmin') && $user->isAdmin()) || (method_exists($user, 'isTeacher') && $user->isTeacher()) || (method_exists($user, 'isStaff') && $user->isStaff()) || (method_exists($user, 'hasStaffAccess') && $user->hasStaffAccess())) {
+            return true;
+        }
+
+        if (! $course) {
+            return true;
+        }
+
+        $userId = $user->id ?? null;
+        $teacherName = trim((string) ($user->name ?? ''));
+        $courseInstructorId = $course->instructor_id ?? null;
+        $courseInstructorName = trim((string) ($course->instructor_name ?? ''));
+
+        if ($userId && $courseInstructorId !== null && (int) $courseInstructorId === (int) $userId) {
+            return true;
+        }
+
+        if ($teacherName !== '' && $courseInstructorName !== '' && strtolower($courseInstructorName) === strtolower($teacherName)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function teacherCourseQuery()
+    {
+        $user = auth()->user();
+        $userId = $user?->id;
+        $teacherName = $user?->name ?? '';
+
+        $query = Course::query();
+
+        // Admins, staff, and teachers see courses
+        if (!$user->is_admin && !(method_exists($user, 'isTeacher') && $user->isTeacher()) && !(method_exists($user, 'isStaff') && $user->isStaff())) {
+            if (Schema::hasColumn('courses', 'instructor_id')) {
+                $query->where(function ($q) use ($userId, $teacherName) {
+                    $q->where('instructor_id', $userId)
+                      ->orWhere(function ($q2) use ($teacherName) {
+                          $q2->whereNull('instructor_id')
+                              ->where('instructor_name', $teacherName);
+                      });
+                });
+            } else {
+                $query->where('instructor_name', $teacherName);
+            }
+        }
+
+        return $query->orderBy('title');
+    }
+
     public function index(Request $request)
     {
         $userId = auth()->id();
         $courseId = $request->query('course_id');
+        $user = auth()->user();
 
-        if (Schema::hasColumn('courses', 'instructor_id')) {
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        // Admins, staff, and teachers see modules
+        if ($user->is_admin || (method_exists($user, 'isTeacher') && $user->isTeacher()) || (method_exists($user, 'isStaff') && $user->isStaff())) {
+            $base = Module::with('course');
+        } elseif (Schema::hasColumn('courses', 'instructor_id')) {
             $base = Module::whereHas('course', function ($q) use ($userId) {
                 $q->where('instructor_id', $userId)
                   ->orWhere(function($q2) use ($userId) {
@@ -40,17 +106,12 @@ class ModuleController extends Controller
 
     public function create()
     {
-        $userId = auth()->id();
-        if (Schema::hasColumn('courses', 'instructor_id')) {
-            $courses = Course::where(function($q) use ($userId) {
-                $q->where('instructor_id', $userId)
-                  ->orWhere(function($q2) use ($userId) {
-                      $q2->whereNull('instructor_id')->where('instructor_name', auth()->user()->name ?? '');
-                  });
-            })->get();
-        } else {
-            $courses = Course::where('instructor_name', auth()->user()->name ?? '')->get();
+        $courses = $this->teacherCourseQuery()->get();
+
+        if ($courses->isEmpty()) {
+            $courses = Course::query()->orderBy('title')->limit(50)->get();
         }
+
         return view('teacher.modules.create', compact('courses'));
     }
 
@@ -68,12 +129,9 @@ class ModuleController extends Controller
             'resource_ppt' => 'nullable|file|mimes:ppt,pptx|max:20480',
         ]);
 
-        // ensure course belongs to this teacher
         $course = Course::findOrFail($data['course_id']);
-        $userId = auth()->id();
-        $teacherName = auth()->user()->name ?? '';
-        if (!(($course->instructor_id ?? null) === $userId || (($course->instructor_id === null) && ($course->instructor_name ?? '') === $teacherName))) {
-            abort(403);
+        if (!$this->userOwnsCourse($course)) {
+            abort(403, 'Forbidden');
         }
 
         $slugBase = Str::slug($data['title']);
@@ -89,7 +147,7 @@ class ModuleController extends Controller
             'slug' => $slug,
             'description' => $data['description'] ?? null,
             'order' => $data['order'] ?? 0,
-            'is_published' => $data['is_published'] ?? false,
+            'is_published' => $data['is_published'] ?? true,
         ]);
 
         if ($request->hasFile('resource_word')) {
@@ -119,19 +177,14 @@ class ModuleController extends Controller
 
     public function edit(Module $module)
     {
-        $userId = auth()->id();
-        $teacherName = auth()->user()->name ?? '';
-        if (!(($module->course->instructor_id ?? null) === $userId || (($module->course->instructor_id === null) && ($module->course->instructor_name ?? '') === $teacherName))) abort(403);
+        if (!$this->userOwnsCourse($module->course)) {
+            abort(403, 'Forbidden');
+        }
 
-        if (Schema::hasColumn('courses', 'instructor_id')) {
-            $courses = Course::where(function($q) use ($userId) {
-                $q->where('instructor_id', $userId)
-                  ->orWhere(function($q2) use ($userId) {
-                      $q2->whereNull('instructor_id')->where('instructor_name', auth()->user()->name ?? '');
-                  });
-            })->get();
-        } else {
-            $courses = Course::where('instructor_name', $teacherName)->get();
+        $courses = $this->teacherCourseQuery()->get();
+
+        if ($courses->isEmpty()) {
+            $courses = Course::query()->orderBy('title')->limit(50)->get();
         }
 
         return view('teacher.modules.create', compact('module', 'courses'));
@@ -139,9 +192,10 @@ class ModuleController extends Controller
 
     public function update(Request $request, Module $module)
     {
-        $userId = auth()->id();
-        $teacherName = auth()->user()->name ?? '';
-        if (!(($module->course->instructor_id ?? null) === $userId || (($module->course->instructor_id === null) && ($module->course->instructor_name ?? '') === $teacherName))) abort(403);
+        if (!$this->userOwnsCourse($module->course)) {
+            abort(403, 'Forbidden');
+        }
+
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'course_id' => 'required|exists:courses,id',
@@ -155,7 +209,9 @@ class ModuleController extends Controller
         ]);
 
         $course = Course::findOrFail($data['course_id']);
-        if (!(($course->instructor_id ?? null) === $userId || (($course->instructor_id === null) && ($course->instructor_name ?? '') === $teacherName))) abort(403);
+        if (!$this->userOwnsCourse($course)) {
+            abort(403, 'Forbidden');
+        }
 
         $module->update([
             'title' => $data['title'],
@@ -208,8 +264,9 @@ class ModuleController extends Controller
 
     public function destroy(Module $module)
     {
-        $userId = auth()->id();
-        if (!(($module->course->instructor_id ?? null) === $userId || (($module->course->instructor_id === null) && ($module->course->instructor_name ?? '') === (auth()->user()->name ?? '')))) abort(403);
+        if (!$this->userOwnsCourse($module->course)) {
+            abort(403, 'Forbidden');
+        }
 
         $module->delete();
         return redirect()->route('teacher.modules.index')->with('success', 'Module archived.');
@@ -217,8 +274,9 @@ class ModuleController extends Controller
 
     public function publish(Module $module)
     {
-        $teacherName = auth()->user()->name ?? '';
-        if (($module->course->instructor_name ?? '') !== $teacherName) abort(403);
+        if (!$this->userOwnsCourse($module->course)) {
+            abort(403, 'Forbidden');
+        }
 
         $module->update(['is_published' => true]);
         return redirect()->back()->with('success', 'Module published.');
@@ -226,8 +284,9 @@ class ModuleController extends Controller
 
     public function unpublish(Module $module)
     {
-        $teacherName = auth()->user()->name ?? '';
-        if (($module->course->instructor_name ?? '') !== $teacherName) abort(403);
+        if (!$this->userOwnsCourse($module->course)) {
+            abort(403, 'Forbidden');
+        }
 
         $module->update(['is_published' => false]);
         return redirect()->back()->with('success', 'Module unpublished.');

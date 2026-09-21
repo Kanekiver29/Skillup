@@ -20,28 +20,15 @@ class CourseController extends Controller
         $showArchived = request()->boolean('archived');
 
         // Build base query depending on instructor ownership column and archived flag
-        if (Schema::hasColumn('courses', 'instructor_id')) {
-            $ownershipConstraint = function ($qb) use ($userId) {
-                $qb->where('instructor_id', $userId)
-                   ->orWhere(function($q2) use ($userId) {
-                       $q2->whereNull('instructor_id')->where('instructor_name', auth()->user()->name ?? '');
-                   });
-            };
-        } else {
-            $ownershipConstraint = function ($qb) {
-                $qb->where('instructor_name', auth()->user()->name ?? '');
-            };
-        }
+        // Fetch all courses for teacher workspace
+        $base = Course::query();
 
         if ($showArchived) {
             if (Schema::hasColumn('courses', 'deleted_at')) {
-                $base = Course::onlyTrashed()->where($ownershipConstraint);
+                $base = Course::onlyTrashed();
             } else {
-                // migrations not yet run; return empty set for archived view to avoid SQL errors
                 $base = Course::whereRaw('0 = 1');
             }
-        } else {
-            $base = Course::where($ownershipConstraint);
         }
 
         if ($q) {
@@ -59,6 +46,13 @@ class CourseController extends Controller
     public function create()
     {
         return view('teacher.courses.create');
+    }
+
+    public function show(Course $course)
+    {
+        $course->load(['modules.lessons', 'subjects']);
+
+        return view('teacher.courses.show', compact('course'));
     }
 
     public function store(Request $request)
@@ -102,19 +96,11 @@ class CourseController extends Controller
 
     public function edit(Course $course)
     {
-        // ensure this teacher owns the course (basic check by instructor_name)
-        if (!(($course->instructor_id ?? null) === auth()->id() || (($course->instructor_id === null) && ($course->instructor_name ?? '') === (auth()->user()->name ?? '')))) {
-            abort(403);
-        }
         return view('teacher.courses.create', compact('course'));
     }
 
     public function update(Request $request, Course $course)
     {
-        if (!(($course->instructor_id ?? null) === auth()->id() || (($course->instructor_id === null) && ($course->instructor_name ?? '') === (auth()->user()->name ?? '')))) {
-            abort(403);
-        }
-
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'short_description' => 'nullable|string|max:500',
@@ -148,32 +134,19 @@ class CourseController extends Controller
 
     public function destroy(Course $course)
     {
-        if (!(($course->instructor_id ?? null) === auth()->id() || (($course->instructor_id === null) && ($course->instructor_name ?? '') === (auth()->user()->name ?? '')))) {
-            abort(403);
-        }
-
-        // Soft-delete (archive)
         $course->delete();
-
         return redirect()->route('teacher.courses.index')->with('success', 'Course archived.');
     }
 
     public function restore($id)
     {
         $course = Course::withTrashed()->findOrFail($id);
-        if (!(($course->instructor_id ?? null) === auth()->id() || (($course->instructor_id === null) && ($course->instructor_name ?? '') === (auth()->user()->name ?? '')))) {
-            abort(403);
-        }
         $course->restore();
         return redirect()->route('teacher.courses.index', ['archived' => 1])->with('success', 'Course restored.');
     }
 
     public function schedule(Course $course)
     {
-        if (($course->instructor_name ?? '') !== (auth()->user()->name ?? '')) {
-            abort(403);
-        }
-
         return view('teacher.courses.schedule', compact('course'));
     }
 }

@@ -1,0 +1,138 @@
+
+
+<?php $__env->startSection('title', 'Archive Center - SkillUp Admin'); ?>
+
+<?php $__env->startSection('content'); ?>
+<div class="min-h-screen bg-gray-50">
+	<div class="bg-white border-b border-gray-200 mb-8">
+		<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+			<div>
+				<h1 class="text-3xl font-bold text-gray-900">Archive Center</h1>
+				<p class="text-gray-600 mt-1">Review archived records and restore items when needed.</p>
+			</div>
+			<div class="text-sm text-gray-600">
+				<span class="font-semibold text-gray-800">Updated:</span>
+				<?php echo e(now()->format('M d, Y h:i A')); ?>
+
+			</div>
+		</div>
+	</div>
+
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+		<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('success')): ?>
+			<div class="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-green-700">
+				<?php echo e(session('success')); ?>
+
+			</div>
+		<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+		<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(session('error')): ?>
+			<div class="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-red-700">
+				<?php echo e(session('error')); ?>
+
+			</div>
+		<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+			<div class="bg-white rounded-lg border border-gray-200 p-5">
+				<p class="text-sm text-gray-500">Archived Users</p>
+				<p class="text-3xl font-bold text-red-600 mt-2"><?php echo e($archivedCount); ?></p>
+			</div>
+			<div class="bg-white rounded-lg border border-gray-200 p-5">
+				<p class="text-sm text-gray-500">Restorable Routes</p>
+				<p class="text-3xl font-bold text-emerald-600 mt-2"><?php echo e($hasRestoreRoute ? 'Enabled' : 'Missing'); ?></p>
+			</div>
+			<div class="bg-white rounded-lg border border-gray-200 p-5">
+				<p class="text-sm text-gray-500">Archive Mode</p>
+				<p class="text-3xl font-bold text-blue-600 mt-2"><?php echo e($archiveReady ? 'Ready' : 'Setup Needed'); ?></p>
+			</div>
+		</div>
+
+		<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$archiveReady): ?>
+			<div class="mb-8 rounded-lg border border-amber-200 bg-amber-50 px-5 py-4 text-amber-800">
+				<h2 class="font-semibold mb-1">Archive storage is not fully configured</h2>
+				<p class="text-sm">To enable real archived-user data, add soft delete support to the users table and User model.</p>
+			</div>
+		<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+		<section class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+			<div class="px-5 py-4 border-b border-gray-200 flex items-center justify-between">
+				<h2 class="text-lg font-semibold text-gray-900">Archived Users</h2>
+				<a href="<?php echo e(route('admin.users.index')); ?>" class="text-sm font-medium text-blue-600 hover:text-blue-800">Back to Users</a>
+			</div>
+
+			<div class="overflow-x-auto">
+				<table class="min-w-full divide-y divide-gray-200">
+					<thead class="bg-gray-50">
+						<tr>
+							<th class="px-5 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">User</th>
+							<th class="px-5 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">Email</th>
+							<th class="px-5 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase">Archived At</th>
+							<th class="px-5 py-3 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase">Actions</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-gray-100 bg-white">
+						<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $archivedUsers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+							<tr class="hover:bg-gray-50">
+								<td class="px-5 py-4">
+									<div class="font-medium text-gray-900"><?php echo e($user->name); ?></div>
+									<div class="text-xs text-gray-500">{{ $user->username ?? 'N/A' }}</div>
+								</td>
+								<td class="px-5 py-4 text-sm text-gray-700"><?php echo e($user->email); ?></td>
+								<td class="px-5 py-4 text-sm text-gray-700">
+									<?php echo e(optional($user->deleted_at)->format('M d, Y h:i A') ?? 'Unknown'); ?>
+
+								</td>
+								<td class="px-5 py-4">
+									<div class="flex flex-wrap justify-end gap-2">
+										<a href="<?php echo e(route('admin.users.archived-detail', $user->id)); ?>" class="rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700">
+											View History
+										</a>
+										<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($hasRestoreRoute): ?>
+											<form action="<?php echo e(route('admin.users.restore', $user->id)); ?>" method="POST">
+												<?php echo csrf_field(); ?>
+												<button type="submit" class="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700">
+													Restore
+												</button>
+											</form>
+										<?php else: ?>
+											<button type="button" class="rounded-md bg-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 cursor-not-allowed" disabled>
+												Restore Unavailable
+											</button>
+										<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+
+										<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($hasForceDeleteRoute): ?>
+											<form action="<?php echo e(route('admin.users.force-delete', $user->id)); ?>" method="POST" onsubmit="return confirm('Permanently delete this user? This action cannot be undone.');">
+												<?php echo csrf_field(); ?>
+												<?php echo method_field('DELETE'); ?>
+												<button type="submit" class="rounded-md bg-red-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-red-700">
+													Delete Permanently
+												</button>
+											</form>
+										<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+									</div>
+								</td>
+							</tr>
+						<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+							<tr>
+								<td colspan="4" class="px-5 py-12 text-center text-sm text-gray-500">
+									No archived users found.
+								</td>
+							</tr>
+						<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+					</tbody>
+				</table>
+			</div>
+
+			<?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(method_exists($archivedUsers, 'hasPages') && $archivedUsers->hasPages()): ?>
+				<div class="px-5 py-4 border-t border-gray-200">
+					<?php echo e($archivedUsers->links()); ?>
+
+				</div>
+			<?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+		</section>
+	</div>
+</div>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('layout.Admin.system', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\skillupv2\resources\views\Admin\archive.blade.php ENDPATH**/ ?>

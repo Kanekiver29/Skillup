@@ -1,930 +1,602 @@
-@extends('auth.layouts.master')
-
-@section('title', 'Sign In — SkillUp')
-
 @push('head')
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
 <style>
-/* ══════════════════════════════════════════════════════════════════
-   TOKENS — inherits the SkillUp HUD system (navy / cyan / gold / red)
-══════════════════════════════════════════════════════════════════ */
-:root {
-    --navy:        #003a8f;
-    --navy-light:  #1a5fd4;
-    --navy-dark:   #0a2540;
-    --navy-deep:   #061828;
-    --void:        #020509;
-    --cyan:        #00e6ff;
-    --cyan-dim:    rgba(0,230,255,.16);
-    --gold:        #fdb913;
-    --red:         #ff2f52;
-    --red-dark:    #c1121f;
-    --green:       #23e0a0;
-    --ink:         #e7edf7;
-    --muted:       #93a4bd;
-    --faint:       #5b6c85;
-    --glass:       rgba(9,17,34,.66);
-    --glass-solid: rgba(8,16,32,.92);
-    --hairline:    rgba(0,230,255,.16);
-    --radius-lg:   22px;
-    --radius-md:   13px;
-    --ease:        cubic-bezier(.22,1,.36,1);
-    --ease-elastic:cubic-bezier(.34,1.56,.64,1);
-}
+/* Fonts, color tokens, and base reset are declared once in auth.layouts.master */
+body{ line-height:1.6; }
 
-*, *::before, *::after { box-sizing: border-box; }
-
-.auth-scope {
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-    color: var(--ink);
-}
-.auth-scope .font-display { font-family: 'Sora','Inter',system-ui,sans-serif; }
-.auth-scope .font-mono    { font-family: 'JetBrains Mono', ui-monospace, monospace; }
-.auth-scope a { text-decoration: none; color: inherit; }
-.auth-scope button { cursor: pointer; font-family: inherit; }
-
-/* ══════════════════════════════════════════════════════════════════
-   PAGE SHELL + AMBIENT BACKGROUND
-══════════════════════════════════════════════════════════════════ */
-.auth-shell {
-    position: relative;
-    min-height: calc(100vh - 6.75rem);
-    margin: -6.75rem 0 0;
-    padding-top: 6.75rem;
-    overflow: hidden;
+/* ---------- Ambient background ---------- */
+.auth-wrapper{
+    position:relative;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:100vh;
+    padding:2.5rem 1.25rem;
+    overflow:hidden;
     background:
-        radial-gradient(ellipse 70% 55% at 18% 8%,  rgba(0,58,143,.55), transparent 55%),
-        radial-gradient(ellipse 60% 50% at 88% 18%, rgba(0,230,255,.10), transparent 50%),
-        radial-gradient(ellipse 55% 45% at 50% 100%,rgba(253,185,19,.08), transparent 45%),
-        linear-gradient(160deg, #050c1c 0%, #030814 55%, #010306 100%);
-}
-@media (min-width: 1024px) {
-    .auth-shell { margin-top: -7.25rem; padding-top: 7.25rem; }
+        radial-gradient(circle at 12% 15%, rgba(11,42,107,.08), transparent 42%),
+        radial-gradient(circle at 88% 85%, rgba(240,174,0,.11), transparent 42%),
+        var(--mist);
 }
 
-.auth-hud-grid {
-    position: absolute; inset: 0;
-    background-image:
-        linear-gradient(rgba(0,230,255,.10) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0,230,255,.10) 1px, transparent 1px);
-    background-size: 42px 42px;
-    -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 10%, transparent 75%);
-            mask-image: radial-gradient(ellipse 80% 70% at 50% 30%, #000 10%, transparent 75%);
-    animation: gridDrift 34s linear infinite;
-    pointer-events: none;
-}
-@keyframes gridDrift {
-    from { background-position: 0 0, 0 0; }
-    to   { background-position: 84px 0, 0 84px; }
+/* subtle drifting mesh blobs */
+.blob{position:absolute;border-radius:50%;filter:blur(70px);opacity:.28;pointer-events:none;animation:float 16s ease-in-out infinite}
+.blob-1{width:360px;height:360px;background:var(--navy);top:-120px;left:-130px}
+.blob-2{width:300px;height:300px;background:var(--gold);bottom:-120px;right:-100px;animation-delay:3.5s}
+.blob-3{width:220px;height:220px;background:var(--flag-red);top:40%;right:6%;animation-delay:7s;opacity:.12}
+@keyframes float{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(20px,-24px) scale(1.07)}}
+
+/* faint grain for a premium print-like texture */
+.auth-wrapper::after{
+    content:'';position:absolute;inset:0;pointer-events:none;opacity:.035;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
-.auth-blob { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; }
-.auth-blob-1 { width: 480px; height: 480px; background: radial-gradient(circle, rgba(0,230,255,.28), transparent 70%); top: -140px; left: -120px; animation: blobDrift1 16s ease-in-out infinite; }
-.auth-blob-2 { width: 440px; height: 440px; background: radial-gradient(circle, rgba(253,185,19,.20), transparent 70%); bottom: -160px; right: -100px; animation: blobDrift2 20s ease-in-out infinite; }
-.auth-blob-3 { width: 320px; height: 320px; background: radial-gradient(circle, rgba(255,47,82,.16), transparent 70%); bottom: 10%; left: 42%; animation: blobDrift3 24s ease-in-out infinite; }
-@keyframes blobDrift1 { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(40px,-24px) scale(1.08);} 66%{transform:translate(-22px,26px) scale(.94);} }
-@keyframes blobDrift2 { 0%,100%{transform:translate(0,0) scale(1);} 40%{transform:translate(-36px,22px) scale(1.1);} 70%{transform:translate(24px,-30px) scale(.92);} }
-@keyframes blobDrift3 { 0%,100%{transform:translate(0,0) scale(1);} 50%{transform:translate(20px,-20px) scale(1.06);} }
+.auth-container{width:100%;max-width:432px;position:relative;z-index:1}
 
-.auth-scanline { position: absolute; left: 0; right: 0; top: 0; height: 1px; overflow: hidden; pointer-events: none; z-index: 3; }
-.auth-scanline::before {
-    content: ''; position: absolute; top: 0; bottom: 0; width: 34%;
-    background: linear-gradient(90deg, transparent, rgba(0,230,255,.9), rgba(253,185,19,.55), transparent);
-    animation: authScanSweep 6.5s linear infinite;
+.auth-card{
+    background:#fff;
+    border-radius:22px;
+    box-shadow:0 1px 2px rgba(11,27,69,.06),0 30px 60px rgba(11,27,69,.16);
+    overflow:hidden;
+    opacity:1;
+    transform:translateY(0) scale(1);
+    transition:opacity .7s cubic-bezier(.16,1,.3,1), transform .7s cubic-bezier(.16,1,.3,1);
 }
-@keyframes authScanSweep { 0% { left: -34%; } 100% { left: 100%; } }
+.auth-card.animate-in{opacity:1;transform:translateY(0) scale(1)}
 
-/* Drifting ambient particles across the whole shell */
-.auth-particle-field { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
-.auth-drift-particle {
-    position: absolute; border-radius: 50%;
-    background: radial-gradient(circle, rgba(0,230,255,.9), rgba(0,230,255,0) 70%);
-    opacity: 0;
-    animation: authParticleRise var(--pdur,9s) linear infinite var(--pdel,0s);
+.stagger{opacity:1;transform:translateY(0);transition:opacity .5s cubic-bezier(.16,1,.3,1), transform .5s cubic-bezier(.16,1,.3,1)}
+.auth-card.loaded .stagger{opacity:1;transform:translateY(0)}
+.auth-card.loaded .stagger:nth-of-type(1){transition-delay:.10s}
+.auth-card.loaded .stagger:nth-of-type(2){transition-delay:.17s}
+.auth-card.loaded .stagger:nth-of-type(3){transition-delay:.24s}
+.auth-card.loaded .stagger:nth-of-type(4){transition-delay:.31s}
+.auth-card.loaded .stagger:nth-of-type(5){transition-delay:.38s}
+.auth-card.loaded .stagger:nth-of-type(6){transition-delay:.45s}
+
+/* ---------- Crest band (signature element) ---------- */
+.crest-band{
+    background:linear-gradient(160deg,var(--navy) 0%,var(--navy-deep) 100%);
+    padding:1.85rem 2rem 1.5rem;
+    text-align:center;
+    position:relative;
 }
-@keyframes authParticleRise {
-    0%   { opacity: 0; transform: translateY(0) scale(.6); }
-    10%  { opacity: .8; }
-    90%  { opacity: .3; }
-    100% { opacity: 0; transform: translateY(-160px) scale(1.1); }
+.crest-band::before{
+    content:'';position:absolute;inset:0;
+    background:radial-gradient(circle at 50% -20%, rgba(255,255,255,.14), transparent 60%);
+    pointer-events:none;
 }
-
-/* ══════════════════════════════════════════════════════════════════
-   LAYOUT — split terminal: brand console (left) + login card (right)
-══════════════════════════════════════════════════════════════════ */
-.auth-layout {
-    position: relative; z-index: 2;
-    max-width: 1180px;
-    margin: 0 auto;
-    padding: 2.5rem 1.25rem 4rem;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
-    align-items: center;
-    min-height: calc(100vh - 6.75rem);
+.logo-row{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:0;position:relative}
+.crest-logo{
+    width:50px;height:50px;border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,255,255,.16);
+    overflow:hidden;
+    opacity:0;
+    animation:popIn .6s cubic-bezier(.16,1,.3,1) forwards;
+    transition:transform .3s ease, box-shadow .3s ease;
 }
-@media (min-width: 1024px) {
-    .auth-layout { grid-template-columns: 1.05fr .95fr; gap: 3rem; padding: 3rem 2rem 4rem; }
+.crest-logo:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.25)}
+.crest-logo img{width:100%;height:100%;object-fit:contain;padding:6px;display:block}
+.crest-logo.brand{
+    width:60px;height:60px;border-radius:14px;
+    background:#fff;border:none;
+    box-shadow:0 6px 18px rgba(0,0,0,.24);
+    position:relative;
 }
-
-/* ── Left console panel ─────────────────────────────────────────── */
-.auth-console {
-    display: none;
-    position: relative;
-    padding: 2.75rem 2.5rem;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--hairline);
-    background: linear-gradient(160deg, rgba(0,58,143,.16), rgba(2,5,9,.4));
-    overflow: hidden;
-    animation: consoleIn .7s var(--ease) both;
+.crest-logo.brand::after{
+    content:'';position:absolute;inset:-3px;border-radius:16px;
+    background:conic-gradient(from 0deg, var(--gold), transparent 30%, transparent 70%, var(--gold));
+    opacity:0;transition:opacity .3s ease;z-index:-1;animation:spinRing 5s linear infinite paused;
 }
-@media (min-width: 1024px) { .auth-console { display: block; } }
-@keyframes consoleIn { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+.crest-logo.brand:hover::after{opacity:.6;animation-play-state:running}
+@keyframes spinRing{to{transform:rotate(360deg)}}
+.crest-logo.brand img{padding:0;object-fit:cover}
+.logo-row .crest-logo:nth-child(1){animation-delay:.08s}
+.logo-row .crest-logo:nth-child(2){animation-delay:.18s}
+.logo-row .crest-logo:nth-child(3){animation-delay:.28s}
+@keyframes popIn{0%{transform:scale(.4) rotate(-8deg);opacity:0}55%{transform:scale(1.08) rotate(2deg);opacity:1}80%{transform:scale(.97) rotate(-1deg)}100%{transform:scale(1) rotate(0);opacity:1}}
 
-.auth-console::before {
-    content: '';
-    position: absolute; inset: 0;
-    background-image: linear-gradient(rgba(0,230,255,.06) 1px, transparent 1px), linear-gradient(90deg, rgba(0,230,255,.06) 1px, transparent 1px);
-    background-size: 28px 28px;
-    -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 90%);
-            mask-image: linear-gradient(180deg, #000 0%, transparent 90%);
-    pointer-events: none;
+/* three-color rule referencing the affiliated flag, kept as a restrained hairline */
+.flag-rule{display:flex;height:3px;width:100%;position:absolute;left:0;bottom:0;transform:scaleX(0);transform-origin:left;animation:growRule .8s cubic-bezier(.16,1,.3,1) .5s forwards}
+@keyframes growRule{to{transform:scaleX(1)}}
+.flag-rule span{flex:1}
+.flag-rule .b{background:var(--navy)}
+.flag-rule .w{background:#fff}
+.flag-rule .r{background:var(--flag-red)}
+
+.auth-header{text-align:center;padding:2rem 2rem 0.4rem}
+.auth-header h1{margin:0;font-family:'Fraunces',serif;font-size:1.7rem;font-weight:600;color:var(--ink);letter-spacing:-.01em}
+.auth-header p{margin:.45rem 0 0;font-size:.94rem;color:var(--slate)}
+
+.auth-body{padding:1.45rem 2rem 2rem}
+.auth-field{margin-bottom:1.3rem}
+
+.role-label{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#9AA3B8;margin-bottom:.7rem}
+
+/* ---------- Sliding role selector ---------- */
+.role-group{
+    position:relative;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+    background:var(--mist);
+    border-radius:12px;
+    padding:4px;
 }
-
-.console-eyebrow {
-    display: inline-flex; align-items: center; gap: .5rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px; letter-spacing: .26em; text-transform: uppercase;
-    color: var(--cyan); margin-bottom: 1.5rem;
+.role-indicator{
+    position:absolute;top:4px;left:4px;height:calc(100% - 8px);
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);
+    border-radius:9px;
+    box-shadow:0 4px 12px rgba(11,42,107,.30);
+    transition:transform .38s cubic-bezier(.16,1,.3,1), width .38s cubic-bezier(.16,1,.3,1);
+    z-index:0;
+    pointer-events:none;
 }
-.console-eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--cyan); box-shadow: 0 0 8px rgba(0,230,255,.9); animation: dotPulse 2.2s ease-in-out infinite; }
-@keyframes dotPulse { 0%,100%{opacity:.4; transform:scale(1);} 50%{opacity:1; transform:scale(1.6);} }
-
-.console-headline {
-    font-family: 'Sora', sans-serif; font-weight: 800;
-    font-size: clamp(1.9rem, 2.6vw, 2.5rem);
-    line-height: 1.14; letter-spacing: -.01em; color: #fff;
-    margin-bottom: 1rem;
+.role-btn{
+    position:relative;z-index:1;
+    padding:.65rem .25rem;border:0;background:transparent;border-radius:9px;
+    cursor:pointer;font-size:11.5px;font-weight:600;color:var(--slate);
+    transition:color .25s ease,transform .15s ease;
+    text-align:center;
 }
-.console-headline .accent {
-    background: linear-gradient(90deg, var(--cyan), #7dd8ff 45%, var(--gold));
-    -webkit-background-clip: text; background-clip: text; color: transparent;
+.role-btn:hover:not(.active){color:var(--navy);transform:translateY(-1px)}
+.role-btn:focus-visible{outline:2px solid var(--navy);outline-offset:2px;border-radius:9px}
+.role-btn:active{transform:translateY(0) scale(.96)}
+.role-btn.active{color:#fff}
+.role-btn.active span::after{content:'';display:block;width:14px;height:2px;background:var(--gold);margin:4px auto 0;border-radius:2px;animation:widenDash .3s ease}
+@keyframes widenDash{from{width:0}to{width:14px}}
+.role-btn i{display:block;font-size:17px;margin-bottom:4px;transition:transform .3s cubic-bezier(.34,1.56,.64,1)}
+.role-btn.active i{transform:scale(1.12) translateY(-1px)}
+.role-btn span{display:block}
+
+.auth-input-label{display:block;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#9AA3B8;margin-bottom:.55rem;transition:color .2s ease}
+.auth-field:focus-within .auth-input-label{color:var(--navy)}
+
+.auth-input-wrap{position:relative}
+.auth-input-wrap::after{
+    content:'';position:absolute;left:0;bottom:-1px;height:2px;width:0;
+    background:linear-gradient(90deg,var(--navy),var(--gold));
+    transition:width .35s cubic-bezier(.16,1,.3,1);
+    border-radius:2px;
 }
-.console-sub { font-size: .95rem; color: var(--muted); line-height: 1.65; max-width: 34rem; margin-bottom: 2.25rem; }
-
-/* live stat readout */
-.console-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-bottom: 2.25rem; }
-.console-stat { padding: 1rem .9rem; border-radius: var(--radius-md); border: 1px solid var(--hairline); background: rgba(2,8,18,.55); }
-.console-stat-num { font-family: 'Sora',sans-serif; font-weight: 800; font-size: 1.5rem; color: #fff; text-shadow: 0 0 20px rgba(0,230,255,.3); }
-.console-stat-label { font-family: 'JetBrains Mono',monospace; font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--faint); margin-top: .2rem; }
-
-/* status feed — mimics a boot / system log */
-.console-feed { border-top: 1px solid var(--hairline); padding-top: 1.25rem; display: flex; flex-direction: column; gap: .65rem; }
-.console-feed-row { display: flex; align-items: center; gap: .65rem; font-family: 'JetBrains Mono',monospace; font-size: 12px; color: var(--muted); opacity: 0; animation: feedIn .5s var(--ease) forwards; }
-.console-feed-row .status-led { width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 7px rgba(35,224,160,.85); flex-shrink: 0; }
-.console-feed-row:nth-child(1) { animation-delay: .5s; }
-.console-feed-row:nth-child(2) { animation-delay: .68s; }
-.console-feed-row:nth-child(3) { animation-delay: .86s; }
-.console-feed-row:nth-child(4) { animation-delay: 1.04s; }
-@keyframes feedIn { from { opacity: 0; transform: translateX(-8px);} to { opacity: 1; transform: translateX(0);} }
-
-/* orbiting mark, bottom-right of console */
-.console-orbit { position: absolute; right: -30px; bottom: -30px; width: 190px; height: 190px; opacity: .5; pointer-events: none; }
-.console-orbit-ring { fill: none; stroke: var(--cyan); stroke-opacity: .35; stroke-dasharray: 2 10; animation: orbitSpin 22s linear infinite; transform-origin: 50% 50%; }
-.console-orbit-ring.alt { stroke: var(--gold); stroke-opacity: .3; stroke-dasharray: 1 7; animation-duration: 32s; animation-direction: reverse; }
-@keyframes orbitSpin { to { transform: rotate(360deg); } }
-
-/* ── Right card ──────────────────────────────────────────────────── */
-.auth-card-wrap { width: 100%; max-width: 440px; margin: 0 auto; animation: cardIn .6s var(--ease) both .1s; }
-@keyframes cardIn { from { opacity: 0; transform: translateY(26px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
-.auth-card {
-    position: relative;
-    border-radius: var(--radius-lg);
-    background: var(--glass);
-    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-    border: 1px solid var(--hairline);
-    box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(0,230,255,.04) inset;
-    overflow: hidden;
+.auth-input{
+    width:100%;padding:.85rem .95rem;border:1.5px solid var(--line);border-radius:10px;
+    font-size:.95rem;font-family:inherit;color:var(--ink);background:#fff;outline:none;
+    transition:border-color .25s ease,box-shadow .25s ease,background .25s ease,transform .15s ease;
 }
-
-/* animated conic border glow, revealed on focus-within */
-.auth-card::after {
-    content: '';
-    position: absolute; inset: -1px; border-radius: inherit;
-    padding: 1px;
-    background: conic-gradient(from 0deg, var(--cyan), var(--gold) 30%, var(--red) 55%, var(--navy-light) 80%, var(--cyan) 100%);
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-    opacity: 0; transition: opacity .4s ease; animation: authRingSpin 5s linear infinite paused;
-    pointer-events: none;
+.auth-input[id="identifier"]{font-family:'IBM Plex Mono','Inter',monospace;letter-spacing:.02em}
+.auth-input::placeholder{color:#C7CDDB;font-family:'Inter',sans-serif;letter-spacing:normal}
+.auth-input:hover{border-color:#C7CDDB}
+.auth-input:focus{border-color:var(--navy);box-shadow:0 0 0 4px rgba(11,42,107,.12);background:#fff}
+.auth-input:focus + .pw-toggle{color:var(--navy)}
+.auth-field:focus-within .auth-input-wrap::after{width:100%}
+.auth-input.error{border-color:var(--danger);box-shadow:0 0 0 3px rgba(220,38,38,.10);animation:shake .4s cubic-bezier(.36,.07,.19,.97)}
+.auth-input.valid{border-color:var(--success)}
+.auth-input:-webkit-autofill,
+.auth-input:-webkit-autofill:hover,
+.auth-input:-webkit-autofill:focus{
+    -webkit-text-fill-color:var(--ink);
+    box-shadow:0 0 0 1000px #fff inset;
+    transition:background-color 9999s ease-in-out 0s;
 }
-.auth-card:focus-within::after { opacity: .55; animation-play-state: running; }
-@keyframes authRingSpin { to { transform: rotate(360deg); } }
+@keyframes shake{10%,90%{transform:translateX(-1px)}20%,80%{transform:translateX(2px)}30%,50%,70%{transform:translateX(-5px)}40%,60%{transform:translateX(5px)}}
 
-/* corner brackets — HUD signature */
-.auth-hud-corner { position: absolute; width: 16px; height: 16px; border: 1.5px solid rgba(0,230,255,.5); opacity: .8; z-index: 2; pointer-events: none; }
-.auth-hud-corner.tl { top: 12px; left: 12px; border-right: none; border-bottom: none; }
-.auth-hud-corner.tr { top: 12px; right: 12px; border-left: none; border-bottom: none; }
-.auth-hud-corner.bl { bottom: 12px; left: 12px; border-right: none; border-top: none; }
-.auth-hud-corner.br { bottom: 12px; right: 12px; border-left: none; border-top: none; }
+.pw-toggle{position:absolute;right:.85rem;top:50%;transform:translateY(-50%);background:none;border:0;color:#9AA3B8;cursor:pointer;font-size:18px;padding:4px 6px;transition:color .2s ease,transform .15s ease}
+.pw-toggle:hover{color:var(--navy)}
+.pw-toggle:focus-visible{outline:2px solid var(--navy);outline-offset:2px;border-radius:6px}
+.pw-toggle:active{transform:translateY(-50%) scale(.88)}
 
-/* ── Terminal top bar ────────────────────────────────────────────── */
-.auth-topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: .85rem 1.25rem;
-    border-bottom: 1px solid var(--hairline);
-    background: rgba(2,8,18,.5);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint);
+.caps-hint{font-size:.8rem;color:#B9740A;display:flex;align-items:center;gap:4px;opacity:0;max-height:0;overflow:hidden;transition:opacity .25s ease,max-height .25s ease,margin-top .25s ease}
+.caps-hint.show{opacity:1;max-height:1.5rem;margin-top:.4rem}
+
+.auth-error{display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:var(--danger);margin-top:.45rem;animation:slideDown .3s cubic-bezier(.16,1,.3,1)}
+.password-requirement{margin:.4rem 0 0;color:var(--slate);font-size:.75rem}
+
+.auth-check-row{display:flex;align-items:center;justify-content:space-between;margin:1.4rem 0}
+.remember-label{display:flex;align-items:center;gap:.6rem;font-size:.9rem;color:var(--slate);cursor:pointer;user-select:none}
+.toggle{width:40px;height:24px;background:#D6DAE6;border-radius:12px;position:relative;cursor:pointer;transition:background .25s ease;flex-shrink:0}
+.toggle.checked{background:var(--navy)}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .3s cubic-bezier(.34,1.56,.64,1);box-shadow:0 2px 4px rgba(0,0,0,.15)}
+.toggle.checked::after{transform:translateX(16px)}
+.forgot-link{font-size:.9rem;font-weight:600;color:var(--navy);text-decoration:none;position:relative}
+.forgot-link::after{content:'';position:absolute;left:0;bottom:-2px;width:0;height:1.5px;background:var(--navy);transition:width .25s ease}
+.forgot-link:hover::after{width:100%}
+.forgot-link:focus-visible,.toggle:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+
+/* ---------- Premium submit button ---------- */
+.auth-submit{
+    width:100%;padding:.95rem;border:0;
+    background:linear-gradient(135deg,var(--navy) 0%,var(--navy-deep) 100%);
+    background-size:160% 160%;
+    color:#fff;font-size:.95rem;font-weight:700;border-radius:10px;cursor:pointer;
+    transition:transform .22s cubic-bezier(.16,1,.3,1),box-shadow .22s ease,background-position .5s ease;
+    box-shadow:0 4px 14px rgba(11,42,107,.28);position:relative;overflow:hidden;
+    border-bottom:2px solid var(--gold);
+    isolation:isolate;
 }
-.auth-topbar-dots { display: flex; gap: 6px; }
-.auth-topbar-dots span { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.auth-topbar-dots span:nth-child(1) { background: var(--red); }
-.auth-topbar-dots span:nth-child(2) { background: var(--gold); }
-.auth-topbar-dots span:nth-child(3) { background: var(--green); }
-.auth-topbar-label { display: flex; align-items: center; gap: .4rem; color: var(--cyan); }
-.auth-topbar-label .blink { animation: blinkCursor 1.1s step-end infinite; }
-@keyframes blinkCursor { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
-
-/* ── Header (logo + heading) ────────────────────────────────────── */
-.auth-header { padding: 2rem 2rem .5rem; text-align: center; position: relative; }
-
-.auth-logo-ring {
-    position: relative;
-    width: 74px; height: 74px; margin: 0 auto 1.1rem;
-    border-radius: 20px;
-    display: flex; align-items: center; justify-content: center;
-    background: linear-gradient(135deg, rgba(0,230,255,.14), rgba(0,58,143,.22));
-    border: 1px solid rgba(0,230,255,.3);
-    box-shadow: 0 10px 30px rgba(0,58,143,.35);
-    animation: logoIn .6s .15s var(--ease-elastic) both;
+.auth-submit::before{
+    content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;
+    background:linear-gradient(120deg, transparent, rgba(255,255,255,.35), transparent);
+    transform:skewX(-20deg);
+    transition:left .6s ease;
+    z-index:1;
 }
-@keyframes logoIn { from { opacity: 0; transform: scale(.6) rotate(-10deg); } to { opacity: 1; transform: scale(1) rotate(0); } }
-.auth-logo-ring img { width: 46px; height: 46px; object-fit: contain; position: relative; z-index: 2; filter: drop-shadow(0 2px 6px rgba(0,0,0,.4)); }
-.auth-logo-spin-ring {
-    position: absolute; inset: -8px; border-radius: 50%;
-    border: 1.5px solid transparent;
-    background: conic-gradient(from 0deg, rgba(0,230,255,.9), rgba(253,185,19,.5) 35%, transparent 60%, rgba(0,230,255,.9) 100%) border-box;
-    -webkit-mask: linear-gradient(#000 0 0) padding-box, linear-gradient(#000 0 0);
-    -webkit-mask-composite: xor; mask-composite: exclude;
-    animation: authRingSpin 4.5s linear infinite;
+.auth-submit:hover:not(:disabled)::before{left:130%}
+.auth-submit:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 26px rgba(11,42,107,.38);background-position:100% 50%}
+.auth-submit:active:not(:disabled){transform:translateY(0)}
+.auth-submit:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.auth-submit:disabled{opacity:.65;cursor:not-allowed}
+.btn-text{display:flex;align-items:center;justify-content:center;gap:.6rem;position:relative;z-index:2;transition:transform .2s ease}
+.auth-submit:hover:not(:disabled) .btn-text i{transform:translateX(3px)}
+.btn-text i{transition:transform .25s ease}
+.btn-load{display:none;align-items:center;justify-content:center;gap:.6rem;position:relative;z-index:2}
+.btn-load.show{display:flex}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.auth-divider{display:flex;align-items:center;gap:.8rem;margin:1.5rem 0;color:#9AA3B8;font-size:.78rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--line)}
+
+.sias-btn{
+    display:flex;align-items:center;justify-content:center;gap:.6rem;width:100%;padding:.85rem;
+    border:1.5px solid var(--line);background:#fff;border-radius:10px;color:var(--slate);font-size:.94rem;font-weight:600;
+    cursor:pointer;text-decoration:none;transition:border-color .25s ease,color .25s ease,background .25s ease,transform .18s cubic-bezier(.16,1,.3,1),box-shadow .25s ease;
 }
+.sias-btn:hover{border-color:var(--navy);color:var(--navy);background:#EEF2FC;transform:translateY(-2px);box-shadow:0 8px 18px rgba(11,42,107,.12)}
+.sias-btn:active{transform:translateY(0)}
+.sias-btn:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+.sias-sub{text-align:center;font-size:.78rem;color:#9AA3B8;margin:.6rem 0 0}
 
-.auth-header h1 {
-    font-family: 'Sora', sans-serif; font-weight: 800; font-size: 1.5rem;
-    color: #fff; letter-spacing: -.02em;
-    animation: fieldIn .45s .3s var(--ease) both;
+.trust-row{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--line);font-size:.78rem;color:#9AA3B8}
+.trust-item{display:flex;align-items:center;gap:.4rem;transition:color .2s ease}
+.trust-item:hover{color:var(--navy)}
+.trust-item i{color:var(--navy);font-size:13px}
+
+.auth-footer{padding:1.1rem 2rem;text-align:center;font-size:.8rem;color:#9AA3B8;border-top:1px solid #F0F2F8}
+.auth-footer a{color:var(--navy);text-decoration:none;font-weight:600;transition:color .2s ease}
+.auth-footer a:hover{color:var(--navy-deep);text-decoration:underline}
+
+.back-link{
+    display:inline-flex;align-items:center;gap:.4rem;margin-top:1.5rem;padding:.6rem 1rem;border-radius:8px;
+    background:none;border:1px solid var(--line);color:var(--slate);font-size:.9rem;font-weight:600;cursor:pointer;
+    text-decoration:none;transition:border-color .25s ease,color .25s ease,background .25s ease,transform .2s cubic-bezier(.16,1,.3,1);
+    opacity:0;animation:fadeIn .6s ease .7s forwards;
 }
-.auth-header p { font-size: 13px; color: var(--muted); margin-top: .35rem; animation: fieldIn .45s .36s var(--ease) both; }
+.back-link:hover{border-color:var(--navy);color:var(--navy);background:#EEF2FC;transform:translateX(-3px)}
+.back-link:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+@keyframes fadeIn{to{opacity:1}}
 
-/* ── Body ────────────────────────────────────────────────────────── */
-.auth-body { padding: 1.5rem 2rem 0; position: relative; }
+.alert{padding:.85rem 1rem;border-radius:10px;font-size:.9rem;margin-bottom:1.2rem;display:flex;align-items:flex-start;gap:.6rem;animation:slideDown .4s cubic-bezier(.16,1,.3,1) forwards}
+.alert.hidden{display:none}
+@keyframes slideDown{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+.alert-success{background:#DFF6EB;color:#0B6B44;border:1px solid #B7EAD2}
+.alert-error{background:#FDECEC;color:#9A1B2A;border:1px solid #F7C9CE}
+.alert i{flex-shrink:0;margin-top:2px;animation:pulseIcon 1.6s ease-in-out infinite}
+@keyframes pulseIcon{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
 
-@keyframes fieldIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-[data-auth-animate] { opacity: 0; animation: fieldIn .4s var(--ease) forwards; }
-
-/* ── Alerts ──────────────────────────────────────────────────────── */
-.auth-alert { display: flex; align-items: flex-start; gap: .6rem; padding: .75rem .9rem; border-radius: 11px; font-size: 13px; font-weight: 500; margin-bottom: 1.1rem; line-height: 1.45; border: 1px solid; }
-.auth-alert--success { background: rgba(35,224,160,.1); color: #6ff5cd; border-color: rgba(35,224,160,.3); }
-.auth-alert--error   { background: rgba(255,47,82,.1);  color: #ff9caa; border-color: rgba(255,47,82,.32); }
-
-/* ── Role selector — sliding segmented control ──────────────────── */
-.role-select-label { font-family: 'JetBrains Mono',monospace; font-size: 10.5px; letter-spacing: .2em; text-transform: uppercase; color: var(--faint); margin-bottom: .6rem; display: block; }
-.role-select {
-    position: relative;
-    display: grid; grid-template-columns: repeat(4,1fr);
-    gap: 4px; padding: 4px;
-    border-radius: 13px;
-    border: 1px solid var(--hairline);
-    background: rgba(2,8,18,.55);
-}
-.role-select-indicator {
-    position: absolute; top: 4px; left: 4px;
-    height: calc(100% - 8px);
-    border-radius: 9px;
-    background: linear-gradient(135deg, var(--navy-light), var(--navy));
-    box-shadow: 0 4px 16px rgba(0,58,143,.45), 0 0 0 1px rgba(0,230,255,.35) inset;
-    transition: transform .32s var(--ease), width .32s var(--ease);
-    z-index: 0;
-}
-.auth-role-btn {
-    position: relative; z-index: 1;
-    display: flex; flex-direction: column; align-items: center; gap: .3rem;
-    padding: .55rem .3rem;
-    border: 0; background: transparent;
-    color: var(--muted); font-size: 10.5px; font-weight: 600; letter-spacing: .02em;
-    border-radius: 9px;
-    transition: color .25s ease;
-}
-.auth-role-btn i { font-size: 13px; opacity: .75; transition: opacity .25s ease; }
-.auth-role-btn:hover { color: #cfe4ff; }
-.auth-role-btn.is-active { color: #fff; }
-.auth-role-btn.is-active i { opacity: 1; }
-
-/* ── Fields ──────────────────────────────────────────────────────── */
-.auth-field { margin-bottom: 1.15rem; }
-.auth-field label {
-    display: flex; align-items: center; gap: .4rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10.5px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--faint); margin-bottom: .55rem;
-}
-.auth-field label i { color: var(--cyan); font-size: 11px; }
-
-.auth-input-wrap { position: relative; }
-.auth-input {
-    width: 100%;
-    padding: .8rem .95rem;
-    border: 1.5px solid var(--hairline);
-    border-radius: var(--radius-md);
-    font-size: 14px; font-family: 'Inter', sans-serif;
-    color: #fff;
-    background: rgba(2,8,18,.55);
-    outline: none;
-    transition: border-color .22s ease, box-shadow .22s ease, background .22s ease;
-}
-.auth-input::placeholder { color: #4a5c76; }
-.auth-input:focus { border-color: var(--cyan); background: rgba(2,10,22,.85); box-shadow: 0 0 0 3px rgba(0,230,255,.12), 0 0 18px rgba(0,230,255,.08); }
-.auth-input.is-error { border-color: var(--red); box-shadow: 0 0 0 3px rgba(255,47,82,.12); }
-.auth-input.is-valid { border-color: rgba(35,224,160,.55); }
-
-.auth-input-wrap .auth-input { padding-right: 2.6rem; }
-.auth-input-status {
-    position: absolute; right: .85rem; top: 50%; transform: translateY(-50%);
-    font-size: 13px; pointer-events: none; opacity: 0; transition: opacity .2s ease, color .2s ease;
-}
-.auth-input-status.show { opacity: 1; }
-.auth-input-status.ok  { color: var(--green); }
-.auth-input-status.bad { color: var(--red); }
-
-.auth-pw-toggle {
-    position: absolute; right: .7rem; top: 50%; transform: translateY(-50%);
-    background: none; border: 0; color: var(--faint); font-size: 14px; padding: 4px;
-    transition: color .22s ease, transform .22s ease;
-}
-.auth-pw-toggle:hover { color: var(--cyan); }
-.auth-pw-toggle:active { transform: translateY(-50%) scale(.9); }
-
-.auth-error { display: flex; align-items: center; gap: .35rem; font-size: 11.5px; color: #ff9caa; margin-top: .4rem; font-weight: 500; }
-.auth-hint  { display: flex; align-items: center; gap: .35rem; font-size: 11.5px; color: var(--gold); margin-top: .4rem; font-weight: 500; opacity: 0; max-height: 0; overflow: hidden; transition: opacity .2s ease, max-height .25s ease, margin .2s ease; }
-.auth-hint.show { opacity: 1; max-height: 2rem; margin-top: .4rem; }
-
-/* ── Remember toggle (custom switch, functional) ────────────────── */
-.auth-remember-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
-.auth-remember-label { display: flex; align-items: center; gap: .55rem; font-size: 12.5px; color: var(--muted); cursor: pointer; user-select: none; }
-.auth-switch { position: relative; width: 38px; height: 21px; flex-shrink: 0; }
-.auth-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; z-index: 2; }
-.auth-switch-track {
-    position: absolute; inset: 0; border-radius: 999px;
-    background: rgba(255,255,255,.08); border: 1px solid var(--hairline);
-    transition: background .25s ease, border-color .25s ease;
-}
-.auth-switch-thumb {
-    position: absolute; top: 2px; left: 2px; width: 15px; height: 15px; border-radius: 50%;
-    background: var(--muted);
-    transition: transform .28s var(--ease-elastic), background .25s ease;
-}
-.auth-switch input:checked ~ .auth-switch-track { background: rgba(0,230,255,.18); border-color: rgba(0,230,255,.5); }
-.auth-switch input:checked ~ .auth-switch-thumb { transform: translateX(17px); background: var(--cyan); box-shadow: 0 0 8px rgba(0,230,255,.8); }
-.auth-switch input:focus-visible ~ .auth-switch-track { outline: 2px solid var(--cyan); outline-offset: 2px; }
-
-/* ── Submit button ───────────────────────────────────────────────── */
-.auth-btn-primary {
-    position: relative; overflow: hidden;
-    width: 100%; padding: .9rem; border: 0; border-radius: var(--radius-md);
-    font-size: 14px; font-weight: 700; color: #04121f;
-    background: linear-gradient(110deg, var(--cyan) 0%, #7dd8ff 45%, var(--gold) 100%);
-    background-size: 220% auto;
-    box-shadow: 0 10px 28px rgba(0,230,255,.25);
-    transition: transform .22s var(--ease), box-shadow .22s var(--ease), background-position .5s ease;
-}
-.auth-btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(0,230,255,.35); background-position: right center; }
-.auth-btn-primary:active:not(:disabled) { transform: translateY(0) scale(.98); }
-.auth-btn-primary:disabled { opacity: .8; cursor: progress; }
-.auth-btn-primary:focus-visible { outline: 3px solid rgba(0,230,255,.5); outline-offset: 2px; }
-.auth-btn-label, .auth-btn-loading { display: flex; align-items: center; justify-content: center; gap: .5rem; }
-.auth-hidden { display: none !important; }
-.auth-btn-ripple { position: absolute; border-radius: 50%; transform: scale(0); background: rgba(4,18,31,.28); pointer-events: none; animation: authRipple .6s ease-out forwards; }
-@keyframes authRipple { to { transform: scale(2.6); opacity: 0; } }
-
-/* ── Divider / secondary actions ─────────────────────────────────── */
-.auth-divider { display: flex; align-items: center; gap: .8rem; margin: 1.5rem 0 1.1rem; color: var(--faint); font-size: 11px; font-family: 'JetBrains Mono',monospace; letter-spacing: .1em; text-transform: uppercase; }
-.auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--hairline); }
-
-.auth-btn-outline {
-    display: flex; align-items: center; justify-content: center; gap: .55rem;
-    width: 100%; padding: .85rem; border-radius: var(--radius-md);
-    border: 1.5px solid var(--hairline);
-    font-size: 14px; font-weight: 600; color: #cfe4ff;
-    background: rgba(2,8,18,.4);
-    transition: border-color .22s ease, background .22s ease, transform .22s ease, box-shadow .22s ease;
-}
-.auth-btn-outline:hover { border-color: rgba(0,230,255,.55); background: rgba(0,230,255,.08); transform: translateY(-2px); box-shadow: 0 10px 26px rgba(0,0,0,.3); }
-.auth-btn-outline:active { transform: translateY(0) scale(.98); }
-
-/* ── Trust chips ─────────────────────────────────────────────────── */
-.auth-trust { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .6rem; margin: 1.5rem 0 0; padding: 1.1rem 0; border-top: 1px solid var(--hairline); }
-.auth-trust span { display: inline-flex; align-items: center; gap: .4rem; font-size: 10.5px; letter-spacing: .04em; color: var(--faint); font-weight: 600; padding: .35rem .65rem; border-radius: 999px; border: 1px solid var(--hairline); background: rgba(2,8,18,.4); }
-.auth-trust i { color: var(--cyan); font-size: 10px; }
-
-/* ── Footer bar ──────────────────────────────────────────────────── */
-.auth-footer-bar { padding: 1rem 2rem; background: rgba(2,8,18,.6); border-top: 1px solid var(--hairline); font-size: 11px; color: var(--faint); text-align: center; line-height: 1.6; }
-.auth-footer-bar a { color: var(--cyan); font-weight: 600; transition: color .2s ease; }
-.auth-footer-bar a:hover { color: #fff; }
-
-/* ── Back link ───────────────────────────────────────────────────── */
-.auth-back { display: inline-flex; align-items: center; gap: .5rem; font-size: 13px; font-weight: 600; color: var(--muted); margin-top: 1.3rem; padding: .5rem .9rem; border-radius: 999px; transition: background .2s ease, color .2s ease, transform .2s ease; }
-.auth-back:hover { background: rgba(0,230,255,.08); color: #fff; transform: translateX(-2px); }
-
-.auth-forgot { display: block; text-align: center; margin-top: 1rem; font-size: 12.5px; font-weight: 600; color: var(--gold); transition: color .2s ease; }
-.auth-forgot:hover { color: #ffd166; }
-
-/* ── Progress sweep shown while submitting ──────────────────────── */
-.auth-submit-sweep { position: absolute; left: 0; top: 0; height: 2px; width: 0%; background: linear-gradient(90deg, var(--cyan), var(--gold)); box-shadow: 0 0 10px rgba(0,230,255,.8); transition: width 1.1s ease; z-index: 5; }
-
-/* ── Responsive ──────────────────────────────────────────────────── */
-@media (max-width: 480px) {
-    .auth-header { padding: 1.6rem 1.3rem .4rem; }
-    .auth-body   { padding: 1.2rem 1.3rem 0; }
-    .auth-footer-bar { padding: .9rem 1.3rem; }
-    .role-select { grid-template-columns: repeat(2,1fr); grid-auto-rows: 1fr; }
-    .role-select-indicator { display: none; }
-    .auth-role-btn.is-active { background: linear-gradient(135deg, var(--navy-light), var(--navy)); box-shadow: 0 4px 16px rgba(0,58,143,.45); }
+@media(max-width:480px){
+    .auth-card{border-radius:18px}
+    .crest-band{padding:1.5rem 1.25rem 1.25rem}
+    .auth-header{padding:1.6rem 1.5rem .3rem}
+    .auth-body{padding:1.2rem 1.5rem 1.5rem}
+    .role-btn{font-size:10.5px;padding:.6rem .15rem}
+    .auth-input,.auth-submit,.sias-btn{font-size:16px}
+    .back-link{margin-left:auto;margin-right:auto}
 }
 
-/* ── Reduced motion ──────────────────────────────────────────────── */
-@media (prefers-reduced-motion: reduce) {
-    .auth-shell *, .auth-shell *::before, .auth-shell *::after {
-        animation-duration: .01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: .01ms !important;
-    }
-    [data-auth-animate] { opacity: 1 !important; }
+@media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
+    .auth-card,.stagger,.back-link{opacity:1 !important;transform:none !important}
 }
 </style>
 @endpush
 
-@section('auth-content')
-<div class="auth-scope auth-shell">
+<div class="auth-wrapper">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+    <div class="blob blob-3"></div>
 
-    {{-- ambient background layers --}}
-    <div class="auth-hud-grid" aria-hidden="true"></div>
-    <div class="auth-blob auth-blob-1" aria-hidden="true"></div>
-    <div class="auth-blob auth-blob-2" aria-hidden="true"></div>
-    <div class="auth-blob auth-blob-3" aria-hidden="true"></div>
-    <div class="auth-scanline" aria-hidden="true"></div>
-    <div class="auth-particle-field" id="authParticleField" aria-hidden="true"></div>
+    <div class="auth-container">
+        <div class="auth-card" id="authCard">
 
-    <div class="auth-layout">
-
-        {{-- ══ LEFT — brand console ══ --}}
-        <aside class="auth-console">
-            <span class="console-eyebrow"><span class="dot"></span>SkillUp // Access Console</span>
-
-            <h2 class="console-headline">Your next skill starts<br><span class="accent">with one sign-in.</span></h2>
-            <p class="console-sub">Personalized learning paths, live mentor support, and TESDA-aligned credentials — all waiting on the other side of this terminal.</p>
-
-            <div class="console-stats">
-                <div class="console-stat">
-                    <div class="console-stat-num" data-console-counter data-target="120">0</div>
-                    <div class="console-stat-label">Courses</div>
-                </div>
-                <div class="console-stat">
-                    <div class="console-stat-num" data-console-counter data-target="35000">0</div>
-                    <div class="console-stat-label">Learners</div>
-                </div>
-                <div class="console-stat">
-                    <div class="console-stat-num" data-console-counter data-target="98">0</div>
-                    <div class="console-stat-label">% Satisfied</div>
-                </div>
-            </div>
-
-            <div class="console-feed font-mono">
-                <div class="console-feed-row"><span class="status-led"></span>tesda_curriculum ..... synced</div>
-                <div class="console-feed-row"><span class="status-led"></span>mentor_network ....... online</div>
-                <div class="console-feed-row"><span class="status-led"></span>credential_engine ..... ready</div>
-                <div class="console-feed-row"><span class="status-led"></span>auth_gateway .......... secure</div>
-            </div>
-
-            <svg class="console-orbit" viewBox="0 0 190 190" aria-hidden="true">
-                <circle class="console-orbit-ring" cx="95" cy="95" r="78" stroke-width="1.5"/>
-                <circle class="console-orbit-ring alt" cx="95" cy="95" r="58" stroke-width="1.5"/>
-            </svg>
-        </aside>
-
-        {{-- ══ RIGHT — login card ══ --}}
-        <div class="auth-card-wrap">
-            <div class="auth-card" id="authCard">
-
-                <span class="auth-hud-corner tl"></span>
-                <span class="auth-hud-corner tr"></span>
-                <span class="auth-hud-corner bl"></span>
-                <span class="auth-hud-corner br"></span>
-
-                <div class="auth-submit-sweep" id="authSubmitSweep"></div>
-
-                {{-- top status bar --}}
-                <div class="auth-topbar">
-                    <span class="auth-topbar-dots"><span></span><span></span><span></span></span>
-                    <span class="auth-topbar-label">SKILLUP // AUTH.SYS<span class="blink">_</span></span>
-                </div>
-
-                {{-- header --}}
-                <header class="auth-header">
-                    <div class="auth-logo-ring">
-                        <span class="auth-logo-spin-ring" aria-hidden="true"></span>
-                        <img src="{{ asset('image/logo_oif_skillup_1_-removebg-preview.png') }}" alt="SkillUp logo">
+            <div class="crest-band">
+                <div class="logo-row">
+                    <div class="crest-logo">
+                        <img src="{{ asset('image/bagong-pilipinas-logo-png_seeklogo-534301.png') }}" alt="Bagong Pilipinas">
                     </div>
-                    <h1>Welcome back</h1>
-                    <p>Sign in to continue your learning journey</p>
-                </header>
+                    <div class="crest-logo brand">
+                        <img src="{{ asset('image/logo%20new.jpg') }}" alt="SkillUp Logo">
+                    </div>
+                    <div class="crest-logo">
+                        <img src="{{ asset('image/hello.png') }}" alt="Institution Logo">
+                    </div>
+                </div>
+                <div class="flag-rule"><span class="b"></span><span class="w"></span><span class="r"></span></div>
+            </div>
 
-                {{-- body --}}
-                <div class="auth-body">
+            <div class="auth-header stagger">
+                <h1>Welcome back</h1>
+                <p>Continue your learning journey</p>
+            </div>
 
-                    @if (session('success'))
-                        <div class="auth-alert auth-alert--success" role="status" data-auth-animate>
-                            <i class="fas fa-check-circle"></i>
-                            <span>{{ session('success') }}</span>
-                        </div>
-                    @endif
+            <div class="auth-body">
+                @if (session('success'))
+                    <div class="alert alert-success stagger" role="status">
+                        <i class="fas fa-check-circle"></i>
+                        <span>{{ session('success') }}</span>
+                    </div>
+                @endif
 
-                    @if ($errors->any() && !$errors->has('email') && !$errors->has('password') && !$errors->has('login_as'))
-                        <div class="auth-alert auth-alert--error" role="alert" data-auth-animate>
+                @if ($errors->any())
+                    @if (!$errors->has('identifier') && !$errors->has('email') && !$errors->has('password') && !$errors->has('login_as'))
+                        <div class="alert alert-error stagger" role="alert">
                             <i class="fas fa-exclamation-circle"></i>
                             <span>Please check your details and try again.</span>
                         </div>
                     @endif
+                @endif
 
-                    <form method="POST" action="{{ route('login') }}" id="loginForm" novalidate>
-                        @csrf
+                <form wire:submit="login" novalidate>
 
-                        {{-- Role selector --}}
-                        <div class="auth-field" data-auth-animate>
-                            <span class="role-select-label">Sign in as</span>
-                            <div class="role-select" id="roleSelect" role="group" aria-label="Account type">
-                                <span class="role-select-indicator" id="roleIndicator" aria-hidden="true"></span>
-                                <button type="button" data-role="admin"
-                                    class="auth-role-btn {{ old('login_as', 'student') === 'admin' ? 'is-active' : '' }}"
-                                    aria-pressed="{{ old('login_as', 'student') === 'admin' ? 'true' : 'false' }}">
-                                    <i class="fas fa-shield-alt"></i>Admin
-                                </button>
-                                <button type="button" data-role="staff"
-                                    class="auth-role-btn {{ old('login_as', 'student') === 'staff' ? 'is-active' : '' }}"
-                                    aria-pressed="{{ old('login_as', 'student') === 'staff' ? 'true' : 'false' }}">
-                                    <i class="fas fa-user-shield"></i>Staff
-                                </button>
-                                <button type="button" data-role="teacher"
-                                    class="auth-role-btn {{ old('login_as', 'student') === 'teacher' ? 'is-active' : '' }}"
-                                    aria-pressed="{{ old('login_as', 'student') === 'teacher' ? 'true' : 'false' }}">
-                                    <i class="fas fa-chalkboard-teacher"></i>Instructor
-                                </button>
-                                <button type="button" data-role="student"
-                                    class="auth-role-btn {{ old('login_as', 'student') === 'student' ? 'is-active' : '' }}"
-                                    aria-pressed="{{ old('login_as', 'student') === 'student' ? 'true' : 'false' }}">
-                                    <i class="fas fa-graduation-cap"></i>Student
-                                </button>
-                            </div>
-                            <input type="hidden" name="login_as" id="login-as" value="{{ old('login_as', 'student') }}">
-                            @error('login_as')
-                                <p class="auth-error"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        {{-- Email --}}
-                        <div class="auth-field" data-auth-animate>
-                            <label for="email"><i class="fas fa-envelope"></i>Email address</label>
-                            <div class="auth-input-wrap">
-                                <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    value="{{ old('email') }}"
-                                    class="auth-input {{ $errors->has('email') ? 'is-error' : '' }}"
-                                    placeholder="you@example.com"
-                                    autocomplete="email"
-                                    required
-                                >
-                                <i class="fas auth-input-status" id="emailStatus"></i>
-                            </div>
-                            @error('email')
-                                <p class="auth-error"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        {{-- Password --}}
-                        <div class="auth-field" data-auth-animate>
-                            <label for="password"><i class="fas fa-lock"></i>Password</label>
-                            <div class="auth-input-wrap">
-                                <input
-                                    type="password"
-                                    id="password"
-                                    name="password"
-                                    class="auth-input {{ $errors->has('password') ? 'is-error' : '' }}"
-                                    placeholder="••••••••"
-                                    autocomplete="current-password"
-                                    required
-                                >
-                                <button type="button" class="auth-pw-toggle" id="pwToggle" aria-label="Show password" aria-controls="password">
-                                    <i class="fas fa-eye" id="pwToggleIcon"></i>
-                                </button>
-                            </div>
-                            <p class="auth-hint" id="capsLockHint"><i class="fas fa-arrow-turn-up"></i>Caps Lock is on</p>
-                            @error('password')
-                                <p class="auth-error"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
-                            @enderror
-                        </div>
-
-                        {{-- Remember + forgot --}}
-                        <div class="auth-remember-row" data-auth-animate>
-                            <label class="auth-remember-label" for="remember">
-                                <span class="auth-switch">
-                                    <input type="checkbox" id="remember" name="remember" {{ old('remember') ? 'checked' : '' }}>
-                                    <span class="auth-switch-track"></span>
-                                    <span class="auth-switch-thumb"></span>
-                                </span>
-                                Keep me signed in
-                            </label>
-                            @if (Route::has('password.request'))
-                                <a href="{{ route('password.request') }}" class="auth-forgot" style="margin:0;">Forgot?</a>
-                            @endif
-                        </div>
-
-                        {{-- Submit --}}
-                        <div data-auth-animate>
-                            <button type="submit" class="auth-btn-primary" id="submitBtn">
-                                <span class="auth-btn-label" id="btnLabel">
-                                    <i class="fas fa-arrow-right-to-bracket"></i> Sign in
-                                </span>
-                                <span class="auth-btn-loading auth-hidden" id="btnLoading">
-                                    <i class="fas fa-circle-notch fa-spin"></i> Authenticating…
-                                </span>
+                    <!-- Role Selection -->
+                    <div class="auth-field stagger">
+                        <label class="role-label" id="roleLabel">Sign in as</label>
+                        <div class="role-group" role="radiogroup" aria-labelledby="roleLabel" id="roleGroup">
+                            <div class="role-indicator" id="roleIndicator"></div>
+                            <button type="button" role="radio" aria-checked="{{ $login_as === 'student' ? 'true' : 'false' }}" class="role-btn {{ $login_as === 'student' ? 'active' : '' }}" wire:click="$set('login_as', 'student')">
+                                <i class="fas fa-graduation-cap"></i>
+                                <span>Student</span>
+                            </button>
+                            <button type="button" role="radio" aria-checked="{{ $login_as === 'teacher' ? 'true' : 'false' }}" class="role-btn {{ $login_as === 'teacher' ? 'active' : '' }}" wire:click="$set('login_as', 'teacher')">
+                                <i class="fas fa-chalkboard-user"></i>
+                                <span>Instructor</span>
+                            </button>
+                            <button type="button" role="radio" aria-checked="{{ $login_as === 'staff' ? 'true' : 'false' }}" class="role-btn {{ $login_as === 'staff' ? 'active' : '' }}" wire:click="$set('login_as', 'staff')">
+                                <i class="fas fa-user-tie"></i>
+                                <span>Staff</span>
+                            </button>
+                            <button type="button" role="radio" aria-checked="{{ $login_as === 'admin' ? 'true' : 'false' }}" class="role-btn {{ $login_as === 'admin' ? 'active' : '' }}" wire:click="$set('login_as', 'admin')">
+                                <i class="fas fa-shield-alt"></i>
+                                <span>Admin</span>
                             </button>
                         </div>
-
-                    </form>
-
-                    {{-- Divider & register --}}
-                    <div class="auth-divider" data-auth-animate><span>New to SkillUp?</span></div>
-
-                    <a href="{{ route('register') }}" class="auth-btn-outline" data-auth-animate>
-                        <i class="fas fa-user-plus"></i> Create an account
-                    </a>
-
-                    {{-- Trust chips --}}
-                    <div class="auth-trust" data-auth-animate>
-                        <span><i class="fas fa-lock"></i>Encrypted login</span>
-                        <span><i class="fas fa-user-shield"></i>Role-based access</span>
-                        <span><i class="fas fa-bolt"></i>Instant session</span>
+                        @error('login_as')
+                            <p class="auth-error"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                        @enderror
                     </div>
 
-                </div>{{-- end .auth-body --}}
+                    <!-- Email / Student ID Field -->
+                    <div class="auth-field stagger">
+                        <label class="auth-input-label" for="identifier">
+                            {{ $login_as === 'student' ? 'Student ID' : 'Email address' }}
+                        </label>
+                        <div class="auth-input-wrap">
+                            <input
+                                type="{{ $login_as === 'student' ? 'text' : 'email' }}"
+                                id="identifier"
+                                wire:model="identifier"
+                                class="auth-input {{ $errors->has('identifier') || $errors->has('email') ? 'error' : '' }}"
+                                placeholder="{{ $login_as === 'student' ? 'Enter your Student ID' : 'name@example.com' }}"
+                                autocomplete="{{ $login_as === 'student' ? 'username' : 'email' }}"
+                                required
+                            >
+                        </div>
+                        @error('identifier')
+                            <p class="auth-error"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                        @enderror
+                        @error('email')
+                            <p class="auth-error"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                        @enderror
+                    </div>
 
-                {{-- Footer bar --}}
-                <div class="auth-footer-bar">
-                    By signing in you agree to our
-                    <a href="{{ route('terms') }}">Terms</a> and
-                    <a href="{{ route('privacy') }}">Privacy Policy</a>.
-                </div>
+                    <!-- Password Field -->
+                    <div class="auth-field stagger">
+                        <label class="auth-input-label" for="password">Password</label>
+                        <div class="auth-input-wrap">
+                            <input
+                                type="password"
+                                id="password"
+                                wire:model="password"
+                                class="auth-input {{ $errors->has('password') ? 'error' : '' }}"
+                                placeholder="••••••••"
+                                autocomplete="current-password"
+                                minlength="6"
+                                aria-describedby="passwordRequirement"
+                                required
+                            >
+                            <button type="button" class="pw-toggle" id="pwToggle" aria-label="Show password" aria-pressed="false">
+                                <i class="fas fa-eye" id="pwIcon"></i>
+                            </button>
+                        </div>
+                        <div class="caps-hint" id="capsHint" role="status">
+                            <i class="fas fa-arrow-turn-up"></i>Caps Lock is on
+                        </div>
+                        <p class="password-requirement" id="passwordRequirement">Use at least 6 characters.</p>
+                        @error('password')
+                            <p class="auth-error"><i class="fas fa-exclamation-circle"></i>{{ $message }}</p>
+                        @enderror
+                    </div>
 
-            </div>{{-- end .auth-card --}}
+                    <!-- Remember & Forgot -->
+                    <div class="auth-check-row stagger">
+                        <label class="remember-label">
+                            <div class="toggle {{ $remember ? 'checked' : '' }}" role="switch" aria-checked="{{ $remember ? 'true' : 'false' }}" tabindex="0" wire:click="$toggle('remember')" wire:keydown.enter="$toggle('remember')" wire:keydown.space.prevent="$toggle('remember')">
+                                <input type="checkbox" wire:model="remember" id="remember" style="display:none">
+                            </div>
+                            <span>Keep me signed in</span>
+                        </label>
+                        @if (Route::has('password.request'))
+                            <a href="{{ route('password.request') }}" class="forgot-link">Forgot?</a>
+                        @endif
+                    </div>
 
-            <p style="text-align:center">
-                <a href="{{ url('/') }}" class="auth-back">
-                    <i class="fas fa-arrow-left"></i> Back to home
+                    <!-- Submit -->
+                    <button type="submit" class="auth-submit stagger" wire:loading.attr="disabled" wire:target="login">
+                        <span class="btn-text" wire:loading.remove wire:target="login">
+                            <span>Sign in</span>
+                            <i class="fas fa-arrow-right-to-bracket"></i>
+                        </span>
+                        <span class="btn-load" wire:loading.class="show" wire:target="login">
+                            <span class="spinner"></span>
+                            <span>Signing in…</span>
+                        </span>
+                    </button>
+                </form>
+
+                <!-- Divider -->
+                @if (Route::has('sias.login.admin'))
+                <div class="auth-divider">Other access</div>
+
+                <!-- NAVIS Login -->
+                <a href="{{ route('sias.login.admin') }}" class="sias-btn">
+                    <i class="fas fa-door-open"></i>
+                    <span>NAVIS Login</span>
                 </a>
-            </p>
-        </div>{{-- end .auth-card-wrap --}}
+                @endif
+                <p class="sias-sub">TESDA Academic &amp; Vocational Information System.</p>
 
-    </div>{{-- end .auth-layout --}}
+                <!-- Trust Row -->
+                <div class="trust-row">
+                    <div class="trust-item">
+                        <i class="fas fa-lock"></i>
+                        <span>Encrypted</span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="fas fa-user-shield"></i>
+                        <span>Role-based</span>
+                    </div>
+                    <div class="trust-item">
+                        <i class="fas fa-bolt"></i>
+                        <span>Instant</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="auth-footer">
+                By signing in, you agree to our
+                @if (Route::has('terms'))
+                    <a href="{{ route('terms') }}">Terms</a>
+                @else
+                    <a href="/terms">Terms</a>
+                @endif
+                and
+                @if (Route::has('privacy'))
+                    <a href="{{ route('privacy') }}">Privacy Policy</a>
+                @else
+                    <a href="/privacy">Privacy Policy</a>
+                @endif
+            </div>
+        </div>
+
+        <a href="{{ url('/') }}" class="back-link">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to home</span>
+        </a>
+    </div>
 </div>
-@endsection
 
 @push('scripts')
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+    document.addEventListener('DOMContentLoaded', function () {
+        const passwordInput = document.getElementById('password');
+        const pwToggle = document.getElementById('pwToggle');
+        const pwIcon = document.getElementById('pwIcon');
+        const capsHint = document.getElementById('capsHint');
+        const authCard = document.getElementById('authCard');
+        const roleGroup = document.getElementById('roleGroup');
+        const roleIndicator = document.getElementById('roleIndicator');
+        const roleButtons = document.querySelectorAll('.role-btn');
 
-    var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-    /* ══════════════════════════════════════
-       STAGGER FIELD ANIMATIONS
-    ══════════════════════════════════════ */
-    document.querySelectorAll('[data-auth-animate]').forEach(function (el, i) {
-        el.style.animationDelay = (0.42 + i * 0.07) + 's';
-    });
-
-    /* ══════════════════════════════════════
-       AMBIENT DRIFTING PARTICLES
-    ══════════════════════════════════════ */
-    (function spawnAuthParticles() {
-        var field = document.getElementById('authParticleField');
-        if (!field || reducedMotion) return;
-        var count = window.innerWidth < 768 ? 10 : 22;
-        for (var i = 0; i < count; i++) {
-            var p = document.createElement('span');
-            var size = 1.5 + Math.random() * 2.5;
-            p.className = 'auth-drift-particle';
-            p.style.cssText = [
-                'width:' + size + 'px',
-                'height:' + size + 'px',
-                'left:' + (Math.random() * 100) + '%',
-                'top:' + (30 + Math.random() * 65) + '%',
-                '--pdur:' + (7 + Math.random() * 9).toFixed(2) + 's',
-                '--pdel:' + (Math.random() * 8).toFixed(2) + 's'
-            ].join(';');
-            field.appendChild(p);
+        // Card entrance animation (optional - card is now visible by default)
+        if (authCard) {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => authCard.classList.add('loaded'));
+            });
         }
-    })();
 
-    /* ══════════════════════════════════════
-       CONSOLE STAT COUNTERS (left panel)
-    ══════════════════════════════════════ */
-    (function animateConsoleCounters() {
-        var counters = document.querySelectorAll('[data-console-counter]');
-        if (!counters.length) return;
-
-        function run(el) {
-            var target = parseInt(el.dataset.target, 10) || 0;
-            if (reducedMotion) { el.textContent = target.toLocaleString(); return; }
-            var duration = 1300, start = performance.now();
-            function tick(now) {
-                var progress = Math.min((now - start) / duration, 1);
-                var eased = 1 - Math.pow(1 - progress, 3);
-                el.textContent = Math.round(target * eased).toLocaleString();
-                if (progress < 1) requestAnimationFrame(tick);
+        // Sliding indicator behind the active role button
+        function moveIndicator(btn, animate = true) {
+            if (!btn || !roleIndicator || !roleGroup) return;
+            const groupRect = roleGroup.getBoundingClientRect();
+            const btnRect = btn.getBoundingClientRect();
+            const offsetX = btnRect.left - groupRect.left - 4; // account for group padding
+            if (!animate) roleIndicator.style.transition = 'none';
+            roleIndicator.style.width = btnRect.width + 'px';
+            roleIndicator.style.transform = `translateX(${offsetX}px)`;
+            if (!animate) {
+                requestAnimationFrame(() => { roleIndicator.style.transition = ''; });
             }
-            requestAnimationFrame(tick);
         }
-        counters.forEach(function (el) {
-            setTimeout(function () { run(el); }, 500);
+
+        const initialActive = document.querySelector('.role-btn.active') || roleButtons[0];
+        // wait one frame so layout is measured after fonts/icons settle
+        requestAnimationFrame(() => moveIndicator(initialActive, false));
+        window.addEventListener('resize', () => {
+            const active = document.querySelector('.role-btn.active');
+            moveIndicator(active, false);
         });
-    })();
 
-    /* ══════════════════════════════════════
-       ROLE SELECTOR — sliding indicator
-    ══════════════════════════════════════ */
-    var loginAsInput = document.getElementById('login-as');
-    var roleSelect   = document.getElementById('roleSelect');
-    var roleIndicator= document.getElementById('roleIndicator');
-    var roleButtons  = document.querySelectorAll('.auth-role-btn[data-role]');
-
-    function moveIndicatorTo(btn) {
-        if (!roleIndicator || !roleSelect || !btn) return;
-        var wrapRect = roleSelect.getBoundingClientRect();
-        var btnRect  = btn.getBoundingClientRect();
-        var x = btnRect.left - wrapRect.left - 4; // account for padding
-        roleIndicator.style.width = btnRect.width + 'px';
-        roleIndicator.style.transform = 'translateX(' + x + 'px)';
-    }
-
-    function setActiveRole(role, opts) {
-        opts = opts || {};
-        if (!loginAsInput) return;
-        loginAsInput.value = role;
-        var activeBtn = null;
-        roleButtons.forEach(function (btn) {
-            var active = btn.dataset.role === role;
-            btn.classList.toggle('is-active', active);
-            btn.setAttribute('aria-pressed', String(active));
-            if (active) activeBtn = btn;
-        });
-        moveIndicatorTo(activeBtn);
-        if (opts.announce && window.SkillUpToast) {
-            var labels = { admin: 'Admin', staff: 'Staff', teacher: 'Instructor', student: 'Student' };
-            window.SkillUpToast.show('Signing in as ' + (labels[role] || role), 'info', 2200);
+        // Password visibility toggle
+        if (pwToggle && passwordInput) {
+            pwToggle.addEventListener('click', (e) => {
+                e.preventDefault();
+                const isPassword = passwordInput.type === 'password';
+                passwordInput.type = isPassword ? 'text' : 'password';
+                pwIcon.classList.toggle('fa-eye', !isPassword);
+                pwIcon.classList.toggle('fa-eye-slash', isPassword);
+                pwToggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+                pwToggle.setAttribute('aria-pressed', isPassword ? 'true' : 'false');
+            });
         }
-    }
 
-    if (loginAsInput) {
-        // wait a tick so layout/fonts settle before measuring positions
-        window.requestAnimationFrame(function () {
-            setActiveRole(loginAsInput.value || 'student');
-        });
-    }
-
-    roleButtons.forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            setActiveRole(this.dataset.role, { announce: true });
-        });
-    });
-
-    window.addEventListener('resize', function () {
-        var current = roleSelect ? roleSelect.querySelector('.auth-role-btn.is-active') : null;
-        moveIndicatorTo(current);
-    });
-
-    /* ══════════════════════════════════════
-       PASSWORD VISIBILITY TOGGLE
-    ══════════════════════════════════════ */
-    var pwInput  = document.getElementById('password');
-    var pwToggle = document.getElementById('pwToggle');
-    var pwIcon   = document.getElementById('pwToggleIcon');
-
-    if (pwToggle && pwInput && pwIcon) {
-        pwToggle.addEventListener('click', function () {
-            var isHidden = pwInput.type === 'password';
-            pwInput.type = isHidden ? 'text' : 'password';
-            pwIcon.classList.toggle('fa-eye', !isHidden);
-            pwIcon.classList.toggle('fa-eye-slash', isHidden);
-            pwToggle.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
-        });
-    }
-
-    /* ══════════════════════════════════════
-       CAPS LOCK DETECTION
-    ══════════════════════════════════════ */
-    var capsHint = document.getElementById('capsLockHint');
-    if (pwInput && capsHint) {
-        var checkCaps = function (e) {
-            if (typeof e.getModifierState !== 'function') return;
-            var isCaps = e.getModifierState('CapsLock');
-            capsHint.classList.toggle('show', isCaps);
+        // Caps Lock detection
+        const checkCaps = (e) => {
+            if (typeof e.getModifierState === 'function' && capsHint) {
+                capsHint.classList.toggle('show', e.getModifierState('CapsLock'));
+            }
         };
-        pwInput.addEventListener('keyup', checkCaps);
-        pwInput.addEventListener('keydown', checkCaps);
-        pwInput.addEventListener('blur', function () { capsHint.classList.remove('show'); });
-    }
 
-    /* ══════════════════════════════════════
-       LIVE EMAIL FORMAT INDICATOR
-    ══════════════════════════════════════ */
-    var emailInput  = document.getElementById('email');
-    var emailStatus = document.getElementById('emailStatus');
-    var emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    function updateEmailStatus() {
-        if (!emailInput || !emailStatus) return;
-        var val = emailInput.value.trim();
-        emailStatus.classList.remove('show', 'ok', 'bad');
-        emailInput.classList.remove('is-valid');
-        if (!val) return;
-        if (emailPattern.test(val)) {
-            emailStatus.classList.add('show', 'ok', 'fa-check-circle');
-            emailStatus.classList.remove('fa-triangle-exclamation');
-            emailInput.classList.add('is-valid');
-        } else {
-            emailStatus.classList.add('show', 'bad', 'fa-triangle-exclamation');
-            emailStatus.classList.remove('fa-check-circle');
+        if (passwordInput) {
+            passwordInput.addEventListener('keyup', checkCaps);
+            passwordInput.addEventListener('keydown', checkCaps);
+            passwordInput.addEventListener('blur', () => {
+                if (capsHint) capsHint.classList.remove('show');
+            });
         }
-    }
-    if (emailInput) {
-        emailInput.addEventListener('input', updateEmailStatus);
-        emailInput.addEventListener('blur', updateEmailStatus);
-        if (emailInput.value) updateEmailStatus();
-    }
 
-    /* ══════════════════════════════════════
-       CLEAR SERVER ERROR STATE ON INPUT
-    ══════════════════════════════════════ */
-    document.querySelectorAll('.auth-input').forEach(function (input) {
-        input.addEventListener('input', function () {
-            this.classList.remove('is-error');
+        // Role button interactions
+        roleButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                roleButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                btn.setAttribute('aria-checked', 'true');
+                roleButtons.forEach(b => {
+                    if (b !== btn) b.setAttribute('aria-checked', 'false');
+                });
+                moveIndicator(btn, true);
+            });
         });
+
+        // Form submission feedback
+        const form = document.querySelector('form[wire\\:submit="login"]');
+        if (form) {
+            form.addEventListener('submit', () => {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                }
+            });
+        }
+
+        // Listen for Livewire finish event to re-enable button
+        if (window.Livewire) {
+            window.Livewire.on('finish', () => {
+                const submitBtn = form?.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                }
+            });
+        }
     });
-
-    /* ══════════════════════════════════════
-       SUBMIT — loading state + progress sweep
-    ══════════════════════════════════════ */
-    var form        = document.getElementById('loginForm');
-    var btnLabel    = document.getElementById('btnLabel');
-    var btnLoading  = document.getElementById('btnLoading');
-    var submitBtn   = document.getElementById('submitBtn');
-    var submitSweep = document.getElementById('authSubmitSweep');
-
-    if (form && btnLabel && btnLoading && submitBtn) {
-        form.addEventListener('submit', function () {
-            submitBtn.disabled = true;
-            btnLabel.classList.add('auth-hidden');
-            btnLoading.classList.remove('auth-hidden');
-            if (submitSweep) {
-                requestAnimationFrame(function () { submitSweep.style.width = '100%'; });
-            }
-        });
-    }
-
-    /* Ripple on primary + outline buttons */
-    document.querySelectorAll('.auth-btn-primary, .auth-btn-outline').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-            if (reducedMotion) return;
-            var rect = this.getBoundingClientRect();
-            var circle = document.createElement('span');
-            var size = Math.max(rect.width, rect.height);
-            circle.className = 'auth-btn-ripple';
-            circle.style.width = circle.style.height = size + 'px';
-            circle.style.left = (e.clientX - rect.left - size / 2) + 'px';
-            circle.style.top  = (e.clientY - rect.top  - size / 2) + 'px';
-            this.style.position = this.style.position || 'relative';
-            this.appendChild(circle);
-            setTimeout(function () { circle.remove(); }, 650);
-        });
-    });
-
-});
 </script>
 @endpush

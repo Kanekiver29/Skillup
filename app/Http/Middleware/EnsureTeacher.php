@@ -15,18 +15,22 @@ class EnsureTeacher
         $user = $request->user();
         if (! $user) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => 'Unauthorized. Teachers only.'], 403);
+                return response()->json(['message' => 'Unauthorized. Please log in.'], 401);
             }
-            abort(403, 'Unauthorized. Teachers only.');
+            return redirect()->route('login');
         }
 
-        $isTeacher = method_exists($user, 'isTeacher') && $user->isTeacher();
+        $isTeacher = (method_exists($user, 'isTeacher') && $user->isTeacher())
+            || (method_exists($user, 'isAdmin') && $user->isAdmin())
+            || (method_exists($user, 'hasStaffAccess') && $user->hasStaffAccess())
+            || in_array(strtolower((string)($user->role ?? '')), ['teacher', 'admin', 'staff', 'instructor'], true)
+            || in_array(strtolower((string)($user->staff_type ?? '')), ['teacher', 'instructor'], true);
 
         if (! $isTeacher) {
             if ($request->expectsJson()) {
                 return response()->json(['message' => 'Unauthorized. Teachers only.'], 403);
             }
-            abort(403, 'Unauthorized. Teachers only.');
+            return redirect()->route('home')->with('error', 'Access restricted to teacher portal.');
         }
 
         return $next($request);

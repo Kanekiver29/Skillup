@@ -14,7 +14,9 @@ class StaffController extends Controller
      */
     protected function authorizeStaff()
     {
-        if (!auth()->check() || auth()->user()->role !== 'staff') {
+        $user = auth()->user();
+
+        if (! $user || ! method_exists($user, 'hasStaffAccess') || ! $user->hasStaffAccess()) {
             abort(403, 'Unauthorized');
         }
     }

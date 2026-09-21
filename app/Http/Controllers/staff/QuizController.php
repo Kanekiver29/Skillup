@@ -8,11 +8,33 @@ use App\Models\Module;
 use App\Models\Quiz;
 use App\Models\QuizQuestion;
 use App\Models\QuizQuestionAnswer;
+use App\Models\UserQuizAttempt;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class QuizController extends Controller
 {
+    public function schedule()
+    {
+        $quizzes = Quiz::with(['module.course', 'subject'])
+            ->where('is_archived', false)
+            ->orderByRaw('scheduled_at IS NULL')
+            ->orderBy('scheduled_at')
+            ->orderBy('title')
+            ->get();
+
+        return view('staff.quizzes.schedule', compact('quizzes'));
+    }
+
+    public function results()
+    {
+        $results = UserQuizAttempt::with(['user', 'quiz'])
+            ->latest('completed_at')
+            ->paginate(25);
+
+        return view('staff.quizzes.results', compact('results'));
+    }
+
     public function index()
     {
         // Get both active and archived quizzes for filtering

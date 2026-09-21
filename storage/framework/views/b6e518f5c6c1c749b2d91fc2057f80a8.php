@@ -1,0 +1,1 @@
+<?php /**PATH C:\xampp\htdocs\skillupv2\resources\views\Admin\users\register.blade.php ENDPATH**/ ?>

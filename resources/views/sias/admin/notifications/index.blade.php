@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Notifications | SIAS Admin')
+@section('page_title', 'Notifications')
+@section('subtitle', 'Sends system reminders and alerts such as enrollment approval, announcements, grades, and updates.')
+@section('content')
+@php($title = 'Notifications')
+@php($purpose = 'Sends system reminders and alerts such as enrollment approval, announcements, grades, and other updates.')
+@php($items = ['Notification center', 'Unread alerts', 'Notification history'])
+@include('sias.admin.modules._workspace')
+@endsection

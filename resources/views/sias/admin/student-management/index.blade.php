@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Student Management | SIAS Admin')
+@section('page_title', 'Student Management')
+@section('subtitle', 'Maintains complete student information, records, documents, and current status.')
+@section('content')
+@php($title = 'Student Management')
+@php($purpose = 'Maintains complete student information, records, documents, and current status.')
+@php($items = ['Student Registration', 'Student Records', 'Student Profiles', 'Documents', 'Student Status'])
+@include('sias.admin.modules._workspace')
+@endsection

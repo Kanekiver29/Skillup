@@ -7,9 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root {
-    --em-void:         #090c12;
-    --em-panel:        #10141d;
-    --em-panel-soft:   #131826;
+    --em-void:         var(--body-bg);
+    --em-panel:        var(--surface);
+    --em-panel-soft:   var(--topbar-control-bg);
 
     --em-accent:       #5eead4;
     --em-accent-dark:  #34d3bd;
@@ -24,19 +24,31 @@
     --em-danger:       #fb7185;
     --em-danger-bg:    rgba(251,113,133,.12);
 
+    --em-gray-100:     var(--topbar-control-bg);
+    --em-gray-200:     var(--border);
+    --em-gray-400:     var(--muted);
+    --em-gray-600:     var(--muted);
+    --em-gray-900:     var(--text);
+
+    --em-radius:       12px;
+    --em-radius-sm:    8px;
+    --em-shadow:       0 1px 2px rgba(0,0,0,.08);
+
+    --em-font:         'Inter', system-ui, sans-serif;
+    --em-font-display: 'Space Grotesk', sans-serif;
+    --em-font-mono:    'JetBrains Mono', monospace;
+}
+
+html[data-staff-theme="dark"] .em-page {
+    --em-void:         #090c12;
+    --em-panel:        #10141d;
+    --em-panel-soft:   #131826;
     --em-gray-100:     #171c28;
     --em-gray-200:     #212739;
     --em-gray-400:     #838da3;
     --em-gray-600:     #aab2c4;
     --em-gray-900:     #e8ebf4;
-
-    --em-radius:       12px;
-    --em-radius-sm:    8px;
     --em-shadow:       0 1px 2px rgba(0,0,0,.35);
-
-    --em-font:         'Inter', system-ui, sans-serif;
-    --em-font-display: 'Space Grotesk', sans-serif;
-    --em-font-mono:    'JetBrains Mono', monospace;
 }
 
 .em-page {

@@ -1,0 +1,83 @@
+
+
+<?php $__env->startSection('title', 'Edit Assessment'); ?>
+
+<?php $__env->startSection('content'); ?>
+<div style="max-width: 960px; margin: 0 auto; padding: 1rem 0 2rem;">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:1.25rem; flex-wrap:wrap;">
+        <div>
+            <div style="font-size:0.72rem; letter-spacing:0.14em; text-transform:uppercase; font-weight:700; color:#2563eb; margin-bottom:0.5rem;">Staff portal</div>
+            <h1 style="margin:0; font-size:2rem; font-weight:800; color:#0b1526;">Edit Assessment</h1>
+            <p style="margin:0.5rem 0 0; color:#5a6f92;">Update the selected assessment details.</p>
+        </div>
+        <a href="<?php echo e(route('staff.quizzes.list')); ?>" style="display:inline-flex; align-items:center; justify-content:center; padding:0.7rem 1rem; border-radius:0.75rem; background:#eef2ff; color:#1e3a8a; font-weight:600; text-decoration:none; border:1px solid #dfe7ff;">Back to list</a>
+    </div>
+
+    <div style="background:#fff; border:1px solid #e5edf9; border-radius:1rem; padding:1.5rem; box-shadow:0 12px 30px rgba(30,64,175,0.06);">
+        <form action="<?php echo e(route('staff.quizzes.update', $quiz)); ?>" method="POST">
+            <?php echo csrf_field(); ?>
+            <?php echo method_field('PUT'); ?>
+
+            <div style="display:grid; grid-template-columns:repeat(2, minmax(0, 1fr)); gap:1.25rem;">
+                <div style="grid-column:1 / -1;">
+                    <label for="title" style="display:block; margin-bottom:0.45rem; font-weight:600; color:#0b1526;">Assessment Title</label>
+                    <input id="title" name="title" type="text" value="<?php echo e(old('title', $quiz->title)); ?>" required
+                           style="width:100%; padding:0.8rem 0.9rem; border:1px solid #d9e2f5; border-radius:0.7rem; background:#f8fbff; color:#0f172a;" />
+                </div>
+
+                <div style="grid-column:1 / -1;">
+                    <label for="description" style="display:block; margin-bottom:0.45rem; font-weight:600; color:#0b1526;">Description</label>
+                    <textarea id="description" name="description" rows="4" style="width:100%; padding:0.8rem 0.9rem; border:1px solid #d9e2f5; border-radius:0.7rem; background:#f8fbff; color:#0f172a; resize:vertical;"><?php echo e(old('description', $quiz->description)); ?></textarea>
+                </div>
+
+                <div>
+                    <label for="module_id" style="display:block; margin-bottom:0.45rem; font-weight:600; color:#0b1526;">Module</label>
+                    <select id="module_id" name="module_id" style="width:100%; padding:0.8rem 0.9rem; border:1px solid #d9e2f5; border-radius:0.7rem; background:#f8fbff; color:#0f172a;">
+                        <option value="">Select a module</option>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $modules; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $module): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <option value="<?php echo e($module->id); ?>" <?php echo e(old('module_id', $quiz->module_id) == $module->id ? 'selected' : ''); ?>>
+                                <?php echo e($module->title); ?>
+
+                            </option>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="course_id" style="display:block; margin-bottom:0.45rem; font-weight:600; color:#0b1526;">Course</label>
+                    <select id="course_id" name="course_id" style="width:100%; padding:0.8rem 0.9rem; border:1px solid #d9e2f5; border-radius:0.7rem; background:#f8fbff; color:#0f172a;">
+                        <option value="">Select a course</option>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::openLoop(); ?><?php endif; ?><?php $__currentLoopData = $courses; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $course): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::startLoopIteration(); ?><?php endif; ?>
+                            <option value="<?php echo e($course->id); ?>" <?php echo e(old('course_id', $quiz->module?->course_id) == $course->id ? 'selected' : ''); ?>>
+                                <?php echo e($course->title); ?>
+
+                            </option>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::endLoop(); ?><?php endif; ?><?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php \Livewire\Features\SupportCompiledWireKeys\SupportCompiledWireKeys::closeLoop(); ?><?php endif; ?>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="passing_score" style="display:block; margin-bottom:0.45rem; font-weight:600; color:#0b1526;">Passing Score (%)</label>
+                    <input id="passing_score" name="passing_score" type="number" min="0" max="100" value="<?php echo e(old('passing_score', $quiz->passing_score ?? 60)); ?>"
+                           style="width:100%; padding:0.8rem 0.9rem; border:1px solid #d9e2f5; border-radius:0.7rem; background:#f8fbff; color:#0f172a;" />
+                </div>
+
+                <div>
+                    <label for="time_limit_minutes" style="display:block; margin-bottom:0.45rem; font-weight:600; color:#0b1526;">Time Limit (Minutes)</label>
+                    <input id="time_limit_minutes" name="time_limit_minutes" type="number" min="0" value="<?php echo e(old('time_limit_minutes', $quiz->time_limit_minutes ?? 30)); ?>"
+                           style="width:100%; padding:0.8rem 0.9rem; border:1px solid #d9e2f5; border-radius:0.7rem; background:#f8fbff; color:#0f172a;" />
+                </div>
+            </div>
+
+            <div style="margin-top:1.5rem; display:flex; gap:0.75rem; justify-content:flex-end; flex-wrap:wrap;">
+                <a href="<?php echo e(route('staff.quizzes.list')); ?>" style="padding:0.8rem 1.1rem; border-radius:0.75rem; background:#f8fafc; border:1px solid #dfe7f3; color:#334155; text-decoration:none; font-weight:600;">Cancel</a>
+                <button type="submit" style="padding:0.8rem 1.25rem; border-radius:0.75rem; border:none; background:linear-gradient(135deg,#2563eb,#4f46e5); color:#fff; font-weight:700; cursor:pointer;">
+                    Update Assessment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('staff.layouts.masters', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\skillupv2\resources\views\staff\quizzes\edit.blade.php ENDPATH**/ ?>

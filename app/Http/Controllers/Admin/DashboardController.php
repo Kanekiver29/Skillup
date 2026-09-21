@@ -134,7 +134,11 @@ class DashboardController extends Controller
             'collegeData' => $collegeData,
         ];
 
-        return view('Admin.dashboard', $data);
+        $dashboardView = $request->routeIs('sias.admin.dashboard')
+            ? 'sias.admin.dashboard'
+            : 'Admin.dashboard';
+
+        return view($dashboardView, $data);
     }
 
     /**

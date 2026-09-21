@@ -1,64 +1,174 @@
 @extends('teacher.layouts.master')
 
-@section('title', 'Create Course')
-@section('page_title', 'Create Course')
+@section('title', isset($course) ? 'Edit Course' : 'Create Course')
+@section('page_title', isset($course) ? 'Edit Course' : 'New Course')
 
 @section('content')
-    <section class="card">
-        <h3 style="margin-top:0;">Create a new course</h3>
-        <p style="margin:0 0 1rem; color:var(--muted);">Add a course, set its details, and publish it when ready.</p>
-        <form method="POST" action="{{ route('teacher.courses.store') }}" enctype="multipart/form-data">
+<style>
+    .form-container {
+        max-width: 840px;
+        margin: 0 auto;
+    }
+    .form-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+    .form-header h1 {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: var(--navy-950);
+    }
+    .btn-back {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--navy-800);
+        font-weight: 700;
+        padding: 0.6rem 1.1rem;
+        border-radius: var(--radius-md);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.88rem;
+    }
+    .form-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-xl);
+        padding: 2.25rem;
+        box-shadow: var(--shadow-card);
+    }
+    .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.25rem;
+    }
+    .form-group {
+        margin-bottom: 1.4rem;
+    }
+    .form-group label {
+        display: block;
+        font-weight: 700;
+        font-size: 0.88rem;
+        color: var(--navy-950);
+        margin-bottom: 0.45rem;
+    }
+    .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        background: var(--surface-2);
+        color: var(--text);
+        font-family: inherit;
+        font-size: 0.92rem;
+    }
+    .form-control:focus {
+        border-color: var(--accent-2);
+        outline: none;
+        background: #fff;
+    }
+    .btn-submit {
+        background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+        color: #fff;
+        font-weight: 700;
+        padding: 0.8rem 1.6rem;
+        border-radius: var(--radius-md);
+        border: none;
+        cursor: pointer;
+    }
+    .form-footer {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 1rem;
+        border-top: 1px solid var(--border-soft);
+        padding-top: 1.5rem;
+        margin-top: 1.5rem;
+    }
+</style>
+
+<div class="form-container">
+    <div class="form-header">
+        <div>
+            <h1>🎓 {{ isset($course) ? 'Edit Course' : 'Create New Course' }}</h1>
+            <p style="color:var(--muted); font-size:0.9rem; margin-top:0.25rem;">Fill out course details to publish to the student platform.</p>
+        </div>
+        <a href="{{ route('teacher.courses.index') }}" class="btn-back">← Back to Courses</a>
+    </div>
+
+    @if($errors->any())
+        <div style="background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220, 38, 38, 0.25); color: #b91c1c; padding: 1rem 1.25rem; border-radius: var(--radius-md); margin-bottom: 1.5rem;">
+            <ul>
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    <div class="form-card">
+        <form method="POST" action="{{ isset($course) ? route('teacher.courses.update', $course->id) : route('teacher.courses.store') }}" enctype="multipart/form-data">
             @csrf
-            <div style="display:grid; gap:0.9rem;">
-                <div>
-                    <label style="display:block; margin-bottom:0.35rem; font-weight:600;">Course title</label>
-                    <input type="text" name="title" value="{{ old('title') }}" style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.8rem;" required>
+            @if(isset($course))
+                @method('PUT')
+            @endif
+
+            <div class="form-group">
+                <label for="title">Course Title <span style="color:var(--danger)">*</span></label>
+                <input type="text" id="title" name="title" value="{{ old('title', $course->title ?? '') }}" class="form-control" placeholder="e.g., Full-Stack Web Development Bootcamp" required>
+            </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="category">Category</label>
+                    <input type="text" id="category" name="category" value="{{ old('category', $course->category ?? 'Information Technology') }}" class="form-control" placeholder="e.g., Web Development, IT">
                 </div>
-                <div>
-                    <label style="display:block; margin-bottom:0.35rem; font-weight:600;">Short description</label>
-                    <input type="text" name="short_description" value="{{ old('short_description') }}" style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.8rem;">
-                </div>
-                <div>
-                    <label style="display:block; margin-bottom:0.35rem; font-weight:600;">Description</label>
-                    <textarea name="description" rows="4" style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.8rem;">{{ old('description') }}</textarea>
-                </div>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:0.9rem;">
-                    <div>
-                        <label style="display:block; margin-bottom:0.35rem; font-weight:600;">Category</label>
-                        <input type="text" name="category" value="{{ old('category') }}" style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.8rem;">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom:0.35rem; font-weight:600;">Level</label>
-                        <select name="level" style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.8rem;">
-                            <option value="Beginner" {{ old('level') == 'Beginner' ? 'selected' : '' }}>Beginner</option>
-                            <option value="Intermediate" {{ old('level') == 'Intermediate' ? 'selected' : '' }}>Intermediate</option>
-                            <option value="Advanced" {{ old('level') == 'Advanced' ? 'selected' : '' }}>Advanced</option>
-                        </select>
-                    </div>
-                </div>
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:0.9rem;">
-                    <div>
-                        <label style="display:block; margin-bottom:0.35rem; font-weight:600;">Duration hours</label>
-                        <input type="number" name="duration_hours" min="0" value="{{ old('duration_hours', 0) }}" style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.8rem;">
-                    </div>
-                    <div>
-                        <label style="display:block; margin-bottom:0.35rem; font-weight:600;">Preview image URL</label>
-                        <input type="url" name="image_url" value="{{ old('image_url') }}" style="width:100%; padding:0.75rem; border:1px solid var(--border); border-radius:0.8rem;">
-                    </div>
-                </div>
-                <div>
-                    <label style="display:block; margin-bottom:0.35rem; font-weight:600;">Course image</label>
-                    <input type="file" name="image" style="width:100%; padding:0.6rem; border:1px solid var(--border); border-radius:0.8rem;">
-                </div>
-                <label style="display:flex; align-items:center; gap:0.5rem; font-weight:600;">
-                    <input type="checkbox" name="is_published" value="1" {{ old('is_published') ? 'checked' : '' }}>
-                    Publish this course immediately
-                </label>
-                <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
-                    <button type="submit" class="btn-primary">Create course</button>
-                    <a href="{{ route('teacher.courses.index') }}" class="btn-secondary">Cancel</a>
+
+                <div class="form-group">
+                    <label for="level">Skill Level</label>
+                    <select id="level" name="level" class="form-control">
+                        <option value="Beginner" {{ old('level', $course->level ?? '') == 'Beginner' ? 'selected' : '' }}>Beginner</option>
+                        <option value="Intermediate" {{ old('level', $course->level ?? '') == 'Intermediate' ? 'selected' : '' }}>Intermediate</option>
+                        <option value="Advanced" {{ old('level', $course->level ?? '') == 'Advanced' ? 'selected' : '' }}>Advanced</option>
+                    </select>
                 </div>
             </div>
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label for="duration_hours">Estimated Duration (Hours)</label>
+                    <input type="number" id="duration_hours" name="duration_hours" value="{{ old('duration_hours', $course->duration_hours ?? 40) }}" min="0" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="is_published">Publishing Status</label>
+                    <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.6rem;">
+                        <input type="checkbox" id="is_published" name="is_published" value="1" {{ old('is_published', $course->is_published ?? true) ? 'checked' : '' }} style="width:18px; height:18px; accent-color:var(--accent);">
+                        <label for="is_published" style="margin:0; font-weight:600; cursor:pointer;">Publish Course Immediately</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="short_description">Short Summary</label>
+                <input type="text" id="short_description" name="short_description" value="{{ old('short_description', $course->short_description ?? '') }}" class="form-control" placeholder="Brief 1-2 sentence overview for course cards...">
+            </div>
+
+            <div class="form-group">
+                <label for="description">Full Description</label>
+                <textarea id="description" name="description" rows="5" class="form-control" placeholder="Detailed syllabus, course objectives, and requirements...">{{ old('description', $course->description ?? '') }}</textarea>
+            </div>
+
+            <div class="form-footer">
+                <a href="{{ route('teacher.courses.index') }}" class="btn-back">Cancel</a>
+                <button type="submit" class="btn-submit">
+                    {{ isset($course) ? 'Update Course' : 'Save & Create Course' }}
+                </button>
+            </div>
         </form>
-    </section>
+    </div>
+</div>
 @endsection

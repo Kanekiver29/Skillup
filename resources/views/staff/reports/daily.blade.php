@@ -5,11 +5,11 @@
 <style>
     /* ─── Design Tokens ──────────────────────────────────────────────── */
     :root {
-        --ink:      #0f1923;
-        --ink-soft: #4a5568;
-        --ink-faint:#8898a9;
-        --canvas:   #f5f7fa;
-        --white:    #ffffff;
+        --ink:      var(--text);
+        --ink-soft: var(--muted);
+        --ink-faint: var(--muted);
+        --canvas:   var(--body-bg);
+        --white:    var(--surface);
         --accent:   #2563eb;        /* electric blue — authority/data */
         --accent-lt:#dbeafe;
         --success:  #059669;

@@ -39,6 +39,48 @@ class UserManagementController extends Controller
     }
 
     /**
+     * Show create form for a user.
+     */
+    public function createUser()
+    {
+        $this->authorizeAdmin();
+
+        return view('sias.admin.users.create');
+    }
+
+    /**
+     * Store a newly created user account.
+     */
+    public function storeUser(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'username' => ['nullable', 'string', 'max:80', 'unique:users,username'],
+            'role' => ['required', 'string', 'in:student,staff,teacher,admin,sias_admin'],
+            'department' => ['nullable', 'string', 'max:255'],
+            'staff_type' => ['nullable', 'string', 'max:50'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'is_admin' => ['nullable', 'boolean'],
+        ]);
+
+        $user = new User();
+        $user->name = $validated['name'];
+        $user->email = strtolower(trim($validated['email']));
+        $user->username = $validated['username'] ?? strtolower(str_replace(' ', '', $validated['name']));
+        $user->role = $validated['role'];
+        $user->department = $validated['department'] ?? null;
+        $user->staff_type = $validated['staff_type'] ?? null;
+        $user->is_admin = (bool) ($validated['is_admin'] ?? false) || in_array($validated['role'], ['admin', 'sias_admin'], true);
+        $user->password = $validated['password'];
+        $user->save();
+
+        return redirect()->route('sias.admin.users')->with('success', 'User created successfully.');
+    }
+
+    /**
      * Make a user an admin.
      */
     public function makeAdmin(User $user)
@@ -190,7 +232,7 @@ class UserManagementController extends Controller
      */
     private function authorizeAdmin()
     {
-        if (!auth()->check() || !auth()->user()->is_admin) {
+        if (! auth()->check() || ! auth()->user()->isAdmin()) {
             abort(403, 'Unauthorized');
         }
     }

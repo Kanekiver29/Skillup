@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'System Settings | SIAS Admin')
+@section('page_title', 'System Settings')
+@section('subtitle', 'Controls SIAS configuration, academic settings, grading rules, backups, and maintenance.')
+@section('content')
+@php($title = 'System Settings')
+@php($purpose = 'Controls the overall configuration of the SIAS, including school information, academic settings, grading rules, backups, and maintenance.')
+@php($items = ['School Information', 'Academic Settings', 'Grading Settings', 'Language', 'Backup & Restore', 'System Maintenance'])
+@include('sias.admin.modules._workspace')
+@endsection

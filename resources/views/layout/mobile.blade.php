@@ -762,6 +762,7 @@
                         <a href="/" class="nav-link">Home</a>
                         <a href="{{ route('about') }}" class="nav-link">About</a>
                         <a href="{{ route('courses.index') }}" class="nav-link">Courses</a>
+                        <a href="{{ route('news') }}" class="nav-link">News</a>
                         <a href="{{ route('contact') }}" class="nav-link">Contact</a>
                     </div>
                 </div>
@@ -839,6 +840,7 @@
                 <a href="/"                           class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80">Home</a>
                 <a href="{{ route('about') }}"         class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80">About</a>
                 <a href="{{ route('courses.index') }}" class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80">Courses</a>
+                <a href="{{ route('news') }}"          class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80">News</a>
                 <a href="{{ route('contact') }}"       class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80">Contact</a>
                 @auth
                     <a href="{{ route('chats.index') }}"        class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80"><i class="fas fa-comments mr-2 text-cyan-300"></i>Messages</a>
@@ -937,8 +939,6 @@
                     <ul class="space-y-3.5 text-sm text-slate-400">
                         <li><a href="{{ route('about') }}"              class="footer-link">About Us</a></li>
                         <li><a href="{{ route('contact') }}"            class="footer-link">Contact</a></li>
-                        <li><a href="/Userpage/Company/careers"         class="footer-link">Careers</a></li>
-                        <li><a href="/Userpage/Company/blog"            class="footer-link">Blog</a></li>
                     </ul>
                 </div>
 
@@ -952,6 +952,10 @@
                         <li><a href="/Userpage/Legal/terms"      class="footer-link">Terms &amp; Conditions</a></li>
                         <li><a href="/Userpage/Legal/cookiepolicy" class="footer-link">Cookie Policy</a></li>
                         <li><a href="{{ route('contact') }}"     class="footer-link">Help Center</a></li>
+                        <li><a href="{{ route('developer') }}"   class="footer-link">Developer</a></li>
+                        <li><a href="{{ route('career') }}"      class="footer-link">Career</a></li>
+                        <li><a href="{{ route('advertising') }}" class="footer-link">Advertising</a></li>
+                        <li><a href="{{ route('licensing') }}"   class="footer-link">Licensing</a></li>
                     </ul>
                 </div>
             </div>

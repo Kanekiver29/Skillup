@@ -90,31 +90,42 @@ class AIChatbotController extends Controller
 
         $messages[] = ['role' => 'user', 'content' => $message];
 
-        // Prefer OpenAI GPT-4 for best guidance, then cost-optimize with gpt-4o-mini, then fallback to Mistral.
-        $models = ['openai/gpt-4', 'gpt-4o-mini', 'mistralai/mistral-7b-instruct'];
+        $model = env('OPENROUTER_MODEL', 'openai/gpt-4o');
+        $siteUrl = env('OPENROUTER_SITE_URL', env('APP_URL', 'http://localhost'));
+        $siteName = env('OPENROUTER_SITE_NAME', env('APP_NAME', 'SkillUp'));
 
-        foreach ($models as $model) {
-            try {
-                $response = Http::withHeaders([
-                    'Authorization' => "Bearer {$apiKey}",
-                    'Content-Type' => 'application/json',
-                ])->timeout(20)->post('https://openrouter.ai/api/v1/chat/completions', [
-                    'model' => $model,
-                    'messages' => $messages,
-                    'temperature' => 0.7,
-                    'max_tokens' => 500,
-                ]);
+        try {
+            $response = Http::withHeaders([
+                'Authorization' => "Bearer {$apiKey}",
+                'HTTP-Referer' => $siteUrl,
+                'X-Title' => $siteName,
+                'Content-Type' => 'application/json',
+            ])->timeout(30)->post('https://openrouter.ai/api/v1/chat/completions', [
+                'model' => $model,
+                'messages' => $messages,
+                'temperature' => 0.7,
+                'max_tokens' => 500,
+            ]);
 
-                if ($response->successful() && isset($response['choices'][0]['message']['content'])) {
-                    return trim($response['choices'][0]['message']['content']);
-                }
-            } catch (\Exception $exception) {
-                // Try next model if available
-                continue;
+            if ($response->successful() && isset($response['choices'][0]['message']['content'])) {
+                return trim($response['choices'][0]['message']['content']);
             }
-        }
 
-        return null;
+            Log::warning('OpenRouter response failed for exact model.', [
+                'model' => $model,
+                'status' => $response->status(),
+                'body' => $response->json('error.message') ?? $response->body(),
+            ]);
+
+            return null;
+        } catch (\Exception $exception) {
+            Log::error('OpenRouter request failed.', [
+                'model' => $model,
+                'message' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     /**

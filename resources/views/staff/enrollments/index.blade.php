@@ -11,9 +11,9 @@
    Futuristic console / HUD theme
    ============================================================ */
 :root {
-    --em-void:         #090c12;
-    --em-panel:        #10141d;
-    --em-panel-soft:   #131826;
+    --em-void:         var(--body-bg);
+    --em-panel:        var(--surface);
+    --em-panel-soft:   var(--topbar-control-bg);
 
     --em-accent:       #5eead4;
     --em-accent-dark:  #34d3bd;
@@ -28,21 +28,35 @@
     --em-danger:       #fb7185;
     --em-danger-bg:    rgba(251,113,133,.12);
 
+    --em-gray-50:      var(--surface);
+    --em-gray-100:     var(--topbar-control-bg);
+    --em-gray-200:     var(--border);
+    --em-gray-400:     var(--muted);
+    --em-gray-600:     var(--muted);
+    --em-gray-900:     var(--text);
+
+    --em-radius:       12px;
+    --em-radius-sm:    8px;
+    --em-shadow:       0 1px 2px rgba(0,0,0,.08);
+    --em-shadow-md:    0 10px 30px rgba(0,0,0,.12);
+
+    --em-font:         'Inter', system-ui, sans-serif;
+    --em-font-display: 'Space Grotesk', sans-serif;
+    --em-font-mono:    'JetBrains Mono', monospace;
+}
+
+html[data-staff-theme="dark"] .em-page {
+    --em-void:         #090c12;
+    --em-panel:        #10141d;
+    --em-panel-soft:   #131826;
     --em-gray-50:      #12161f;
     --em-gray-100:     #171c28;
     --em-gray-200:     #212739;
     --em-gray-400:     #838da3;
     --em-gray-600:     #aab2c4;
     --em-gray-900:     #e8ebf4;
-
-    --em-radius:       12px;
-    --em-radius-sm:    8px;
     --em-shadow:       0 1px 2px rgba(0,0,0,.35);
     --em-shadow-md:    0 10px 30px rgba(0,0,0,.55);
-
-    --em-font:         'Inter', system-ui, sans-serif;
-    --em-font-display: 'Space Grotesk', sans-serif;
-    --em-font-mono:    'JetBrains Mono', monospace;
 }
 
 /* Page wrapper */
@@ -50,12 +64,14 @@
     font-family: var(--em-font);
     color: var(--em-gray-900);
     max-width: 1300px;
-    background: var(--em-void);
+    background: linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+    border: 1px solid var(--border);
     border-radius: 18px;
     padding: 28px;
     position: relative;
     isolation: isolate;
     overflow: hidden;
+    box-shadow: 0 20px 50px rgba(15,23,42,.08);
 }
 .em-page::before {
     content: '';
@@ -173,14 +189,14 @@
     margin-bottom: 28px;
 }
 .em-stat {
-    background: linear-gradient(180deg, var(--em-panel), var(--em-panel-soft));
-    border: 1px solid var(--em-gray-200);
+    background: linear-gradient(180deg, var(--surface), var(--topbar-surface));
+    border: 1px solid var(--border);
     border-radius: var(--em-radius);
     padding: 20px 20px 18px;
-    box-shadow: var(--em-shadow);
+    box-shadow: 0 10px 24px rgba(15,23,42,.06);
     position: relative;
     overflow: hidden;
-    transition: border-color .2s ease, transform .2s ease;
+    transition: border-color .2s ease, transform .2s ease, box-shadow .2s ease;
 }
 .em-stat:hover { transform: translateY(-2px); border-color: var(--em-gray-400); }
 .em-stat::before {
@@ -233,14 +249,15 @@
 
 /* ── Purpose banner ── */
 .em-purpose {
-    background: linear-gradient(135deg, rgba(139,124,246,.08) 0%, rgba(94,234,212,.06) 100%);
-    border: 1px solid var(--em-gray-200);
+    background: linear-gradient(135deg, rgba(56,189,248,.08), rgba(139,92,246,.06), rgba(94,234,212,.08));
+    border: 1px solid var(--border);
     border-radius: var(--em-radius);
     padding: 18px 22px;
     margin-bottom: 28px;
     display: flex;
     gap: 16px;
     align-items: flex-start;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
 }
 .em-purpose__icon {
     width: 38px; height: 38px;
@@ -287,8 +304,8 @@
 
 /* ── Filter / search bar ── */
 .em-toolbar {
-    background: var(--em-panel-soft);
-    border: 1px solid var(--em-gray-200);
+    background: var(--topbar-surface);
+    border: 1px solid var(--border);
     border-radius: var(--em-radius);
     padding: 14px 16px;
     margin-bottom: 16px;
@@ -296,7 +313,7 @@
     gap: 12px;
     flex-wrap: wrap;
     align-items: center;
-    box-shadow: var(--em-shadow);
+    box-shadow: 0 10px 24px rgba(15,23,42,.05);
 }
 .em-search {
     position: relative;
@@ -356,10 +373,10 @@
 /* ── Table card ── */
 .em-card {
     position: relative;
-    background: linear-gradient(180deg, var(--em-panel), var(--em-panel-soft));
-    border: 1px solid var(--em-gray-200);
+    background: linear-gradient(180deg, var(--surface), var(--topbar-surface));
+    border: 1px solid var(--border);
     border-radius: var(--em-radius);
-    box-shadow: var(--em-shadow);
+    box-shadow: 0 16px 30px rgba(15,23,42,.05);
     overflow: hidden;
     margin-bottom: 24px;
 }

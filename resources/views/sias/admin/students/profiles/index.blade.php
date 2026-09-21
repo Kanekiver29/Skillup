@@ -1,0 +1,11 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Student Profiles')
+@section('page_title', 'Student Profiles')
+@section('subtitle', 'Review personal, educational, employment, and guardian information for every learner.')
+@section('content')
+<div class="admin-card" style="overflow:hidden;">
+  <div style="display:flex;justify-content:space-between;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem;"><div><h3 style="margin:0;">Learner profiles</h3><p style="margin:.3rem 0 0;color:var(--text-muted);">{{ $students->total() }} registered learners</p></div><a class="btn" style="width:auto;" href="{{ route('sias.admin.students.create') }}">Register learner</a></div>
+  <div style="overflow-x:auto;"><table style="width:100%;min-width:760px;border-collapse:collapse;"><thead><tr style="text-align:left;color:var(--text-muted);font-size:.75rem;text-transform:uppercase;border-bottom:1px solid var(--card-border);"><th style="padding:.75rem;">Learner</th><th style="padding:.75rem;">Birthdate / Sex</th><th style="padding:.75rem;">Education</th><th style="padding:.75rem;">Employment</th><th style="padding:.75rem;">Action</th></tr></thead><tbody>@foreach($students as $student)@php($data = $student->settings['registration'] ?? [])<tr style="border-bottom:1px solid var(--card-border);"><td style="padding:.75rem;"><strong>{{ $student->name }}</strong><small style="display:block;color:var(--text-muted);">{{ $student->lrn ?? $student->id }}</small></td><td style="padding:.75rem;">{{ $data['birthdate'] ?? '—' }}<small style="display:block;color:var(--text-muted);">{{ $data['sex'] ?? '—' }}</small></td><td style="padding:.75rem;">{{ $data['educational_attainment'] ?? '—' }}<small style="display:block;color:var(--text-muted);">{{ $data['school'] ?? '—' }}</small></td><td style="padding:.75rem;">{{ $data['employment_status'] ?? '—' }}<small style="display:block;color:var(--text-muted);">{{ $data['occupation'] ?? '—' }}</small></td><td style="padding:.75rem;"><a href="{{ route('sias.admin.students.show', $student->id) }}" style="color:var(--accent);">View</a></td></tr>@endforeach</tbody></table></div>
+  <div style="margin-top:1rem;">{{ $students->links() }}</div>
+</div>
+@endsection

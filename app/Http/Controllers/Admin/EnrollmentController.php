@@ -32,4 +32,12 @@ class EnrollmentController extends Controller
 
         return view('Admin.enrollments.index', compact('enrollments'));
     }
+
+    public function approve(Enrollment $enrollment)
+    {
+        $this->authorizeAdmin();
+
+        // Placeholder approval action.
+        return redirect()->route('admin.enrollments.index')->with('success', 'Enrollment approved (placeholder).');
+    }
 }

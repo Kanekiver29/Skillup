@@ -89,6 +89,165 @@ class SettingsController extends Controller
     }
 
     /**
+     * Show one of the SIAS admin settings sections.
+     */
+    public function section(Request $request, string $section)
+    {
+        $this->authorizeSettings($request);
+
+        $definitions = $this->sectionDefinitions();
+        abort_unless(isset($definitions[$section]), 404);
+
+        $userSettings = $request->user()->settings ?? [];
+        $values = $userSettings['admin'][$section] ?? [];
+
+        if ($section === 'language') {
+            $values = array_merge([
+                'locale' => app()->getLocale(),
+                'timezone' => config('app.timezone', 'UTC'),
+            ], $values);
+        }
+
+        if ($section === 'school-information') {
+            $values = array_merge([
+                'app_name' => config('app.name'),
+                'app_url' => config('app.url'),
+            ], $values);
+        }
+
+        $views = [
+            'school-information' => 'sias.admin.settings.school-information.index',
+            'academic-settings' => 'sias.admin.settings.academic-settings.index',
+            'grading-settings' => 'sias.admin.settings.grading-settings.index',
+            'language' => 'sias.admin.settings.language.index',
+            'maintenance' => 'sias.admin.settings.system-maintenance.index',
+        ];
+
+        return view($views[$section], [
+            'section' => $section,
+            'definition' => $definitions[$section],
+            'values' => $values,
+        ]);
+    }
+
+    /**
+     * Persist one of the SIAS admin settings sections.
+     */
+    public function updateSection(Request $request, string $section)
+    {
+        $this->authorizeSettings($request);
+
+        $definitions = $this->sectionDefinitions();
+        abort_unless(isset($definitions[$section]), 404);
+
+        $validated = $request->validate($definitions[$section]['rules']);
+        $user = $request->user();
+        $settings = $user->settings ?? [];
+        $settings['admin'] ??= [];
+        $settings['admin'][$section] = $validated;
+
+        if ($section === 'school-information') {
+            $this->updateEnvFile([
+                'APP_NAME' => $validated['app_name'],
+                'APP_URL' => $validated['app_url'],
+            ]);
+            Artisan::call('config:clear');
+        }
+
+        if ($section === 'language') {
+            $request->session()->put('locale', $validated['locale']);
+        }
+
+        $user->forceFill(['settings' => $settings])->save();
+
+        return redirect()
+            ->route('sias.admin.settings.section', $section)
+            ->with('success', $definitions[$section]['title'] . ' updated successfully.');
+    }
+
+    /**
+     * Define the editable SIAS settings and their validation rules in one place.
+     */
+    private function sectionDefinitions(): array
+    {
+        return [
+            'school-information' => [
+                'title' => __('sias.settings_school_information'),
+                'purpose' => __('sias.settings_school_information_purpose'),
+                'fields' => [
+                    ['name' => 'app_name', 'label' => 'School name', 'type' => 'text'],
+                    ['name' => 'app_url', 'label' => 'School website URL', 'type' => 'url'],
+                    ['name' => 'school_email', 'label' => 'School email', 'type' => 'email'],
+                    ['name' => 'school_phone', 'label' => 'School phone', 'type' => 'text'],
+                    ['name' => 'school_address', 'label' => 'School address', 'type' => 'textarea'],
+                ],
+                'rules' => [
+                    'app_name' => ['required', 'string', 'max:100'],
+                    'app_url' => ['required', 'url', 'max:255'],
+                    'school_email' => ['nullable', 'email', 'max:255'],
+                    'school_phone' => ['nullable', 'string', 'max:50'],
+                    'school_address' => ['nullable', 'string', 'max:500'],
+                ],
+            ],
+            'academic-settings' => [
+                'title' => __('sias.settings_academic'),
+                'purpose' => __('sias.settings_academic_purpose'),
+                'fields' => [
+                    ['name' => 'school_year', 'label' => 'School year', 'type' => 'text'],
+                    ['name' => 'semester', 'label' => 'Semester / term', 'type' => 'select', 'options' => ['First Semester', 'Second Semester', 'Summer Term']],
+                    ['name' => 'grading_period', 'label' => 'Grading period', 'type' => 'select', 'options' => ['Quarter', 'Semester', 'Trimester']],
+                    ['name' => 'section_capacity', 'label' => 'Default section capacity', 'type' => 'number'],
+                ],
+                'rules' => [
+                    'school_year' => ['required', 'string', 'max:20'],
+                    'semester' => ['required', 'in:First Semester,Second Semester,Summer Term'],
+                    'grading_period' => ['required', 'in:Quarter,Semester,Trimester'],
+                    'section_capacity' => ['required', 'integer', 'min:1', 'max:500'],
+                ],
+            ],
+            'grading-settings' => [
+                'title' => __('sias.settings_grading'),
+                'purpose' => __('sias.settings_grading_purpose'),
+                'fields' => [
+                    ['name' => 'passing_grade', 'label' => 'Passing grade (%)', 'type' => 'number', 'step' => '0.01'],
+                    ['name' => 'maximum_grade', 'label' => 'Maximum grade (%)', 'type' => 'number', 'step' => '0.01'],
+                    ['name' => 'decimal_places', 'label' => 'Displayed decimal places', 'type' => 'number'],
+                ],
+                'rules' => [
+                    'passing_grade' => ['required', 'numeric', 'min:0', 'max:100'],
+                    'maximum_grade' => ['required', 'numeric', 'gt:passing_grade', 'max:100'],
+                    'decimal_places' => ['required', 'integer', 'min:0', 'max:4'],
+                ],
+            ],
+            'language' => [
+                'title' => __('sias.settings_language'),
+                'purpose' => __('sias.settings_language_purpose'),
+                'fields' => [
+                    ['name' => 'locale', 'label' => 'Language', 'type' => 'select', 'options' => ['en', 'tl']],
+                    ['name' => 'timezone', 'label' => 'Timezone', 'type' => 'timezone'],
+                ],
+                'rules' => [
+                    'locale' => ['required', 'in:en,tl'],
+                    'timezone' => ['required', 'timezone'],
+                ],
+            ],
+            'maintenance' => [
+                'title' => __('sias.settings_maintenance'),
+                'purpose' => __('sias.settings_maintenance_purpose'),
+                'fields' => [],
+                'rules' => [],
+            ],
+        ];
+    }
+
+    private function authorizeSettings(Request $request): void
+    {
+        if (! $request->user() || ! $request->user()->is_admin) {
+            abort(403, 'Forbidden');
+        }
+    }
+
+    /**
      * Clear one or all Laravel caches.
      * Accepted types: config | route | view | all
      */
@@ -137,11 +296,25 @@ class SettingsController extends Controller
             Artisan::call('up');
             $message = 'Application is now live.';
         } else {
+            $maintenanceReason = trim((string) $request->input('maintenance_reason', 'Scheduled system maintenance in progress.'));
+
+            if ($maintenanceReason === '') {
+                $maintenanceReason = 'Scheduled system maintenance in progress.';
+            }
+
+            $this->updateEnvFile([
+                'APP_MAINTENANCE_REASON' => $maintenanceReason,
+            ]);
+
+            Artisan::call('config:clear');
+
             Artisan::call('down', [
                 '--secret' => bin2hex(random_bytes(16)),
-                '--render' => 'errors::503',
+                '--render' => 'errors.maintenance',
+                '--retry' => '60',
             ]);
-            $message = 'Maintenance mode enabled.';
+
+            $message = 'Maintenance mode enabled: ' . $maintenanceReason;
         }
 
         if ($request->expectsJson()) {

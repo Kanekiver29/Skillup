@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Dashboard | SIAS Admin')
+@section('page_title', 'Dashboard')
+@section('subtitle', 'Gives the admin an overview of students, teachers, enrollment, courses, attendance, grades, and system activity.')
+@section('content')
+@php($title = 'Dashboard')
+@php($purpose = 'Gives the admin an overview of students, teachers, enrollment, courses, attendance, grades, and system activity.')
+@php($items = ['Student overview', 'Enrollment activity', 'System activity'])
+@include('sias.admin.modules._workspace')
+@endsection

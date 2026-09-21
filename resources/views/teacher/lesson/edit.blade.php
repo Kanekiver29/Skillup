@@ -1,0 +1,66 @@
+@extends('teacher.layouts.master')
+
+@section('title', 'Edit Lesson')
+
+@section('content')
+<div class="container mx-auto px-4 py-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-slate-800">Edit Lesson</h1>
+        <p class="text-slate-500">Update lesson details and learning content.</p>
+    </div>
+
+    <div class="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+        <form action="{{ route('teacher.lessons.update', $lesson->id) }}" method="POST" enctype="multipart/form-data" class="space-y-5">
+            @csrf
+            @method('PUT')
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Title</label>
+                <input type="text" name="title" value="{{ old('title', $lesson->title) }}" class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none" required>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Module</label>
+                <select name="module_id" class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none" required>
+                    @foreach($modules ?? [] as $module)
+                        <option value="{{ $module->id }}" {{ $lesson->module_id == $module->id ? 'selected' : '' }}>{{ $module->title }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Content</label>
+                <textarea name="content" rows="6" class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none">{{ old('content', $lesson->content) }}</textarea>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Video URL</label>
+                <input type="url" name="video_url" value="{{ old('video_url', $lesson->video_url) }}" class="w-full rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none" placeholder="https://">
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Replace video file</label>
+                <input type="file" name="video" accept="video/*" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Lesson image</label>
+                <input type="file" name="image" accept="image/*" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+                @if($lesson->image_url)
+                    <img src="{{ $lesson->image_url }}" alt="Lesson image" class="mt-2 h-24 rounded-lg object-cover">
+                @endif
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700">Material</label>
+                <input type="file" name="material" accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" class="w-full rounded-lg border border-slate-300 px-3 py-2">
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4">
+                <a href="{{ route('teacher.lessons.index') }}" class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50">Cancel</a>
+                <button type="submit" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Update Lesson</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection

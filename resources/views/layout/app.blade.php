@@ -10,11 +10,29 @@
     <title>@yield('title', 'SkillUp')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel ="icon" href="{{ asset('image/logo_oif_skillup_1_-removebg-preview.png') }}" type="image/x-icon">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <script>
+        (() => {
+            const saved = @json(data_get(auth()->user(), 'settings.appearance', []));
+            const local = JSON.parse(localStorage.getItem('skillup-appearance') || '{}');
+            const appearance = { ...saved, ...local };
+            const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            const root = document.documentElement;
+            const apply = () => {
+                const theme = appearance.theme === 'system' ? (systemDark.matches ? 'dark' : 'light') : (appearance.theme || 'light');
+                root.dataset.skillupTheme = theme;
+                root.dataset.skillupThemeChoice = appearance.theme || 'light';
+                root.dataset.skillupFontSize = appearance.font_size || 'medium';
+                root.dataset.skillupReducedMotion = appearance.reduced_motion ? 'true' : 'false';
+                root.classList.toggle('dark-mode', theme === 'dark');
+            };
+            apply();
+            systemDark.addEventListener?.('change', apply);
+        })();
+    </script>
     <style>
         :root {
             --primary: #0046ff;
@@ -35,6 +53,7 @@
         }
 
         html { scroll-behavior: smooth; }
+        [x-cloak] { display: none !important; }
         @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
         body { font-family: 'Inter', system-ui, sans-serif; position: relative; }
@@ -432,10 +451,11 @@
         ══════════════════════════════════════ */
 
         .site-header {
-            background: rgba(6, 12, 26, 0.86);
+            background: linear-gradient(180deg, rgba(5, 10, 20, 0.98) 0%, rgba(9, 17, 31, 0.94) 100%);
             backdrop-filter: blur(18px);
             -webkit-backdrop-filter: blur(18px);
-            border-bottom: 1px solid rgba(0, 230, 255, 0.14);
+            border-bottom: 1px solid rgba(146, 172, 204, 0.12);
+            box-shadow: inset 0 -1px 0 rgba(255,255,255,0.03);
             transition: background 0.4s var(--header-ease), box-shadow 0.4s var(--header-ease), border-color 0.4s var(--header-ease);
             animation: headerEnter 0.7s var(--header-ease) forwards;
             position: relative;
@@ -492,11 +512,17 @@
         .site-header.is-scrolled .site-header-bar {
             height: 4.25rem;
         }
+        .header-brand {
+            letter-spacing: 0.08em;
+        }
 
         .nav-link {
             position: relative;
-            padding-bottom: 0.25rem;
-            color: rgba(226, 232, 240, 0.85);
+            padding-bottom: 0.2rem;
+            color: rgba(226, 232, 240, 0.82);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-size: 0.74rem;
             transition: color 0.25s ease, transform 0.25s var(--header-ease);
         }
         .nav-link::after {
@@ -506,9 +532,9 @@
             bottom: -0.35rem;
             width: 0;
             height: 2px;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-gold));
-            border-radius: 2px;
-            box-shadow: 0 0 8px rgba(0,230,255,0.7);
+            background: linear-gradient(90deg, var(--accent-cyan), #7dd3fc);
+            border-radius: 50px;
+            box-shadow: 0 0 10px rgba(125,211,252,0.85);
             transform: translateX(-50%);
             transition: width 0.35s var(--header-ease);
         }
@@ -516,30 +542,22 @@
         .nav-link:hover::after,
         .nav-link.active::after { width: 100%; }
         .nav-link.active { color: #fff; }
-        .nav-link.active::before {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: -0.85rem;
-            width: 4px; height: 4px;
-            transform: translateX(-50%);
-            border-radius: 50%;
-            background: var(--accent-cyan);
-            box-shadow: 0 0 8px rgba(0,230,255,0.9);
-        }
 
         .header-search {
             position: relative;
-            transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+            border-radius: 9999px;
+            border: 1px solid rgba(148, 163, 184, 0.26);
+            background: rgba(15, 23, 42, 0.45);
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, transform 0.2s ease;
         }
         .header-search:focus-within {
-            border-color: rgba(0, 230, 255, 0.55);
-            background: rgba(2, 8, 18, 0.6);
-            box-shadow: 0 0 0 3px rgba(0, 230, 255, 0.14), 0 0 18px rgba(0,230,255,0.15);
+            border-color: rgba(125, 211, 252, 0.7);
+            background: rgba(2, 6, 23, 0.85);
+            box-shadow: 0 0 0 3px rgba(125, 211, 252, 0.12), 0 0 18px rgba(56, 189, 248, 0.12);
         }
         .header-search:focus-within .header-search-icon {
             color: var(--accent-cyan);
-            transform: scale(1.1);
+            transform: scale(1.08);
         }
         .header-search-icon {
             transition: color 0.25s ease, transform 0.25s var(--header-ease);
@@ -547,18 +565,19 @@
         .header-search kbd {
             font-family: 'JetBrains Mono', ui-monospace, monospace;
             font-size: 10px;
-            color: rgba(148,163,184,0.7);
-            border: 1px solid rgba(148,163,184,0.3);
-            border-radius: 5px;
-            padding: 1px 6px;
+            color: rgba(148,163,184,0.8);
+            border: 1px solid rgba(148,163,184,0.25);
+            border-radius: 9999px;
+            padding: 1px 7px;
             line-height: 1.5;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255,255,255,0.02);
         }
 
         .header-action-btn {
+            border-radius: 9999px;
             transition: transform 0.22s var(--header-ease), background 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
         }
-        .header-action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,230,255,0.25); }
+        .header-action-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2), 0 0 0 1px rgba(125,211,252,0.18); }
         .header-action-btn:active { transform: translateY(0) scale(0.98); }
 
         .header-login-btn {
@@ -633,7 +652,11 @@
         .header-nav-toggle.is-active { transform: rotate(90deg); }
 
         .mobile-nav-panel {
-            position: relative;
+            position: fixed;
+            top: 76px;
+            right: 0;
+            bottom: 0;
+            left: 0;
             max-height: 0;
             overflow: hidden;
             opacity: 0;
@@ -769,6 +792,68 @@
         [data-footer-animate].footer-delay-2 { transition-delay: 160ms; }
         [data-footer-animate].footer-delay-3 { transition-delay: 240ms; }
         [data-footer-animate].footer-delay-4 { transition-delay: 320ms; }
+
+        /* User appearance preferences are applied before the first paint. */
+        html[data-skillup-font-size="small"] { font-size: 93.75%; }
+        html[data-skillup-font-size="large"] { font-size: 112.5%; }
+        html[data-skillup-theme="dark"] body { background: #0b1220 !important; color: #e5edf8 !important; }
+        html[data-skillup-theme="dark"] .bg-light-background { background-color: #0b1220 !important; }
+        html[data-skillup-theme="dark"] .text-dark { color: #e5edf8 !important; }
+        html[data-skillup-theme="dark"] .bg-white { background-color: #111c2e !important; }
+        html[data-skillup-theme="dark"] .bg-slate-50 { background-color: #162235 !important; }
+        html[data-skillup-theme="dark"] .bg-slate-100 { background-color: #0f1a2b !important; }
+        html[data-skillup-theme="dark"] .bg-gray-50 { background-color: #0f1a2b !important; }
+        html[data-skillup-theme="dark"] .bg-gray-100 { background-color: #162235 !important; }
+        html[data-skillup-theme="dark"] .text-slate-900,
+        html[data-skillup-theme="dark"] .text-slate-800,
+        html[data-skillup-theme="dark"] .text-slate-700 { color: #e5edf8 !important; }
+        html[data-skillup-theme="dark"] .text-slate-600,
+        html[data-skillup-theme="dark"] .text-slate-500 { color: #9fb0c7 !important; }
+        html[data-skillup-theme="dark"] .text-gray-900,
+        html[data-skillup-theme="dark"] .text-gray-800,
+        html[data-skillup-theme="dark"] .text-gray-700 { color: #e5edf8 !important; }
+        html[data-skillup-theme="dark"] .text-gray-600,
+        html[data-skillup-theme="dark"] .text-gray-500 { color: #9fb0c7 !important; }
+        html[data-skillup-theme="dark"] .border-slate-200,
+        html[data-skillup-theme="dark"] .border-slate-300 { border-color: #2b3b52 !important; }
+        html[data-skillup-theme="dark"] .border-gray-200,
+        html[data-skillup-theme="dark"] .border-gray-300 { border-color: #2b3b52 !important; }
+        html[data-skillup-theme="dark"] select,
+        html[data-skillup-theme="dark"] input,
+        html[data-skillup-theme="dark"] textarea { color-scheme: dark; }
+        html[data-skillup-theme="dark"] .bg-cyan-50 { background-color: #123448 !important; }
+        html[data-skillup-theme="dark"] .bg-emerald-50,
+        html[data-skillup-theme="dark"] .bg-violet-50,
+        html[data-skillup-theme="dark"] .bg-amber-50,
+        html[data-skillup-theme="dark"] .bg-pink-50,
+        html[data-skillup-theme="dark"] .bg-indigo-50,
+        html[data-skillup-theme="dark"] .bg-red-50 { background-color: #18283b !important; }
+        html[data-skillup-theme="dark"] .skillup-settings-page .text-emerald-700 { color: #6ee7b7 !important; }
+        html[data-skillup-theme="dark"] .skillup-settings-page .text-violet-700 { color: #c4b5fd !important; }
+        html[data-skillup-theme="dark"] .skillup-settings-page .text-amber-700 { color: #fcd34d !important; }
+        html[data-skillup-theme="dark"] .skillup-settings-page .text-pink-700 { color: #f9a8d4 !important; }
+        html[data-skillup-theme="dark"] .skillup-settings-page .text-indigo-700 { color: #a5b4fc !important; }
+        html[data-skillup-theme="dark"] .skillup-settings-page .text-red-700 { color: #fca5a5 !important; }
+        html[data-skillup-theme="dark"] .skillup-settings-page select option { background: #111c2e; color: #e5edf8; }
+        html[data-skillup-theme="dark"] .skillup-settings-page input::placeholder { color: #8395ad !important; }
+        /* Pages with custom card surfaces keep readable text in dark mode. */
+        html[data-skillup-theme="dark"] .about-glass,
+        html[data-skillup-theme="dark"] .faq-item { background: #111c2e !important; color: #e5edf8 !important; }
+        html[data-skillup-theme="dark"] #mission-vision.bg-white,
+        html[data-skillup-theme="dark"] #values.bg-white { background: #0b1220 !important; }
+        html[data-skillup-theme="dark"] .about-glass .text-gray-800,
+        html[data-skillup-theme="dark"] .about-glass .text-gray-700,
+        html[data-skillup-theme="dark"] .faq-item .text-gray-700,
+        html[data-skillup-theme="dark"] .faq-panel-inner { color: #e5edf8 !important; }
+        html[data-skillup-theme="dark"] #mission-vision h2.text-\[\#0a2540\] { color: #dbeafe !important; }
+        html[data-skillup-reduced-motion="true"] *,
+        html[data-skillup-reduced-motion="true"] *::before,
+        html[data-skillup-reduced-motion="true"] *::after {
+            animation-duration: 0.001ms !important;
+            animation-iteration-count: 1 !important;
+            scroll-behavior: auto !important;
+            transition-duration: 0.001ms !important;
+        }
 
         .footer-logo-icon {
             position: relative;
@@ -996,6 +1081,109 @@
         }
     </style>
     @stack('head')
+    <style>
+        /* Final theme layer: this runs after page-specific styles so custom Userpage
+           designs use the same saved appearance preferences as the shared shell. */
+        html[data-skillup-theme="light"] .su-contact {
+            --c-void: #f4f7fb;
+            --c-surface: #ffffff;
+            --c-surface-2: #eef3f9;
+            --c-glass: rgba(255,255,255,0.82);
+            --c-glass-border: rgba(15,23,42,0.12);
+            --c-text: #172033;
+            --c-muted: #526174;
+            --c-muted-2: #718096;
+        }
+        html[data-skillup-theme="light"] .su-contact .su-hero,
+        html[data-skillup-theme="light"] .su-contact .su-cta {
+            background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,92,255,0.12), transparent 70%), var(--c-void);
+        }
+        html[data-skillup-theme="light"] .su-contact .su-section-alt { background: linear-gradient(180deg, #eaf1f8 0%, #f4f7fb 100%); }
+        html[data-skillup-theme="light"] .su-contact .su-input,
+        html[data-skillup-theme="light"] .su-contact .su-select,
+        html[data-skillup-theme="light"] .su-contact .su-textarea { background: rgba(255,255,255,0.9); }
+
+        html[data-skillup-theme="dark"] .su-contact {
+            --c-void: #05060d;
+            --c-surface: #0b0e1a;
+            --c-surface-2: #10152a;
+            --c-glass: rgba(255,255,255,0.045);
+            --c-glass-border: rgba(255,255,255,0.09);
+            --c-text: #e9edfb;
+            --c-muted: #aab3c8;
+            --c-muted-2: #818aa5;
+        }
+
+        html[data-skillup-theme="light"] .container,
+        html[data-skillup-theme="light"] #features,
+        html[data-skillup-theme="light"] #explore,
+        html[data-skillup-theme="light"] #faq,
+        html[data-skillup-theme="light"] .marquee-section,
+        html[data-skillup-theme="light"] .feature-card,
+        html[data-skillup-theme="light"] .step-card,
+        html[data-skillup-theme="light"] .explore-card,
+        html[data-skillup-theme="light"] .testimonial-card,
+        html[data-skillup-theme="light"] details.faq-item { color: #172033; }
+
+        html[data-skillup-theme="dark"] .feature-card,
+        html[data-skillup-theme="dark"] .step-card,
+        html[data-skillup-theme="dark"] .explore-card,
+        html[data-skillup-theme="dark"] .testimonial-card,
+        html[data-skillup-theme="dark"] details.faq-item {
+            background: #111c2e !important;
+            border-color: #2b3b52 !important;
+        }
+        html[data-skillup-theme="dark"] .feature-title,
+        html[data-skillup-theme="dark"] .step-title,
+        html[data-skillup-theme="dark"] .explore-title,
+        html[data-skillup-theme="dark"] .t-name,
+        html[data-skillup-theme="dark"] .faq-q,
+        html[data-skillup-theme="dark"] .section-title { color: #e5edf8 !important; }
+        html[data-skillup-theme="dark"] .feature-desc,
+        html[data-skillup-theme="dark"] .step-desc,
+        html[data-skillup-theme="dark"] .section-sub,
+        html[data-skillup-theme="dark"] .t-quote,
+        html[data-skillup-theme="dark"] .faq-a { color: #aebdd1 !important; }
+        html[data-skillup-theme="dark"] #how-it-works,
+        html[data-skillup-theme="dark"] #testimonials { background: #0f1a2b !important; }
+        html[data-skillup-theme="dark"] #features,
+        html[data-skillup-theme="dark"] #explore,
+        html[data-skillup-theme="dark"] #faq { background: #0b1220 !important; }
+
+        html[data-skillup-theme="dark"] .su-contact .su-input,
+        html[data-skillup-theme="dark"] .su-contact .su-select,
+        html[data-skillup-theme="dark"] .su-contact .su-textarea { color: #e9edfb !important; background: rgba(255,255,255,0.06); }
+        html[data-skillup-theme="dark"] .su-contact .su-select option { background: #10152a; color: #e9edfb; }
+        html[data-skillup-theme="light"] .su-contact .su-select option { background: #ffffff; color: #172033; }
+
+        /* Shared tokens used by the course, exam, grade, lesson, quiz,
+           subject, and trivia views. */
+        html[data-skillup-theme="light"] {
+            --bg: #f3f5fb;
+            --bg-alt: #e8edf7;
+            --text: #101b2e;
+            --text-muted: #5b6b85;
+            --text-dim: #8792ac;
+            --card-bg: #ffffff;
+            --card-border: rgba(16,27,46,.10);
+            --surface: rgba(255,255,255,.9);
+            --surface-solid: #ffffff;
+        }
+        html[data-skillup-theme="dark"] {
+            --bg: #070a13;
+            --bg-alt: #0e1526;
+            --text: #e7ebf5;
+            --text-muted: #aebbd2;
+            --text-dim: #7887a8;
+            --card-bg: #0e1526;
+            --card-border: rgba(255,255,255,.12);
+            --surface: rgba(9,16,34,.82);
+            --surface-solid: #0b1428;
+        }
+
+        html[data-skillup-reduced-motion="true"],
+        html[data-skillup-reduced-motion="true"] body { scroll-behavior: auto !important; }
+    </style>
 </head>
 <body class="bg-light-background text-dark">
 
@@ -1005,185 +1193,8 @@
     {{-- Ambient cursor spotlight --}}
     <div id="cursor-glow" aria-hidden="true"></div>
 
-    <header id="site-header" class="site-header fixed w-full z-50 text-slate-100">
-        <div class="header-hud-grid hud-grid" aria-hidden="true"></div>
-
-        {{-- Scrolling status strip --}}
-        <div class="status-strip" aria-hidden="true">
-            <div class="status-track">
-                <span class="status-item"><span class="status-dot"></span>TESDA-ALIGNED CURRICULUM</span>
-                <span class="status-item gold"><span class="status-dot"></span>LIVE MENTOR SUPPORT</span>
-                <span class="status-item"><span class="status-dot"></span>SKILL PATHS UPDATED WEEKLY</span>
-                <span class="status-item red"><span class="status-dot"></span>FREE STARTER COURSES</span>
-                <span class="status-item"><span class="status-dot"></span>CAREER-READY CREDENTIALS</span>
-                <span class="status-item gold"><span class="status-dot"></span>BUILT FOR FILIPINO YOUTH</span>
-                <span class="status-item"><span class="status-dot"></span>TESDA-ALIGNED CURRICULUM</span>
-                <span class="status-item gold"><span class="status-dot"></span>LIVE MENTOR SUPPORT</span>
-                <span class="status-item"><span class="status-dot"></span>SKILL PATHS UPDATED WEEKLY</span>
-                <span class="status-item red"><span class="status-dot"></span>FREE STARTER COURSES</span>
-                <span class="status-item"><span class="status-dot"></span>CAREER-READY CREDENTIALS</span>
-                <span class="status-item gold"><span class="status-dot"></span>BUILT FOR FILIPINO YOUTH</span>
-            </div>
-        </div>
-
-        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
-            <div class="site-header-bar flex items-center justify-between gap-4 lg:gap-6">
-
-                {{-- ══ BRAND / LOGO ══ --}}
-                <a href="/" class="header-brand inline-flex items-center gap-3 sm:gap-4 text-white shrink-0" aria-label="SkillUp Home">
-
-                    {{-- Icon wrap --}}
-                    <span class="relative inline-block" style="width:52px;height:52px;flex-shrink:0;">
-
-                        {{-- Targeting reticle ticks (hover only) --}}
-                        <span class="logo-reticle" aria-hidden="true">
-                            <span></span><span></span><span></span><span></span>
-                        </span>
-
-                        {{-- Spinning conic ring (hover only) --}}
-                        <span class="logo-ring" aria-hidden="true"></span>
-
-                        {{-- Main icon box --}}
-                        <span class="header-brand-icon" id="logo-icon-box" aria-hidden="true">
-
-                            {{-- Particle container --}}
-                            <span id="logo-particles" class="absolute inset-0 overflow-hidden pointer-events-none" style="border-radius:16px;" aria-hidden="true"></span>
-
-                            {{-- Custom rocket SVG --}}
-                            <svg viewBox="0 0 26 26" fill="none" class="relative z-10" style="width:26px;height:26px;filter:drop-shadow(0 1px 4px rgba(0,0,0,0.45));" aria-hidden="true">
-                                <g class="rocket-flame">
-                                    <ellipse cx="13" cy="22.5" rx="3.8" ry="3.2" fill="rgba(0,230,255,0.9)"/>
-                                    <ellipse cx="13" cy="23"   rx="2.2" ry="2.0" fill="rgba(253,185,19,0.85)"/>
-                                </g>
-                                <path d="M13 3C9 3 7 8 7 13L7 18C7 18 9.5 19.5 13 19.5C16.5 19.5 19 18 19 18L19 13C19 8 17 3 13 3Z" fill="white" opacity="0.95"/>
-                                <circle cx="13" cy="11" r="2.5" fill="rgba(0,58,143,0.75)" stroke="rgba(0,230,255,0.55)" stroke-width="0.5"/>
-                                <circle cx="13" cy="11" r="1"   fill="rgba(120,215,255,0.95)"/>
-                                <circle cx="13.4" cy="10.5" r="0.4" fill="rgba(255,255,255,0.7)"/>
-                                <path d="M7 16L4 19L7 18.5Z"   fill="rgba(193,18,31,0.85)"/>
-                                <path d="M19 16L22 19L19 18.5Z" fill="rgba(193,18,31,0.85)"/>
-                                <path d="M13 3C11 3 10 5 10 7L13 5L16 7C16 5 15 3 13 3Z" fill="rgba(253,185,19,0.98)"/>
-                            </svg>
-                        </span>
-
-                        {{-- Gold sparkle star --}}
-                        <svg class="logo-sparkle" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                            <path d="M7 0L7.9 5.5L13.3 5.5L9 8.8L10.4 14L7 10.8L3.6 14L5 8.8L0.7 5.5L6.1 5.5Z" fill="#00e6ff"/>
-                        </svg>
-                    </span>
-
-                    {{-- Wordmark --}}
-                    <div class="hidden sm:flex flex-col gap-0.5">
-                        <span class="logo-wordmark-primary">SkillUp</span>
-                        <span class="logo-wordmark-sub">
-                            Learning Portal
-                            <span class="logo-sub-dot"></span>
-                            PH
-                        </span>
-                    </div>
-                </a>
-
-                {{-- Desktop nav --}}
-                <div class="hidden lg:flex flex-1 justify-center">
-                    <div id="primary-nav" class="font-display flex items-center gap-10 xl:gap-12 text-sm font-semibold uppercase tracking-[0.12em]">
-                        <a href="/" class="nav-link">Home</a>
-                        <a href="{{ route('about') }}" class="nav-link">About</a>
-                        <a href="{{ route('courses.index') }}" class="nav-link">Courses</a>
-                        <a href="{{ route('contact') }}" class="nav-link">Contact</a>
-                    </div>
-                </div>
-
-                {{-- Desktop actions --}}
-                <div class="hidden lg:flex items-center gap-2.5 shrink-0">
-                    <form action="{{ route('courses.index') }}" method="GET" class="header-search relative flex items-center rounded-full border border-slate-600/60 bg-slate-950/30 px-3 py-2 w-[14rem] xl:w-[20rem]">
-                        <i class="header-search-icon fas fa-search text-slate-400 text-sm"></i>
-                        <input
-                            type="search"
-                            name="search"
-                            placeholder="Search courses..."
-                            class="ml-2.5 w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
-                        />
-                        <kbd class="hidden xl:inline-block">/</kbd>
-                    </form>
-                    @auth
-                        <a href="{{ route('notifications.index') }}" class="header-action-btn relative inline-flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/90 text-slate-100 border border-slate-700/50" aria-label="Notifications">
-                            <i class="fas fa-bell"></i>
-                            <span id="header-unread-badge" class="hidden absolute -top-1 -right-1 inline-flex items-center justify-center h-5 min-w-[1.25rem] px-1.5 rounded-full bg-rose-500 text-white text-xs font-bold">0</span>
-                        </a>
-                        <div id="header-user-wrap" class="relative header-user-menu">
-                            <button
-                                id="user-menu-toggle"
-                                type="button"
-                                class="header-action-btn inline-flex items-center gap-2 rounded-full bg-slate-900/90 border border-slate-700/50 px-4 py-2.5 text-sm font-semibold text-white focus:outline-none"
-                                aria-haspopup="true"
-                                aria-expanded="false"
-                                aria-controls="user-menu"
-                            >
-                                <i class="fas fa-user-circle text-slate-300" aria-hidden="true"></i>
-                                <span class="hidden xl:inline">Menu</span>
-                                <i class="fas fa-chevron-down text-xs text-slate-400 header-menu-chevron" aria-hidden="true"></i>
-                            </button>
-                            <div id="user-menu" role="menu" class="header-dropdown absolute right-0 top-full mt-2 min-w-[13rem] overflow-hidden rounded-2xl border border-slate-700/80 bg-[#0c2d4a] shadow-2xl shadow-black/40">
-                                <a href="{{ route('userpage.profile') }}" class="block px-4 py-3 text-sm text-slate-200 hover:bg-slate-800/80"><i class="fas fa-user mr-2 text-cyan-300"></i>Profile</a>
-                                <a href="{{ route('chats.index') }}" class="block px-4 py-3 text-sm text-slate-200 hover:bg-slate-800/80"><i class="fas fa-comments mr-2 text-cyan-300"></i>Messages</a>
-                                <a href="{{ route('contact') }}" class="block px-4 py-3 text-sm text-slate-200 hover:bg-slate-800/80"><i class="fas fa-envelope mr-2 text-cyan-300"></i>Contact</a>
-                                <div class="border-t border-slate-700/80">
-                                    <form action="{{ route('logout') }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-950/40 hover:text-red-300">Logout</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    @else
-                        <a href="/login"    class="header-action-btn header-login-btn btn-ripple inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-semibold text-white">Login</a>
-                        <a href="/register" class="header-action-btn header-signup-btn btn-ripple inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-bold shadow-md">Sign Up</a>
-                    @endauth
-                </div>
-
-                {{-- Mobile toggle --}}
-                <button id="nav-toggle" type="button" class="header-nav-toggle lg:hidden inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-100 border border-slate-700/50" aria-label="Open menu" aria-expanded="false">
-                    <i id="nav-open-icon"  class="fas fa-bars text-lg"></i>
-                    <i id="nav-close-icon" class="fas fa-times text-lg hidden"></i>
-                </button>
-            </div>
-        </nav>
-
-        {{-- Mobile menu --}}
-        <div id="mobile-nav" class="mobile-nav-panel lg:hidden bg-[#050e1c]/98 backdrop-blur-xl border-t border-cyan-400/10 shadow-2xl shadow-black/30">
-            <div class="hud-grid absolute inset-0 pointer-events-none" aria-hidden="true"></div>
-            <div class="relative px-4 py-4 border-b border-slate-800/80">
-                <form action="{{ route('courses.index') }}" method="GET" class="header-search flex items-center gap-3 rounded-2xl border border-slate-700/60 bg-slate-950/40 px-4 py-3">
-                    <i class="header-search-icon fas fa-search text-slate-400"></i>
-                    <input
-                        type="search"
-                        name="search"
-                        placeholder="Search courses..."
-                        class="w-full bg-transparent text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
-                    />
-                </form>
-            </div>
-            <div class="relative px-4 py-5 space-y-2.5">
-                <a href="/"                           class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80">Home</a>
-                <a href="{{ route('about') }}"         class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80">About</a>
-                <a href="{{ route('courses.index') }}" class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80">Courses</a>
-                <a href="{{ route('contact') }}"       class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80">Contact</a>
-                @auth
-                    <a href="{{ route('chats.index') }}"        class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80"><i class="fas fa-comments mr-2 text-cyan-300"></i>Messages</a>
-                    <a href="{{ route('notifications.index') }}" class="mobile-nav-link block rounded-2xl border border-slate-800/80 bg-slate-950/40 px-4 py-3.5 text-sm font-semibold text-slate-100 hover:bg-slate-900/80"><i class="fas fa-bell mr-2 text-cyan-300"></i>Notifications</a>
-                    <form action="{{ route('logout') }}" method="POST" class="mobile-nav-link block pt-1">
-                        @csrf
-                        <button type="submit" class="header-action-btn w-full rounded-2xl bg-red-600/90 px-4 py-3.5 text-sm font-semibold text-white hover:bg-red-600 border border-red-500/30">Logout</button>
-                    </form>
-                @else
-                    <a href="/login"    class="mobile-nav-link block rounded-2xl border border-slate-700/80 bg-slate-900/60 px-4 py-3.5 text-sm font-semibold text-slate-100 text-center">Login</a>
-                    <a href="/register" class="mobile-nav-link header-signup-btn btn-ripple block rounded-2xl px-4 py-3.5 text-sm font-bold text-center shadow-md">Sign Up Free</a>
-                @endauth
-            </div>
-        </div>
-
-        {{-- Animated scanline sweep along the header's bottom edge --}}
-        <span class="header-scanline" aria-hidden="true"></span>
-    </header>
+    @include('components.navigation.desktop')
+    @include('components.navigation.mobile')
 
 
     <main class="pt-[6.75rem] lg:pt-[7.25rem]">
@@ -1263,10 +1274,10 @@
                         <span class="eyebrow-rule"></span>Learn
                     </h4>
                     <ul class="space-y-3.5 text-sm text-slate-400">
-                        <li><a href="{{ url('/#features') }}"    class="footer-link">Features</a></li>
-                        <li><a href="{{ url('/#how-it-works') }}" class="footer-link">How It Works</a></li>
+                        <li><a href="{{ route('features') }}"       class="footer-link">Features</a></li>
+                        <li><a href="{{ route('how-it-works') }}"   class="footer-link">How It Works</a></li>
                         <li><a href="{{ route('courses.index') }}" class="footer-link">Courses</a></li>
-                        <li><a href="{{ route('contact') }}#faq"  class="footer-link">FAQ</a></li>
+                        <li><a href="{{ route('faq') }}"            class="footer-link">FAQ</a></li>
                     </ul>
                 </div>
 
@@ -1278,8 +1289,6 @@
                     <ul class="space-y-3.5 text-sm text-slate-400">
                         <li><a href="{{ route('about') }}"              class="footer-link">About Us</a></li>
                         <li><a href="{{ route('contact') }}"            class="footer-link">Contact</a></li>
-                        <li><a href="/Userpage/Company/careers"         class="footer-link">Careers</a></li>
-                        <li><a href="/Userpage/Company/blog"            class="footer-link">Blog</a></li>
                     </ul>
                 </div>
 
@@ -1289,10 +1298,14 @@
                         <span class="eyebrow-rule"></span>Support
                     </h4>
                     <ul class="space-y-3.5 text-sm text-slate-400">
-                        <li><a href="/Userpage/Legal/privacy"    class="footer-link">Privacy Policy</a></li>
-                        <li><a href="/Userpage/Legal/terms"      class="footer-link">Terms &amp; Conditions</a></li>
-                        <li><a href="/Userpage/Legal/cookiepolicy" class="footer-link">Cookie Policy</a></li>
+                        <li><a href="{{ route('privacy') }}"       class="footer-link">Privacy Policy</a></li>
+                        <li><a href="{{ route('terms') }}"         class="footer-link">Terms &amp; Conditions</a></li>
+                        <li><a href="{{ route('cookie-policy') }}" class="footer-link">Cookie Policy</a></li>
                         <li><a href="{{ route('contact') }}"     class="footer-link">Help Center</a></li>
+                        <li><a href="{{ route('developer') }}"   class="footer-link">Developer</a></li>
+                        <li><a href="{{ route('career') }}"      class="footer-link">Career</a></li>
+                        <li><a href="{{ route('advertising') }}" class="footer-link">Advertising</a></li>
+                        <li><a href="{{ route('licensing') }}"   class="footer-link">Licensing</a></li>
                     </ul>
                 </div>
             </div>
@@ -1327,7 +1340,7 @@
                     SKILLUP × TESDA
                 </p>
                 <div class="footer-agency-logos mx-auto mt-6">
-                    <img src="{{ asset('image\logo new.jpg') }}" alt="APARRI Polytechnic Institute logo" class="footer-agency-logo" loading="lazy" />
+                    <img src="{{ asset('image/logo new.jpg') }}" alt="APARRI Polytechnic Institute logo" class="footer-agency-logo" loading="lazy" />
                     <img src="{{ asset('image/hello.png') }}" alt="Partner logo" class="footer-agency-logo" loading="lazy" />
                     <img src="{{ asset('image/bagong-pilipinas-logo-png_seeklogo-534301.png') }}" alt="Bagong Pilipinas logo" class="footer-agency-logo" loading="lazy" />
                 </div>
@@ -1343,10 +1356,14 @@
     <div id="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
     {{-- ══ KNOWLEDGE CHAT BUBBLE ══ --}}
-    <div id="knowledgeChatBubble" title="SKILL.UP BOT" class="chat-bubble-pulse fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white shadow-[0_22px_50px_-20px_rgba(0,230,255,0.9)] shadow-slate-900/30 cursor-pointer ring-4 ring-white transition-transform duration-200 hover:scale-105 hover:bg-blue-700 overflow-hidden">
+    <div id="knowledgeChatBubble" title="SKILL.UP BOT" role="button" tabindex="0" aria-label="Open SKILL.UP BOT" class="chat-bubble-pulse fixed bottom-6 right-6 z-50 flex h-16 w-16 items-center justify-center rounded-full bg-blue-600 text-white shadow-[0_22px_50px_-20px_rgba(0,230,255,0.9)] shadow-slate-900/30 cursor-grab ring-4 ring-white transition-transform duration-200 hover:scale-105 hover:bg-blue-700 overflow-visible select-none">
         <span class="chat-bubble-radar" aria-hidden="true"></span>
-        <img src="{{ asset('image/logo_oif_skillup_1_-removebg-preview.png') }}" alt="SKILL.UP BOT logo" class="relative h-11 w-11 object-cover" />
+        <img src="{{ asset('image/logo_oif_skillup_1_-removebg-preview.png') }}" alt="SKILL.UP BOT logo" class="relative h-11 w-11 rounded-full object-cover pointer-events-none" draggable="false" />
+        <button id="hideKnowledgeChat" type="button" class="absolute -right-2 -top-2 z-10 inline-flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-slate-900 text-base font-bold leading-none text-white shadow-lg transition hover:bg-slate-700" aria-label="Hide chatbot launcher" title="Hide chatbot launcher">&times;</button>
     </div>
+    <button id="showKnowledgeChat" type="button" class="fixed bottom-6 right-6 z-50 hidden h-11 w-11 items-center justify-center rounded-full border border-cyan-300/60 bg-blue-700 text-white shadow-lg shadow-blue-900/40 transition hover:scale-105" aria-label="Show chatbot launcher" title="Show chatbot launcher">
+        <i class="fas fa-robot" aria-hidden="true"></i>
+    </button>
 
     <div id="knowledgeChatModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 p-4">
         <div class="relative w-full max-w-2xl overflow-hidden rounded-[28px] bg-white text-slate-900 shadow-2xl sm:max-h-[calc(100vh-2rem)]">
@@ -1380,7 +1397,16 @@
     </div>
 
     <style>
-        #knowledgeChatBubble { touch-action: manipulation; }
+        #knowledgeChatBubble { touch-action: none; }
+        #hideKnowledgeChat { pointer-events: auto; }
+        @media (max-width: 1023px) {
+            #knowledgeChatBubble,
+            #showKnowledgeChat { bottom: calc(6rem + env(safe-area-inset-bottom)); }
+        }
+        #knowledgeChatBubble.is-dragging { cursor: grabbing; transition: none; }
+        #knowledgeChatBubble.is-dragging:hover { transform: none; }
+        #knowledgeChatBubble.is-hidden { display: none; }
+        #showKnowledgeChat.is-visible { display: inline-flex; }
         #knowledgeChatBubble:hover { transform: translateY(-2px) scale(1.05); }
         #knowledgeChatModal.show { display: flex !important; }
         #knowledgeChatMessages { scrollbar-width: thin; scrollbar-color: rgba(59,130,246,0.7) rgba(226,232,240,0.8); }
@@ -1640,6 +1666,8 @@
            KNOWLEDGE CHAT
         ══════════════════════════════════════ */
         const bubble   = document.getElementById('knowledgeChatBubble');
+        const hideBubbleBtn = document.getElementById('hideKnowledgeChat');
+        const showBubbleBtn = document.getElementById('showKnowledgeChat');
         const modal    = document.getElementById('knowledgeChatModal');
         const closeBtn = document.getElementById('closeKnowledgeChat');
         const form     = document.getElementById('knowledgeChatForm');
@@ -1686,7 +1714,107 @@
             form.requestSubmit();
         }
 
-        bubble.addEventListener('click', openModal);
+        let dragState = null;
+        let dragged = false;
+        const bubblePositionKey = 'skillup-chatbot-position';
+
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function mobileBottomInset() {
+            return window.innerWidth < 1024 ? 96 : 8;
+        }
+
+        function setBubblePosition(left, top) {
+            const width = bubble.offsetWidth;
+            const height = bubble.offsetHeight;
+            const safeLeft = clamp(left, 8, Math.max(8, window.innerWidth - width - 8));
+            const safeTop = clamp(top, 8, Math.max(8, window.innerHeight - height - mobileBottomInset()));
+            bubble.style.left = `${safeLeft}px`;
+            bubble.style.top = `${safeTop}px`;
+            bubble.style.right = 'auto';
+            bubble.style.bottom = 'auto';
+            return { left: safeLeft, top: safeTop };
+        }
+
+        try {
+            const savedPosition = JSON.parse(localStorage.getItem(bubblePositionKey) || 'null');
+            if (savedPosition && Number.isFinite(savedPosition.left) && Number.isFinite(savedPosition.top)) {
+                setBubblePosition(savedPosition.left, savedPosition.top);
+            }
+        } catch (_) {}
+
+        function moveBubble(event) {
+            if (!dragState) return;
+            setBubblePosition(event.clientX - dragState.offsetX, event.clientY - dragState.offsetY);
+            dragged = true;
+        }
+
+        bubble.addEventListener('pointerdown', (event) => {
+            if (event.target.closest('button')) return;
+            const rect = bubble.getBoundingClientRect();
+            dragState = {
+                pointerId: event.pointerId,
+                offsetX: event.clientX - rect.left,
+                offsetY: event.clientY - rect.top,
+                width: rect.width,
+                height: rect.height,
+            };
+            dragged = false;
+            bubble.classList.add('is-dragging');
+            bubble.setPointerCapture?.(event.pointerId);
+        });
+        bubble.addEventListener('pointermove', moveBubble);
+        bubble.addEventListener('pointerup', (event) => {
+            if (!dragState || dragState.pointerId !== event.pointerId) return;
+            bubble.releasePointerCapture?.(event.pointerId);
+            bubble.classList.remove('is-dragging');
+            if (dragged) {
+                try {
+                    localStorage.setItem(bubblePositionKey, JSON.stringify({
+                        left: bubble.offsetLeft,
+                        top: bubble.offsetTop,
+                    }));
+                } catch (_) {}
+            }
+            dragState = null;
+        });
+        bubble.addEventListener('pointercancel', () => {
+            bubble.classList.remove('is-dragging');
+            dragState = null;
+        });
+
+        bubble.addEventListener('click', (event) => {
+            if (dragged) {
+                dragged = false;
+                return;
+            }
+            if (!event.target.closest('button')) openModal();
+        });
+        bubble.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openModal();
+            }
+        });
+        hideBubbleBtn.addEventListener('click', (event) => {
+            event.stopPropagation();
+            bubble.classList.add('is-hidden');
+            showBubbleBtn.classList.add('is-visible');
+        });
+        showBubbleBtn.addEventListener('click', () => {
+            bubble.classList.remove('is-hidden');
+            showBubbleBtn.classList.remove('is-visible');
+        });
+        window.addEventListener('resize', () => {
+            if (bubble.classList.contains('is-hidden') || bubble.style.left === '') return;
+            const rect = bubble.getBoundingClientRect();
+            const position = setBubblePosition(rect.left, rect.top);
+            try {
+                localStorage.setItem(bubblePositionKey, JSON.stringify(position));
+            } catch (_) {}
+        });
         closeBtn.addEventListener('click', closeModal);
         modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
         document.addEventListener('keydown', (e) => {

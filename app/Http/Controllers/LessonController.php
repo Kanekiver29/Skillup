@@ -213,13 +213,33 @@ class LessonController extends Controller
             }
         }
 
-        return view('courses.lessons.show', [
+        $isCompleted = (bool) optional($lessonEnrollment)->completed;
+        $nextLesson = $module->lessons()
+            ->where('is_published', true)
+            ->where(function ($query) use ($lesson) {
+                $query->where('order', '>', $lesson->order)
+                    ->orWhere(function ($query) use ($lesson) {
+                        $query->where('order', $lesson->order)
+                            ->where('id', '>', $lesson->id);
+                    });
+            })
+            ->orderBy('order')
+            ->orderBy('id')
+            ->first();
+
+        $nextLessonUrl = $nextLesson
+            ? route('lessons.show', [$course->slug, $module->slug, $nextLesson->slug])
+            : route('modules.show', [$course->slug, $module->slug]);
+
+        return view('Userpage.course.lesson', [
             'course' => $course,
             'module' => $module,
             'lesson' => $lesson,
             'enrollment' => $enrollment,
             'lessonEnrollment' => $lessonEnrollment,
             'userProgress' => $userProgress,
+            'isCompleted' => $isCompleted,
+            'nextLessonUrl' => $nextLessonUrl,
         ]);
     }
 

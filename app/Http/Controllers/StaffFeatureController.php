@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use App\Models\Enrollment;
 use App\Models\Course;
+use App\Models\ClassSchedule;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\AccountCreated;
@@ -694,13 +695,117 @@ class StaffFeatureController extends Controller
     public function schedule()
     {
         $this->authorizeStaff();
-        // Simple placeholder schedule — in future pull from DB
-        $schedule = session('staff_schedule', [
-            ['time' => '9:00 AM', 'event' => 'Shift starts'],
-            ['time' => '12:00 PM', 'event' => 'Team standup meeting'],
-            ['time' => '1:00 PM', 'event' => 'Lunch break'],
-        ]);
+
+        if (!Schema::hasTable('class_schedules')) {
+            $schedule = session('staff_schedule', [
+                ['time' => '9:00 AM', 'event' => 'Shift starts'],
+                ['time' => '12:00 PM', 'event' => 'Team standup meeting'],
+                ['time' => '1:00 PM', 'event' => 'Lunch break'],
+            ]);
+
+            return view('staff.schedule.index', compact('schedule'));
+        }
+
+        $schedule = ClassSchedule::with(['teacher', 'course'])
+            ->where('is_active', true)
+            ->orderByRaw("FIELD(day_of_week, 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday') ASC")
+            ->orderBy('start_time')
+            ->get()
+            ->map(function ($entry) {
+                $day = $entry->day_of_week ?? 'Schedule';
+                $time = $entry->start_time && $entry->end_time
+                    ? $entry->start_time . ' - ' . $entry->end_time
+                    : ($entry->start_time ?? 'Time TBD');
+
+                $teacherName = $entry->teacher?->name ?? 'Assigned trainer';
+                $courseName = $entry->course?->title ?? $entry->subject_name ?? 'Class session';
+                $room = $entry->room_number ? ' · Room ' . $entry->room_number : '';
+
+                return [
+                    'id' => $entry->id,
+                    'time' => $day . ' · ' . $time,
+                    'event' => $courseName . ' with ' . $teacherName . $room,
+                ];
+            })
+            ->values()
+            ->all();
+
         return view('staff.schedule.index', compact('schedule'));
+    }
+
+    public function createSchedule()
+    {
+        $this->authorizeStaff();
+
+        $teachers = User::whereIn('role', ['teacher', 'staff'])->orderBy('name')->get(['id', 'name']);
+        $courses = Course::orderBy('title')->get(['id', 'title']);
+
+        return view('staff.schedule.create', compact('teachers', 'courses'));
+    }
+
+    public function storeSchedule(Request $request)
+    {
+        $this->authorizeStaff();
+
+        $data = $request->validate([
+            'teacher_id' => 'required|exists:users,id',
+            'course_id' => 'nullable|exists:courses,id',
+            'subject_name' => 'required|string|max:255',
+            'day_of_week' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'room_number' => 'nullable|string|max:50',
+            'building' => 'nullable|string|max:100',
+            'student_count' => 'nullable|integer|min:0',
+            'notes' => 'nullable|string|max:1000',
+        ]);
+
+        $data['is_active'] = true;
+        ClassSchedule::create($data);
+
+        return redirect()->route('staff.schedule.index')->with('success', 'Schedule added successfully.');
+    }
+
+    public function editSchedule(ClassSchedule $schedule)
+    {
+        $this->authorizeStaff();
+
+        $teachers = User::whereIn('role', ['teacher', 'staff'])->orderBy('name')->get(['id', 'name']);
+        $courses = Course::orderBy('title')->get(['id', 'title']);
+
+        return view('staff.schedule.edit', compact('schedule', 'teachers', 'courses'));
+    }
+
+    public function updateSchedule(Request $request, ClassSchedule $schedule)
+    {
+        $this->authorizeStaff();
+
+        $data = $request->validate([
+            'teacher_id' => 'required|exists:users,id',
+            'course_id' => 'nullable|exists:courses,id',
+            'subject_name' => 'required|string|max:255',
+            'day_of_week' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
+            'start_time' => 'required|date_format:H:i',
+            'end_time' => 'required|date_format:H:i|after:start_time',
+            'room_number' => 'nullable|string|max:50',
+            'building' => 'nullable|string|max:100',
+            'student_count' => 'nullable|integer|min:0',
+            'notes' => 'nullable|string|max:1000',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $data['is_active'] = $request->boolean('is_active');
+        $schedule->update($data);
+
+        return redirect()->route('staff.schedule.index')->with('success', 'Schedule updated successfully.');
+    }
+
+    public function destroySchedule(ClassSchedule $schedule)
+    {
+        $this->authorizeStaff();
+        $schedule->delete();
+
+        return redirect()->route('staff.schedule.index')->with('success', 'Schedule deleted successfully.');
     }
 
     public function contactSupport()

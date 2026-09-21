@@ -1,0 +1,6 @@
+@extends('teacher.layouts.master')
+@section('title', 'Trainee Progress')
+@section('page_title', 'Trainee Progress')
+@section('content')
+<div class="portal-page"><div class="portal-heading"><div><h2>{{ $studentModel->name }}</h2><p>Module completion, competency progress, assessment results, and overall training progress.</p></div><a class="portal-button" href="{{ route('teacher.progress.index') }}">Back to progress</a></div><div class="portal-table-wrap"><table class="portal-table"><thead><tr><th>Program</th><th>Subject</th><th>Progress</th><th>Grade</th><th>Status</th></tr></thead><tbody>@forelse($enrollments as $enrollment)<tr><td>{{ $enrollment->course?->title ?? '—' }}</td><td>{{ $enrollment->subject?->title ?? 'All subjects' }}</td><td>{{ $enrollment->progress ?? 0 }}%</td><td>{{ $enrollment->final_grade ?? 'Pending' }}</td><td>{{ $enrollment->completed ? 'Completed' : ucfirst($enrollment->status ?? 'In progress') }}</td></tr>@empty<tr><td colspan="5">No progress records found for this trainee.</td></tr>@endforelse</tbody></table></div></div>
+@endsection

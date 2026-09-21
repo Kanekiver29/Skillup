@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'User Management | SIAS Admin')
+@section('page_title', 'User Management')
+@section('subtitle', 'Manages all system accounts and their access: Admin, Staff, Teacher, and Student.')
+@section('content')
+@php($title = 'User Management')
+@php($purpose = 'Manages all system accounts and their access: Admin, Staff, Teacher, and Student.')
+@php($items = ['Admins', 'Staff', 'Teachers', 'Students'])
+@include('sias.admin.modules._workspace')
+@endsection

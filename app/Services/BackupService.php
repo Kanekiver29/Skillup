@@ -5,6 +5,8 @@ namespace App\Services;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
+use App\Models\Backup;
 use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use ZipArchive;
@@ -27,6 +29,121 @@ class BackupService
     public function getBackupPath(string $filename): string
     {
         return Storage::disk('local')->path($this->backupDir . '/' . $filename);
+    }
+
+    public function buildBackupFilename(string $prefix = 'skillup_backup'): string
+    {
+        return sprintf('%s_%s.zip', $prefix, now()->format('Y-m-d_H-i')); 
+    }
+
+    public function resolveBackupPassword(?string $password = null): ?string
+    {
+        $value = $password ?? config('backup.password');
+
+        if (is_string($value)) {
+            $trimmed = trim($value);
+            if ($trimmed !== '') {
+                return $trimmed;
+            }
+        }
+
+        return null;
+    }
+
+    public function encryptArchiveIfNeeded(string $archivePath, ?string $password = null): string
+    {
+        $resolvedPassword = $this->resolveBackupPassword($password);
+        if ($resolvedPassword === null || $resolvedPassword === '') {
+            return $archivePath;
+        }
+
+        if (file_exists($archivePath) === false) {
+            throw new \RuntimeException('Archive not found for encryption: ' . $archivePath);
+        }
+
+        $encryptedPath = preg_replace('/\.(zip|tar|gz)$/i', '_encrypted.7z', $archivePath);
+        $binary = $this->resolveCommand('7z', ['7z', '7zz', '7za']);
+
+        if ($binary === null) {
+            throw new \RuntimeException('7-Zip is required for encrypted backups. Install 7-Zip and add its installation directory to PATH.');
+        }
+
+        $commands = [
+            [$binary, 'a', '-t7z', '-mhe=on', '-p' . $resolvedPassword, $encryptedPath, basename($archivePath)],
+        ];
+
+        foreach ($commands as $command) {
+            $binary = $command[0];
+            $process = new Process($command, dirname($archivePath));
+            $process->setTimeout(3600);
+            $process->run();
+
+            if (! $process->isSuccessful()) {
+                throw new \RuntimeException('Failed to encrypt backup with 7-Zip.');
+            }
+
+            @unlink($archivePath);
+            return $encryptedPath;
+        }
+
+        throw new \RuntimeException('Unable to encrypt backup archive.');
+    }
+
+    /**
+     * Run one complete backup while holding a distributed lock and recording its result.
+     */
+    public function runRecordedBackup(string $type = 'manual', ?int $userId = null, bool $includeAll = false): Backup
+    {
+        $lock = Cache::lock('skillup:backup:run', 7200);
+        if (! $lock->get()) {
+            throw new \RuntimeException('Another backup is already running. Please try again later.');
+        }
+
+        $record = Backup::create([
+            'filename' => 'pending',
+            'path' => $this->backupDir,
+            'type' => $type,
+            'status' => 'pending',
+            'created_by' => $userId,
+            'started_at' => now(),
+        ]);
+
+        try {
+            $this->ensureBackupDirectory();
+            $filename = $this->buildBackupFilename('skillup_backup');
+            $path = $this->getBackupPath($filename);
+            $temporaryPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $filename . '.part';
+            @unlink($temporaryPath);
+            $this->createFullBackup($temporaryPath, $includeAll);
+            if (! @rename($temporaryPath, $path)) {
+                if (! @copy($temporaryPath, $path)) {
+                    throw new \RuntimeException('The completed backup archive could not be moved into the backup directory.');
+                }
+                @unlink($temporaryPath);
+            }
+            $finalPath = $this->encryptArchiveIfNeeded($path);
+
+            $record->update([
+                'filename' => basename($finalPath),
+                'path' => $this->backupDir . '/' . basename($finalPath),
+                'size' => filesize($finalPath) ?: 0,
+                'checksum' => hash_file('sha256', $finalPath),
+                'status' => 'success',
+                'message' => 'Backup completed successfully.',
+                'completed_at' => now(),
+            ]);
+
+            return $record->fresh();
+        } catch (\Throwable $exception) {
+            $record->update([
+                'status' => 'failed',
+                'message' => $exception->getMessage(),
+                'completed_at' => now(),
+            ]);
+            throw $exception;
+        } finally {
+            optional($lock)->release();
+        }
     }
 
     public function createFullBackup(string $zipPath, bool $includeAll = true): string
@@ -91,14 +208,23 @@ class BackupService
             }
 
             $includeDirs = [
-                'app', 'bootstrap', 'config', 'database', 'public', 'resources', 'routes', 'storage', 'tests', '.github'
+                'app', 'bootstrap', 'config', 'database', 'resources', 'routes', 'storage/app/public',
+                'public/uploads', 'public/images', 'public/image', 'public/presentations', 'public/video'
             ];
             if ($includeAll) {
                 $includeDirs[] = 'vendor';
                 $includeDirs[] = 'node_modules';
             }
 
-            $excludeDirs = ['.git', 'storage/framework/cache', 'storage/framework/sessions', 'storage/logs'];
+            $excludeDirs = [
+                '.git',
+                'storage/framework/cache',
+                'storage/framework/sessions',
+                'storage/logs',
+                'storage/app/private/backups',
+                'storage/app/backups',
+                '.env',
+            ];
             if (! $includeAll) {
                 $excludeDirs[] = 'node_modules';
                 $excludeDirs[] = 'vendor';
@@ -111,7 +237,7 @@ class BackupService
             foreach ($rootFiles as $rootFile) {
                 if ($rootFile->isFile()) {
                     $basename = $rootFile->getFilename();
-                    if (! in_array($basename, $includeFiles, true)) {
+                    if (! in_array($basename, $includeFiles, true) && $basename !== '.env') {
                         $includeFiles[] = $basename;
                     }
                 }
@@ -136,6 +262,7 @@ class BackupService
 
             if ($opened) {
                 $zip->close();
+                $opened = false;
             }
 
             if (file_exists($dbBackupPath)) {
@@ -146,7 +273,11 @@ class BackupService
         } catch (\Throwable $e) {
             Log::error('BackupService::createFullBackup failed', ['zipPath' => $zipPath, 'exception' => $e]);
             if ($opened) {
-                $zip->close();
+                try {
+                    $zip->close();
+                } catch (\Throwable $closeException) {
+                    Log::warning('Backup ZIP could not be closed after failure.', ['exception' => $closeException]);
+                }
             }
             if (file_exists($dbBackupPath)) {
                 @unlink($dbBackupPath);
@@ -167,8 +298,13 @@ class BackupService
 
         foreach ($files as $file) {
             if ($file->isDir()) continue;
+            if ($file->isLink()) continue;
+            $rawPath = str_replace('\\', '/', $file->getPathname());
+            $publicStoragePath = str_replace('\\', '/', $projectRoot . DIRECTORY_SEPARATOR . 'public/storage');
+            if (str_starts_with($rawPath, $publicStoragePath . '/')) continue;
             $filePath = $file->getRealPath();
             $relativePath = substr($filePath, strlen($projectRoot) + 1);
+            if (str_starts_with(str_replace('\\', '/', $relativePath), 'public/storage/')) continue;
 
             $skip = false;
             foreach ($excludeDirs as $excludeDir) {
@@ -226,7 +362,14 @@ class BackupService
 
             $includeDirs = [ 'app', 'bootstrap', 'config', 'database', 'public', 'resources', 'routes', 'storage', 'tests', '.github' ];
             if ($includeAll) { $includeDirs[] = 'vendor'; $includeDirs[] = 'node_modules'; }
-            $excludeDirs = ['.git', 'storage/framework/cache', 'storage/framework/sessions', 'storage/logs'];
+            $excludeDirs = [
+                '.git',
+                'storage/framework/cache',
+                'storage/framework/sessions',
+                'storage/logs',
+                'storage/app/private/backups',
+                'storage/app/backups',
+            ];
             if (! $includeAll) { $excludeDirs[] = 'node_modules'; $excludeDirs[] = 'vendor'; }
             $includeFiles = ['artisan', 'composer.json', 'composer.lock', 'package.json', 'package-lock.json', 'vite.config.js', '.env.example', 'README.md', '.gitignore', '.htaccess', 'phpunit.xml'];
             $rootFiles = new \FilesystemIterator(base_path(), \FilesystemIterator::SKIP_DOTS);
@@ -286,32 +429,67 @@ class BackupService
             throw new \RuntimeException('MySQL configuration is missing.');
         }
 
-        if ($this->commandExists('mysqldump')) {
-            $process = new Process([
-                'mysqldump',
-                '--host=' . ($config['host'] ?? '127.0.0.1'),
-                '--port=' . ($config['port'] ?? 3306),
-                '--user=' . ($config['username'] ?? ''),
-                '--password=' . ($config['password'] ?? ''),
-                '--single-transaction',
-                '--routines',
-                '--triggers',
-                '--databases',
-                $config['database'] ?? '',
-            ]);
+        $mysqldump = $this->resolveCommand('mysqldump', ['mysqldump']);
+        if ($mysqldump !== null) {
+            $defaultsFile = $this->createMysqlDefaultsFile($config);
+            $attempts = 3;
+            $lastException = null;
 
-            $process->setTimeout(3600);
-            $process->run();
+            try {
+                for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+                    $process = new Process([
+                        $mysqldump,
+                        '--defaults-extra-file=' . $defaultsFile,
+                        '--host=' . ($config['host'] ?? '127.0.0.1'),
+                        '--port=' . ($config['port'] ?? 3306),
+                        '--protocol=TCP',
+                        '--single-transaction',
+                        '--routines',
+                        '--triggers',
+                        '--databases',
+                        $config['database'] ?? '',
+                    ]);
 
-            if (! $process->isSuccessful()) {
-                throw new ProcessFailedException($process);
+                    $process->setTimeout(3600);
+                    $process->run();
+
+                    if ($process->isSuccessful()) {
+                        file_put_contents($targetPath, $process->getOutput());
+                        return;
+                    }
+
+                    $lastException = new ProcessFailedException($process);
+
+                    if ($attempt < $attempts && $this->isTransientMysqlDumpFailure($process)) {
+                        usleep(750000);
+                        continue;
+                    }
+
+                    break;
+                }
+
+                throw $lastException ?? new \RuntimeException('MySQL dump failed without a captured error.');
+            } catch (\Throwable $e) {
+                $this->createMysqlBackupFromQuery($targetPath);
+                return;
+            } finally {
+                @unlink($defaultsFile);
             }
-
-            file_put_contents($targetPath, $process->getOutput());
-            return;
         }
 
         $this->createMysqlBackupFromQuery($targetPath);
+    }
+
+    protected function isTransientMysqlDumpFailure(Process $process): bool
+    {
+        $output = strtolower($process->getErrorOutput() . PHP_EOL . $process->getOutput());
+
+        return str_contains($output, 'can\'t create tcp/ip socket')
+            || str_contains($output, 'can\'t connect to mysql')
+            || str_contains($output, 'connection refused')
+            || str_contains($output, 'error 2004')
+            || str_contains($output, 'temporary failure')
+            || str_contains($output, 'timed out');
     }
 
     protected function createMysqlBackupFromQuery(string $targetPath): void
@@ -375,19 +553,99 @@ class BackupService
         return $process->isSuccessful();
     }
 
+    protected function resolveCommand(string $environmentKey, array $commands): ?string
+    {
+        $configKey = $environmentKey === '7z' ? 'seven_zip_path' : strtolower($environmentKey) . '_path';
+        $configured = config('backup.' . $configKey);
+        if (is_string($configured) && $configured !== '' && is_file($configured)) {
+            return $configured;
+        }
+
+        if ($environmentKey === '7z') {
+            $candidates = array_merge($commands, [
+                'C:\\Program Files\\7-Zip\\7z.exe',
+                'C:\\Program Files (x86)\\7-Zip\\7z.exe',
+            ]);
+        } elseif ($environmentKey === 'mysqldump') {
+            $candidates = array_merge($commands, [
+                'C:\\xampp\\mysql\\bin\\mysqldump.exe',
+            ]);
+        } elseif ($environmentKey === 'mysql') {
+            $candidates = array_merge($commands, [
+                'C:\\xampp\\mysql\\bin\\mysql.exe',
+            ]);
+        } else {
+            $candidates = $commands;
+        }
+
+        foreach ($candidates as $candidate) {
+            if (is_file($candidate)) {
+                return $candidate;
+            }
+            if (! str_contains($candidate, DIRECTORY_SEPARATOR) && $this->commandExists($candidate)) {
+                return $candidate;
+            }
+        }
+
+        return null;
+    }
+
+    protected function createMysqlDefaultsFile(array $config): string
+    {
+        $path = tempnam(sys_get_temp_dir(), 'skillup_mysql_');
+        if ($path === false) {
+            throw new \RuntimeException('Unable to create a temporary MySQL credential file.');
+        }
+
+        $contents = "[client]\n"
+            . 'host=' . ($config['host'] ?? '127.0.0.1') . "\n"
+            . 'port=' . ($config['port'] ?? 3306) . "\n"
+            . 'user=' . ($config['username'] ?? '') . "\n"
+            . 'password=' . ($config['password'] ?? '') . "\n";
+        file_put_contents($path, $contents, LOCK_EX);
+
+        return $path;
+    }
+
+    protected function restoreMysqlBackup(string $backupPath): void
+    {
+        $config = config('database.connections.mysql');
+        $mysql = $this->resolveCommand('mysql', ['mysql']);
+        if (! $config || $mysql === null) {
+            throw new \RuntimeException('MySQL client is unavailable. Configure MYSQL_PATH or add XAMPP MySQL bin to PATH.');
+        }
+
+        $defaultsFile = $this->createMysqlDefaultsFile($config);
+        try {
+            $process = new Process([
+                $mysql,
+                '--defaults-extra-file=' . $defaultsFile,
+                $config['database'] ?? '',
+            ]);
+            $process->setInput(file_get_contents($backupPath) ?: '');
+            $process->setTimeout(3600);
+            $process->run();
+            if (! $process->isSuccessful()) {
+                throw new \RuntimeException('MySQL restore failed.');
+            }
+        } finally {
+            @unlink($defaultsFile);
+        }
+    }
+
     /**
      * Determine whether a backup file is a full archive (zip or tar.gz/tgz).
      */
     public function isFullArchive(string $path): bool
     {
         $lower = strtolower($path);
-        return str_ends_with($lower, '.zip') || str_ends_with($lower, '.tar.gz') || str_ends_with($lower, '.tgz') || str_ends_with($lower, '.tar');
+        return str_ends_with($lower, '.zip') || str_ends_with($lower, '.7z') || str_ends_with($lower, '.tar.gz') || str_ends_with($lower, '.tgz') || str_ends_with($lower, '.tar');
     }
 
     /**
      * Extract an archive to a temporary directory and return that directory path.
      */
-    public function extractArchiveToTemp(string $archivePath): string
+    public function extractArchiveToTemp(string $archivePath, ?string $password = null): string
     {
         if (! file_exists($archivePath)) {
             throw new \RuntimeException('Archive not found: ' . $archivePath);
@@ -399,6 +657,39 @@ class BackupService
         }
 
         $lower = strtolower($archivePath);
+
+        if (str_ends_with($lower, '.7z')) {
+            $binary = collect(['7z', '7zz', '7za'])->first(fn (string $candidate) => $this->commandExists($candidate));
+            if ($binary === null) {
+                throw new \RuntimeException('7-Zip is required to restore encrypted backups.');
+            }
+
+            $command = [$binary, 'x', '-y', '-o' . $tempDir];
+            if ($password !== null && $password !== '') {
+                $command[] = '-p' . $password;
+            }
+            $command[] = $archivePath;
+            $process = new Process($command);
+            $process->setTimeout(3600);
+            $process->run();
+            if (! $process->isSuccessful()) {
+                throw new \RuntimeException('Unable to decrypt or extract the backup archive. The password may be incorrect or the archive may be corrupted.');
+            }
+
+            $nestedArchives = glob($tempDir . DIRECTORY_SEPARATOR . '*.zip') ?: [];
+            if (count($nestedArchives) === 1) {
+                $nested = new ZipArchive();
+                if ($nested->open($nestedArchives[0]) !== true || ! $nested->extractTo($tempDir . DIRECTORY_SEPARATOR . 'payload')) {
+                    throw new \RuntimeException('The encrypted backup payload is corrupted.');
+                }
+                $nested->close();
+                @unlink($nestedArchives[0]);
+                rename($tempDir . DIRECTORY_SEPARATOR . 'payload', $tempDir . DIRECTORY_SEPARATOR . 'payload_extracted');
+                $this->moveExtractedPayload($tempDir . DIRECTORY_SEPARATOR . 'payload_extracted', $tempDir);
+            }
+
+            return $tempDir;
+        }
 
         if (str_ends_with($lower, '.zip')) {
             $zip = new ZipArchive();
@@ -447,23 +738,29 @@ class BackupService
      */
     public function restoreFullBackup(string $archivePath, array $options = []): array
     {
-        $options = array_merge(['overwrite_env' => false], $options);
-
-        if (! $this->isFullArchive($archivePath)) {
-            throw new \RuntimeException('Not a recognized full archive: ' . $archivePath);
+        $options = array_merge(['overwrite_env' => false, 'password' => null], $options);
+        $lock = Cache::lock('skillup:backup:restore', 7200);
+        if (! $lock->get()) {
+            throw new \RuntimeException('Another restore or backup operation is already running.');
         }
 
-        // Create a pre-restore full backup to allow rollback
-        $preName = 'pre_restore_' . now()->format('Ymd_His') . '.zip';
-        $prePath = $this->getBackupPath($preName);
         try {
-            $this->createFullBackup($prePath, true);
-        } catch (\Throwable $e) {
-            Log::warning('Pre-restore backup failed; continuing with restore but cannot auto-rollback.', ['exception' => $e]);
-        }
+            if (! $this->isFullArchive($archivePath)) {
+                throw new \RuntimeException('Not a recognized full archive: ' . $archivePath);
+            }
 
-        // Extract archive to temp
-        $tempDir = $this->extractArchiveToTemp($archivePath);
+            // Verify and extract before creating the safety snapshot or touching the live system.
+            $tempDir = $this->extractArchiveToTemp($archivePath, $options['password']);
+
+            // Create an encrypted pre-restore snapshot to allow rollback.
+            $preName = 'pre_restore_' . now()->format('Ymd_His') . '.zip';
+            $prePath = $this->getBackupPath($preName);
+            try {
+                $this->createFullBackup($prePath, false);
+                $prePath = $this->encryptArchiveIfNeeded($prePath);
+            } catch (\Throwable $e) {
+                Log::warning('Pre-restore backup failed; continuing with restore but cannot auto-rollback.', ['exception' => $e]);
+            }
 
         $projectRoot = base_path();
         $copied = 0;
@@ -508,7 +805,27 @@ class BackupService
         // Clean up temp dir
         $this->deleteDirectory($tempDir);
 
-        return ['pre_backup' => $prePath, 'copied' => $copied, 'skipped' => $skipped];
+            return ['pre_backup' => $prePath, 'copied' => $copied, 'skipped' => $skipped];
+        } finally {
+            if (isset($tempDir) && is_dir($tempDir)) {
+                $this->deleteDirectory($tempDir);
+            }
+            $lock->release();
+        }
+    }
+
+    protected function moveExtractedPayload(string $payloadDir, string $targetDir): void
+    {
+        $iterator = new \FilesystemIterator($payloadDir, \FilesystemIterator::SKIP_DOTS);
+        foreach ($iterator as $item) {
+            $destination = $targetDir . DIRECTORY_SEPARATOR . $item->getFilename();
+            if ($item->isDir()) {
+                rename($item->getPathname(), $destination);
+            } else {
+                rename($item->getPathname(), $destination);
+            }
+        }
+        @rmdir($payloadDir);
     }
 
     protected function deleteDirectory(string $dir): void
@@ -559,5 +876,10 @@ class BackupService
         }
 
         throw new \RuntimeException('Recovery is only supported for MySQL and SQLite drivers in this environment.');
+    }
+
+    public function restoreDatabaseBackup(string $backupPath): void
+    {
+        $this->restoreDatabaseFromBackup($backupPath);
     }
 }

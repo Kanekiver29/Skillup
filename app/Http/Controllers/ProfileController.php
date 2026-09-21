@@ -132,7 +132,9 @@ class ProfileController extends Controller
 
         $user->update($validated);
 
-        return redirect()->route('userpage.profile')->with('success', 'Profile updated successfully!');
+        $redirectRoute = $request->is('teacher/*') ? 'teacher.profile.edit' : 'userpage.profile';
+
+        return redirect()->route($redirectRoute)->with('success', 'Profile updated successfully!');
     }
 
     /**

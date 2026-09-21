@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Subject;
+use App\Models\Course;
 
 class User extends Authenticatable
 {
@@ -21,10 +23,15 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'username',
         'lrn',
+        'settings',
         'password',
         'is_admin',
         'role',
+        'department',
+        'assigned_course_id',
+        'major_id',
         'staff_type',
         'profile_image',
         'bio',
@@ -60,6 +67,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'birthday' => 'date',
             'password' => 'hashed',
+            'settings' => 'array',
             'skills' => 'array',
             'profile_public' => 'boolean',
             'xp' => 'integer',
@@ -137,7 +145,41 @@ class User extends Authenticatable
      */
     public function isAdmin(): bool
     {
-        return $this->is_admin || $this->role === 'admin';
+        return $this->isUserAdmin() || $this->isSiasAdmin();
+    }
+
+    public function isUserAdmin(): bool
+    {
+        $role = strtolower((string) ($this->role ?? ''));
+
+        return ((bool) $this->is_admin || $role === 'admin') && ! $this->isSiasAdmin();
+    }
+
+    public function isSiasAdmin(): bool
+    {
+        return strtolower((string) $this->role) === 'sias_admin';
+    }
+
+    public function profileVisibility(): string
+    {
+        return data_get($this->settings, 'privacy.profile_visibility', $this->profile_public ? 'public' : 'private');
+    }
+
+    public function showsContactDetails(): bool
+    {
+        return (bool) data_get($this->settings, 'privacy.show_contact', false);
+    }
+
+    public function receivesNotificationChannel(string $channel): bool
+    {
+        $notifications = data_get($this->settings, 'notifications', []);
+
+        return match ($channel) {
+            'mail' => (bool) ($notifications['email'] ?? true) && ! (bool) ($notifications['weekly_digest'] ?? false),
+            'broadcast' => (bool) ($notifications['push'] ?? true),
+            'database' => true,
+            default => true,
+        };
     }
 
     /**
@@ -170,6 +212,11 @@ class User extends Authenticatable
         return $this->hasMany(Enrollment::class);
     }
 
+    public function studentDocumentRequests()
+    {
+        return $this->hasMany(StudentDocumentRequest::class);
+    }
+
     /**
      * Courses where the user is the instructor.
      */
@@ -192,6 +239,14 @@ class User extends Authenticatable
     public function badges()
     {
         return $this->hasMany(UserBadge::class);
+    }
+
+    /**
+     * Subjects assigned to this user (when the user is a teacher).
+     */
+    public function subjects()
+    {
+        return $this->hasMany(Subject::class, 'teacher_id');
     }
 
     /**
@@ -226,5 +281,57 @@ class User extends Authenticatable
     public function chatMessages()
     {
         return $this->hasMany(ChatMessage::class);
+    }
+
+    /**
+     * Get the major (academic program/major)
+     */
+    public function major()
+    {
+        return $this->belongsTo(Major::class);
+    }
+
+    /**
+     * Get the assigned course for this user
+     */
+    public function assignedCourse()
+    {
+        return $this->belongsTo(Course::class, 'assigned_course_id');
+    }
+
+    /**
+     * Resolve the primary course for a student based on their major, or fall back
+     * to their explicitly assigned course.
+     */
+    public function designatedCourse()
+    {
+        if ($this->major_id) {
+            $major = $this->major()->with('courses')->first();
+
+            if ($major) {
+                $designatedCourse = $major->courses()
+                    ->where('is_published', true)
+                    ->where('is_primary', true)
+                    ->first();
+
+                if (! $designatedCourse) {
+                    $designatedCourse = $major->courses()
+                        ->where('is_published', true)
+                        ->first();
+                }
+
+                if ($designatedCourse) {
+                    return $designatedCourse;
+                }
+            }
+        }
+
+        if ($this->assigned_course_id) {
+            return Course::where('id', $this->assigned_course_id)
+                ->where('is_published', true)
+                ->first();
+        }
+
+        return null;
     }
 }

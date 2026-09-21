@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Enrollment | SIAS Admin')
+@section('page_title', 'Enrollment')
+@section('subtitle', 'Handles student enrollment from registration through approval, section assignment, and enrollment history.')
+@section('content')
+@php($title = 'Enrollment')
+@php($purpose = 'Handles student enrollment from registration through approval, section assignment, and enrollment history.')
+@php($items = ['New Enrollment', 'Enrollment List', 'Enrollment Approval', 'Section Assignment', 'Enrollment History'])
+@include('sias.admin.modules._workspace')
+@endsection

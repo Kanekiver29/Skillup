@@ -493,7 +493,7 @@
         <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-6 space-y-4" id="chatMessages">
             <div class="message-group ai-group message-animate mb-2" data-sender="ai" id="welcome-message">
                 <div class="flex gap-3 items-start">
-                    <div class="ai-msg-avatar w-9 h-9 rounded-xl bg-gradient-to-br from-[#003a8f] to-[#0a2540] flex-shrink-0 flex items-center justify-center shadow-md">
+                    <div class="ai-msg-avatar w-9 h-9 rounded-xlbg-gradient-to-br from-[#003a8f] to-[#0a2540] flex-shrink-0 flex items-center justify-center shadow-md">
                         <i class="fas fa-robot text-white text-sm"></i>
                     </div>
                     <div class="message-bubble ai-bubble">

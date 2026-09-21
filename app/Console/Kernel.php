@@ -14,17 +14,12 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\FullBackup::class,
+        \App\Console\Commands\PruneOldBackups::class,
     ];
 
     /**
      * Define the application's command schedule.
      */
-    protected function schedule(Schedule $schedule): void
-    {
-        // Example: daily full backup at 02:00 including vendor/node_modules
-        // Uncomment to enable scheduled backups. Ensure CLI/PHP has required extensions and permissions.
-        // $schedule->command('backup:full')->dailyAt('2:00');
-    }
 
     /**
      * Register the commands for the application.

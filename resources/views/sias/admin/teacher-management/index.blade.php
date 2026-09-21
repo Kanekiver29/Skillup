@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Teacher Management | SIAS Admin')
+@section('page_title', 'Teacher Management')
+@section('subtitle', 'Manages teacher profiles, assigned subjects, teaching loads, and schedules.')
+@section('content')
+@php($title = 'Teacher Management')
+@php($purpose = 'Manages teacher profiles, assigned subjects, teaching loads, and schedules.')
+@php($items = ['Teacher Registration', 'Teacher Profiles', 'Assign Subjects', 'Teaching Load'])
+@include('sias.admin.modules._workspace')
+@endsection

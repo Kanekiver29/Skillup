@@ -130,6 +130,25 @@
         .top-btn:hover { background: rgba(255,255,255,.18); color: #fff; transform: translateY(-1px); }
         .top-btn:active { transform: scale(.96); }
 
+        .top-btn.clock-btn {
+            width: auto;
+            min-width: 110px;
+            padding: 0 12px;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            background: rgba(255,255,255,.08);
+        }
+        .top-btn.clock-btn i {
+            color: #8ec5ff;
+            animation: pulseDot 1.8s ease-in-out infinite;
+        }
+
+        .top-btn .clock-text {
+            white-space: nowrap;
+        }
+
         .notif-dot {
             position: absolute; top: 7px; right: 7px;
             width: 7px; height: 7px; border-radius: 50%;
@@ -416,9 +435,14 @@
         </nav>
 
         <div class="top-actions">
+            <div class="top-btn clock-btn" aria-live="polite" aria-label="Current time">
+                <i class="fas fa-clock"></i>
+                <span id="siteClockText" class="clock-text">--:--:--</span>
+            </div>
+
             <a href="{{ route('notifications.index') }}" class="top-btn" aria-label="Notifications">
                 <i class="fas fa-bell"></i>
-                <span class="notif-dot" aria-hidden="true"></span>
+                <span id="siteNotificationBadge" class="notif-dot hidden" aria-hidden="true"></span>
             </a>
             <a href="{{ route('chats.index') }}" class="top-btn" aria-label="Messages">
                 <i class="fas fa-comments"></i>
@@ -508,6 +532,10 @@
                 <a href="{{ route('courses.index') }}"
                    class="sb-link {{ request()->routeIs('courses.*') ? 'active' : '' }}">
                     <i class="fas fa-book-open sb-icon"></i> My Courses
+                </a>
+                <a href="{{ route('news.index') }}"
+                   class="sb-link {{ request()->routeIs('news.*') ? 'active' : '' }}">
+                    <i class="fas fa-newspaper sb-icon"></i> News
                 </a>
                 <a href="#"
                    class="sb-link">
@@ -616,19 +644,38 @@
             el.style.animation = 'slideRight .28s both';
         });
 
-        /* ── Notification polling ───────────────────────────────── */
+        function updateClock() {
+            var el = document.getElementById('siteClockText');
+            if (!el) return;
+            var now = new Date();
+            el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+        }
+
         function fetchNotifications() {
             @auth
-            fetch('{{ route("chats.notifications") }}')
+            fetch('{{ route("chats.notifications") }}', {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
                 .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
                 .then(function (data) {
                     var badge = document.getElementById('sidebar-unread-badge');
+                    var siteBadge = document.getElementById('siteNotificationBadge');
+                    var count = Number(data && data.unread ? data.unread : 0);
+
                     if (badge) {
-                        if (data.unread > 0) {
-                            badge.textContent = data.unread;
+                        if (count > 0) {
+                            badge.textContent = count;
                             badge.classList.remove('hidden');
                         } else {
                             badge.classList.add('hidden');
+                        }
+                    }
+
+                    if (siteBadge) {
+                        if (count > 0) {
+                            siteBadge.classList.remove('hidden');
+                        } else {
+                            siteBadge.classList.add('hidden');
                         }
                     }
                 })
@@ -636,8 +683,10 @@
             @endauth
         }
 
+        updateClock();
+        setInterval(updateClock, 1000);
         fetchNotifications();
-        setInterval(fetchNotifications, 10000);
+        setInterval(fetchNotifications, 15000);
 
     })();
     </script>

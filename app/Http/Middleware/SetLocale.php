@@ -28,6 +28,12 @@ class SetLocale
 
         App::setLocale($locale);
 
+        $userTimezone = $request->user()?->settings['admin']['language']['timezone'] ?? null;
+        if (is_string($userTimezone) && in_array($userTimezone, timezone_identifiers_list(), true)) {
+            config(['app.timezone' => $userTimezone]);
+            date_default_timezone_set($userTimezone);
+        }
+
         return $next($request);
     }
 }

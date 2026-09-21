@@ -26,7 +26,10 @@ class NewLessonNotification extends Notification implements ShouldBroadcast
 
     public function via($notifiable)
     {
-        return ['database', 'mail', 'broadcast'];
+        return collect(['database', 'mail', 'broadcast'])
+            ->filter(fn (string $channel) => $notifiable->receivesNotificationChannel($channel))
+            ->values()
+            ->all();
     }
 
     public function toMail($notifiable)

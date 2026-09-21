@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Learning Management | SIAS Admin')
+@section('page_title', 'Learning Management')
+@section('subtitle', 'Manages learning materials and activities such as lessons, quizzes, trivia, assignments, and exams.')
+@section('content')
+@php($title = 'Learning Management')
+@php($purpose = 'Manages actual learning materials and activities such as lessons, quizzes, trivia, assignments, and exams.')
+@php($items = ['Lessons / Modules', 'Quizzes', 'Trivia', 'Assignments', 'Midterm Exam', 'Final Exam'])
+@include('sias.admin.modules._workspace')
+@endsection

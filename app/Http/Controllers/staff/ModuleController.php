@@ -6,6 +6,17 @@ use App\Http\Controllers\Admin\ModuleController as AdminModuleController;
 
 class ModuleController extends AdminModuleController
 {
+    public function competencyStatus()
+    {
+        $this->authorizeStaff();
+        $modules = \App\Models\Module::with('course')->withCount('quizzes')
+            ->orderBy('course_id')
+            ->orderBy('order')
+            ->get();
+
+        return view('staff.modules.competency', compact('modules'));
+    }
+
     public function index(\Illuminate\Http\Request $request)
     {
         $this->authorizeStaff();

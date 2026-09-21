@@ -8,15 +8,15 @@
 
 <style>
     .amc {
-        --amc-void: #090c12;
-        --amc-panel: #10141d;
-        --amc-panel-soft: #131826;
-        --amc-line: #212739;
-        --amc-line-bright: #384260;
+        --amc-void: var(--body-bg);
+        --amc-panel: var(--surface);
+        --amc-panel-soft: var(--topbar-control-bg);
+        --amc-line: var(--border);
+        --amc-line-bright: rgba(129,140,248,0.45);
         --amc-cyan: #5eead4;
         --amc-violet: #8b7cf6;
-        --amc-text: #e8ebf4;
-        --amc-muted: #838da3;
+        --amc-text: var(--text);
+        --amc-muted: var(--muted);
         --amc-success: #34d399;
         --amc-danger: #fb7185;
         --amc-font-display: 'Space Grotesk', sans-serif;
@@ -110,6 +110,16 @@
         color: var(--amc-text);
         background: rgba(255,255,255,0.02);
         border-color: var(--amc-line-bright);
+    }
+
+    html[data-staff-theme="dark"] .amc {
+        --amc-void: #090c12;
+        --amc-panel: #10141d;
+        --amc-panel-soft: #131826;
+        --amc-line: #212739;
+        --amc-line-bright: #384260;
+        --amc-text: #e8ebf4;
+        --amc-muted: #838da3;
     }
     .amc-btn--ghost:hover { border-color: var(--amc-violet); background: rgba(139,124,246,0.08); transform: translateY(-1px); }
 

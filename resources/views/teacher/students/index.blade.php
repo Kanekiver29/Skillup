@@ -23,12 +23,15 @@
         --dur-base:     .38s;
         --dur-slow:     .7s;
         --ease-out:     cubic-bezier(.22,1,.36,1);
+        --ease-spring:  cubic-bezier(.34,1.56,.64,1);
     }
 
     @media (prefers-reduced-motion: reduce) {
         *, *::before, *::after {
             animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
             transition-duration: .01ms !important;
+            scroll-behavior: auto !important;
         }
     }
 
@@ -36,7 +39,6 @@
     @keyframes fadeUp        { from { opacity:0; transform:translateY(18px); }  to { opacity:1; transform:translateY(0); } }
     @keyframes fadeIn        { from { opacity:0; }                               to { opacity:1; } }
     @keyframes scaleIn       { from { opacity:0; transform:scale(.92); }         to { opacity:1; transform:scale(1); } }
-    @keyframes countUp       { from { opacity:0; transform:translateY(5px); }    to { opacity:1; transform:translateY(0); } }
     @keyframes progressFill  { from { width:0 !important; }                      to { width:var(--pw); } }
     @keyframes shimmer       { 0%   { transform:translateX(-150%); }             100% { transform:translateX(150%); } }
     @keyframes pulseRing     {
@@ -44,7 +46,6 @@
         70%  { box-shadow:0 0 0 8px rgba(37,99,235,0); }
         100% { box-shadow:0 0 0 0 rgba(37,99,235,0); }
     }
-    @keyframes spin          { to { transform:rotate(360deg); } }
     @keyframes slideDown     { from { opacity:0; transform:translateY(-8px); }   to { opacity:1; transform:translateY(0); } }
     @keyframes numberTick    {
         0%   { opacity:0; transform:translateY(10px) scale(.9); }
@@ -60,11 +61,8 @@
         0%, 100% { transform:translateY(0); }
         50%       { transform:translateY(-4px); }
     }
-    @keyframes tooltipFade   { from { opacity:0; transform:translateY(4px); }    to { opacity:1; transform:translateY(0); } }
-    @keyframes borderGlow    {
-        0%, 100% { border-color: rgba(99,102,241,.3); }
-        50%      { border-color: rgba(99,102,241,.7); }
-    }
+    @keyframes tooltipFade   { from { opacity:0; transform:translate(-50%,4px); } to { opacity:1; transform:translate(-50%,0); } }
+    @keyframes cardPress     { 0% { transform:scale(1); } 50% { transform:scale(.985); } 100% { transform:scale(1); } }
 
     /* ── Page shell ────────────────────────────────────────────── */
     .sp {
@@ -104,10 +102,7 @@
         animation: fadeUp var(--dur-base) var(--ease-out) both;
     }
 
-    .sp-toolbar__left {
-        flex: 1;
-        min-width: 0;
-    }
+    .sp-toolbar__left { flex: 1; min-width: 0; }
 
     .sp-toolbar__title {
         margin: 0;
@@ -133,9 +128,7 @@
     }
 
     /* Search box */
-    .sp-search {
-        position: relative;
-    }
+    .sp-search { position: relative; }
 
     .sp-search__icon {
         position: absolute;
@@ -148,7 +141,7 @@
     }
 
     .sp-search__input {
-        padding: 8px 12px 8px 34px;
+        padding: 8px 34px 8px 34px;
         border: 1.5px solid #e2e8f0;
         border-radius: 10px;
         font-size: .84rem;
@@ -167,16 +160,31 @@
     }
 
     .sp-search__input:focus + .sp-search__icon,
-    .sp-search:focus-within .sp-search__icon {
-        color: var(--brand-blue);
+    .sp-search:focus-within .sp-search__icon { color: var(--brand-blue); }
+
+    .sp-search__clear {
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 20px;
+        height: 20px;
+        border: none;
+        background: #e2e8f0;
+        color: #64748b;
+        border-radius: 50%;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background var(--dur-fast), color var(--dur-fast);
+        padding: 0;
     }
+    .sp-search__clear:hover { background: #cbd5e1; color: #1e293b; }
+    .sp-search.has-value .sp-search__clear { display: inline-flex; }
 
     /* Filter pills */
-    .sp-filters {
-        display: flex;
-        align-items: center;
-        gap: .4rem;
-    }
+    .sp-filters { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
 
     .sp-filter-btn {
         padding: 6px 13px;
@@ -187,16 +195,13 @@
         color: #64748b;
         background: #f8fafc;
         cursor: pointer;
-        transition: all var(--dur-fast);
+        transition: color var(--dur-fast), background var(--dur-fast), border-color var(--dur-fast), transform var(--dur-fast), box-shadow var(--dur-fast);
         letter-spacing: .02em;
         white-space: nowrap;
     }
 
-    .sp-filter-btn:hover {
-        border-color: #c7d2fe;
-        color: var(--brand-indigo);
-        background: #eef2ff;
-    }
+    .sp-filter-btn:hover { border-color: #c7d2fe; color: var(--brand-indigo); background: #eef2ff; }
+    .sp-filter-btn:active { transform: scale(.96); }
 
     .sp-filter-btn.is-active {
         background: var(--brand-indigo);
@@ -239,15 +244,12 @@
         color: var(--brand-indigo);
         border: 1px solid #c7d2fe;
         box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
-        animation: badgePop .5s .15s var(--ease-out) both;
+        animation: badgePop .5s .15s var(--ease-spring) both;
         white-space: nowrap;
         transition: transform var(--dur-fast), box-shadow var(--dur-fast);
     }
 
-    .sp-count:hover {
-        transform: scale(1.04);
-        box-shadow: 0 4px 12px rgba(79,70,229,.2), inset 0 1px 0 rgba(255,255,255,.8);
-    }
+    .sp-count:hover { transform: scale(1.04); box-shadow: 0 4px 12px rgba(79,70,229,.2), inset 0 1px 0 rgba(255,255,255,.8); }
 
     /* ── Stat strip ─────────────────────────────────────────────── */
     .sp-summary {
@@ -281,11 +283,11 @@
         pointer-events: none;
     }
 
-    .sp-stat:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-lg);
-        border-color: #c7d2fe;
-    }
+    .sp-stat:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: #c7d2fe; }
+    .sp-stat:active { transform: translateY(-1px) scale(.99); }
+
+    .sp-stat[data-clickable="true"] { cursor: pointer; }
+    .sp-stat[data-clickable="true"]:focus-visible { outline: 2px solid var(--brand-indigo); outline-offset: 2px; }
 
     .sp-stat__icon {
         font-size: 1.1rem;
@@ -300,6 +302,7 @@
     .sp-stat:nth-child(3) .sp-stat__icon { animation-delay: .8s; }
     .sp-stat:nth-child(4) .sp-stat__icon { animation-delay: 1.2s; }
     .sp-stat:nth-child(5) .sp-stat__icon { animation-delay: 1.6s; }
+    .sp-stat:nth-child(6) .sp-stat__icon { animation-delay: 2s; }
 
     .sp-stat__label {
         font-size: .68rem;
@@ -316,20 +319,16 @@
         color: #0f172a;
         line-height: 1;
         animation: numberTick .55s var(--ease-out) both;
+        font-variant-numeric: tabular-nums;
     }
 
-    .sp-stat__sub {
-        font-size: .68rem;
-        color: #94a3b8;
-        margin-top: .25rem;
-        font-weight: 600;
-    }
+    .sp-stat__sub { font-size: .68rem; color: #94a3b8; margin-top: .25rem; font-weight: 600; }
 
-    .clr-green  { color: var(--brand-green) !important; }
-    .clr-blue   { color: var(--brand-blue)  !important; }
-    .clr-amber  { color: var(--brand-amber) !important; }
-    .clr-rose   { color: var(--brand-rose)  !important; }
-    .clr-indigo { color: var(--brand-indigo)!important; }
+    .clr-green  { color: var(--brand-green)  !important; }
+    .clr-blue   { color: var(--brand-blue)   !important; }
+    .clr-amber  { color: var(--brand-amber)  !important; }
+    .clr-rose   { color: var(--brand-rose)   !important; }
+    .clr-indigo { color: var(--brand-indigo) !important; }
 
     /* ── View toggle ────────────────────────────────────────────── */
     .sp-view-toggle {
@@ -343,15 +342,8 @@
         gap: .5rem;
     }
 
-    .sp-results-label {
-        font-size: .8rem;
-        font-weight: 600;
-        color: #64748b;
-    }
-
-    .sp-results-label strong {
-        color: #1e293b;
-    }
+    .sp-results-label { font-size: .8rem; font-weight: 600; color: #64748b; }
+    .sp-results-label strong { color: #1e293b; font-variant-numeric: tabular-nums; }
 
     .sp-toggle-group {
         display: flex;
@@ -370,17 +362,13 @@
         cursor: pointer;
         background: transparent;
         color: #94a3b8;
-        transition: all var(--dur-fast);
+        transition: background var(--dur-fast), color var(--dur-fast), box-shadow var(--dur-fast);
         display: flex;
         align-items: center;
         gap: 5px;
     }
 
-    .sp-toggle-btn.is-active {
-        background: #fff;
-        color: #1e293b;
-        box-shadow: var(--shadow-sm);
-    }
+    .sp-toggle-btn.is-active { background: #fff; color: #1e293b; box-shadow: var(--shadow-sm); }
 
     /* ── Card grid / list ───────────────────────────────────────── */
     .sp-grid {
@@ -389,12 +377,9 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
         gap: 14px;
-        transition: all .25s var(--ease-out);
     }
 
-    .sp-grid.list-view {
-        grid-template-columns: 1fr;
-    }
+    .sp-grid.list-view { grid-template-columns: 1fr; }
 
     /* ── Student card ────────────────────────────────────────────── */
     .s-card {
@@ -411,7 +396,6 @@
         cursor: default;
     }
 
-    /* Top colour bar */
     .s-card::before {
         content: '';
         position: absolute;
@@ -419,10 +403,8 @@
         height: 3.5px;
         background: var(--card-bar, #e2e8f0);
         border-radius: var(--radius-card) var(--radius-card) 0 0;
-        transition: background .25s;
     }
 
-    /* Shine sweep */
     .s-card::after {
         content: '';
         position: absolute;
@@ -436,38 +418,28 @@
     }
 
     .s-card:hover::after { transform: translateX(220%); }
+    .s-card:hover { border-color: #cbd5e1; transform: translateY(-5px); box-shadow: var(--shadow-lg); }
 
-    .s-card:hover {
-        border-color: #cbd5e1;
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-lg);
-    }
-
-    /* accent colours */
     .s-card.ac-green  { --card-bar: linear-gradient(90deg, #22c55e, #4ade80); }
     .s-card.ac-blue   { --card-bar: linear-gradient(90deg, #3b82f6, #60a5fa); }
     .s-card.ac-amber  { --card-bar: linear-gradient(90deg, #f59e0b, #fbbf24); }
     .s-card.ac-rose   { --card-bar: linear-gradient(90deg, #f43f5e, #fb7185); }
     .s-card.ac-indigo { --card-bar: linear-gradient(90deg, #6366f1, #818cf8); }
 
-    /* List-view adjustments */
-    .list-view .s-card {
-        padding: .75rem 1.1rem;
-        border-radius: 14px;
-    }
-
+    .list-view .s-card { padding: .75rem 1.1rem; border-radius: 14px; }
     .list-view .s-card-inner {
         display: grid;
         grid-template-columns: auto 1fr auto auto auto;
         align-items: center;
         gap: 1rem;
     }
-
     .list-view .s-card__body   { display: none; }
-    .list-view .s-card__footer { margin-top: 0; }
+    .list-view .s-card__footer { margin-top: 0; padding-top: 0; border-top: none; }
     .list-view .s-card__top    { margin-bottom: 0; }
     .list-view .s-divider      { display: none; }
     .list-view .s-meta         { margin-bottom: 0; }
+    .list-view .s-progress__row,
+    .list-view .s-progress__track { margin-bottom: 0; }
 
     /* ── Avatar ──────────────────────────────────────────────────── */
     .s-avatar {
@@ -482,14 +454,11 @@
         flex-shrink: 0;
         letter-spacing: .02em;
         position: relative;
-        transition: transform var(--dur-fast), box-shadow var(--dur-fast);
+        transition: transform var(--dur-fast);
     }
 
-    .s-card:hover .s-avatar {
-        transform: scale(1.08);
-    }
+    .s-card:hover .s-avatar { transform: scale(1.08); }
 
-    /* Online indicator */
     .s-avatar__badge {
         position: absolute;
         bottom: 1px; right: 1px;
@@ -503,7 +472,6 @@
     .s-avatar__badge.offline { background: #cbd5e1; }
     .s-avatar__badge.away    { background: #f59e0b; }
 
-    /* Avatar colour variants */
     .av-0 { background: linear-gradient(135deg, #ede9fe, #ddd6fe); color: #5b21b6; box-shadow: inset 0 1px 2px rgba(255,255,255,.9), 0 0 0 1.5px rgba(167,139,250,.25); }
     .av-1 { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #166534; box-shadow: inset 0 1px 2px rgba(255,255,255,.9), 0 0 0 1.5px rgba(74,222,128,.25); }
     .av-2 { background: linear-gradient(135deg, #ffedd5, #fed7aa); color: #9a3412; box-shadow: inset 0 1px 2px rgba(255,255,255,.9), 0 0 0 1.5px rgba(251,146,60,.25); }
@@ -511,13 +479,7 @@
     .av-4 { background: linear-gradient(135deg, #dbeafe, #bfdbfe); color: #1d4ed8; box-shadow: inset 0 1px 2px rgba(255,255,255,.9), 0 0 0 1.5px rgba(96,165,250,.25); }
 
     /* ── Card sections ───────────────────────────────────────────── */
-    .s-card__top {
-        display: flex;
-        align-items: center;
-        gap: 11px;
-        margin-bottom: 11px;
-    }
-
+    .s-card__top { display: flex; align-items: center; gap: 11px; margin-bottom: 11px; }
     .s-card__identity { min-width: 0; flex: 1; }
 
     .s-card__name {
@@ -551,29 +513,11 @@
         gap: 4px;
     }
 
-    .s-divider {
-        border: none;
-        border-top: 1px solid rgba(226,232,240,.85);
-        margin: 0 0 10px;
-    }
+    .s-divider { border: none; border-top: 1px solid rgba(226,232,240,.85); margin: 0 0 10px; }
 
-    /* Status / meta row */
-    .s-meta {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 10px;
-    }
+    .s-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .s-meta__label { font-size: .7rem; color: #94a3b8; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
 
-    .s-meta__label {
-        font-size: .7rem;
-        color: #94a3b8;
-        font-weight: 700;
-        letter-spacing: .07em;
-        text-transform: uppercase;
-    }
-
-    /* Pill */
     .s-pill {
         display: inline-flex;
         align-items: center;
@@ -583,42 +527,21 @@
         padding: 3.5px 9px;
         border-radius: 999px;
         letter-spacing: .025em;
-        transition: transform var(--dur-fast), box-shadow var(--dur-fast);
+        transition: transform var(--dur-fast);
     }
-
     .s-pill:hover { transform: scale(1.05); }
+    .s-pill__dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
-    .s-pill__dot {
-        width: 6px; height: 6px;
-        border-radius: 50%;
-        background: currentColor;
-        flex-shrink: 0;
-    }
-
-    .pill-active   { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
-    .pill-pending  { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
-    .pill-inactive { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
-    .pill-dropped  { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+    .pill-active    { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+    .pill-pending   { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+    .pill-inactive  { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+    .pill-dropped   { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+    .pill-completed { background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #047857; border: 1px solid #a7f3d0; }
 
     /* ── Progress bar ────────────────────────────────────────────── */
-    .s-progress__row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 5px;
-    }
-
-    .s-progress__lbl {
-        font-size: .71rem;
-        color: #64748b;
-        font-weight: 600;
-    }
-
-    .s-progress__val {
-        font-size: .72rem;
-        font-weight: 800;
-        color: #0f172a;
-    }
+    .s-progress__row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+    .s-progress__lbl { font-size: .71rem; color: #64748b; font-weight: 600; }
+    .s-progress__val { font-size: .72rem; font-weight: 800; color: #0f172a; font-variant-numeric: tabular-nums; }
 
     .s-progress__track {
         height: 7px;
@@ -654,12 +577,7 @@
     .bar-zero { background: #e2e8f0; }
 
     /* ── Micro-stats row ─────────────────────────────────────────── */
-    .s-card__body {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-bottom: .75rem;
-    }
+    .s-card__body { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: .75rem; }
 
     .s-micro {
         background: #f8fafc;
@@ -668,23 +586,9 @@
         padding: 7px 9px;
         transition: background var(--dur-fast);
     }
-
     .s-micro:hover { background: #f0f9ff; }
-
-    .s-micro__label {
-        font-size: .65rem;
-        color: #94a3b8;
-        font-weight: 700;
-        letter-spacing: .07em;
-        text-transform: uppercase;
-        margin-bottom: 2px;
-    }
-
-    .s-micro__val {
-        font-size: .88rem;
-        font-weight: 800;
-        color: #1e293b;
-    }
+    .s-micro__label { font-size: .65rem; color: #94a3b8; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 2px; }
+    .s-micro__val { font-size: .88rem; font-weight: 800; color: #1e293b; }
 
     /* ── Footer ──────────────────────────────────────────────────── */
     .s-card__footer {
@@ -696,14 +600,7 @@
         border-top: 1px solid rgba(226,232,240,.7);
     }
 
-    .s-card__date {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: .72rem;
-        color: #94a3b8;
-        font-weight: 600;
-    }
+    .s-card__date { display: flex; align-items: center; gap: 5px; font-size: .72rem; color: #94a3b8; font-weight: 600; white-space: nowrap; }
 
     .s-card__actions {
         display: flex;
@@ -713,11 +610,8 @@
         transform: translateX(6px);
         transition: opacity var(--dur-fast), transform var(--dur-fast);
     }
-
-    .s-card:hover .s-card__actions {
-        opacity: 1;
-        transform: translateX(0);
-    }
+    .s-card:hover .s-card__actions,
+    .s-card:focus-within .s-card__actions { opacity: 1; transform: translateX(0); }
 
     .s-action-btn {
         width: 28px;
@@ -730,25 +624,20 @@
         justify-content: center;
         cursor: pointer;
         color: #64748b;
-        transition: all var(--dur-fast);
+        transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast), transform var(--dur-fast);
         text-decoration: none;
         position: relative;
     }
+    .s-action-btn:hover { background: #eff6ff; border-color: #bfdbfe; color: var(--brand-blue); transform: scale(1.12); }
+    .s-action-btn:active { transform: scale(1); animation: cardPress .18s var(--ease-out); }
+    .s-action-btn:focus-visible { outline: 2px solid var(--brand-blue); outline-offset: 2px; }
 
-    .s-action-btn:hover {
-        background: #eff6ff;
-        border-color: #bfdbfe;
-        color: var(--brand-blue);
-        transform: scale(1.12);
-    }
-
-    /* Tooltip */
     .s-action-btn[data-tip]::after {
         content: attr(data-tip);
         position: absolute;
         bottom: calc(100% + 6px);
         left: 50%;
-        transform: translateX(-50%);
+        transform: translate(-50%, 4px);
         background: #0f172a;
         color: #fff;
         font-size: .68rem;
@@ -758,12 +647,12 @@
         white-space: nowrap;
         pointer-events: none;
         opacity: 0;
-        transition: opacity .15s;
+        transition: opacity .15s, transform .15s;
     }
-
-    .s-action-btn[data-tip]:hover::after {
+    .s-action-btn[data-tip]:hover::after,
+    .s-action-btn[data-tip]:focus-visible::after {
         opacity: 1;
-        animation: tooltipFade .15s ease;
+        transform: translate(-50%, 0);
     }
 
     /* ── Empty state ─────────────────────────────────────────────── */
@@ -793,22 +682,10 @@
         animation: floatDot 3s ease-in-out infinite;
     }
 
-    .sp-empty h3 {
-        margin: 0 0 .5rem;
-        font-size: 1.05rem;
-        font-weight: 800;
-        color: #111827;
-    }
+    .sp-empty h3 { margin: 0 0 .5rem; font-size: 1.05rem; font-weight: 800; color: #111827; }
+    .sp-empty p { margin: 0 auto; font-size: .9rem; color: #64748b; max-width: 340px; line-height: 1.65; }
 
-    .sp-empty p {
-        margin: 0 auto;
-        font-size: .9rem;
-        color: #64748b;
-        max-width: 340px;
-        line-height: 1.65;
-    }
-
-    /* ── No-results state (search/filter) ────────────────────────── */
+    /* ── No-results state ─────────────────────────────────────────── */
     .sp-no-results {
         grid-column: 1 / -1;
         text-align: center;
@@ -816,36 +693,128 @@
         color: #64748b;
         animation: fadeIn .3s ease both;
     }
-
-    .sp-no-results__icon {
-        font-size: 2.2rem;
-        margin-bottom: .75rem;
-        display: block;
+    .sp-no-results__icon { font-size: 2.2rem; margin-bottom: .75rem; display: block; }
+    .sp-no-results p { font-size: .9rem; font-weight: 600; margin: 0 0 .75rem; }
+    .sp-no-results__reset {
+        border: 1.5px solid #e2e8f0;
+        background: #fff;
+        color: var(--brand-indigo);
+        font-size: .8rem;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background var(--dur-fast), border-color var(--dur-fast);
     }
-
-    .sp-no-results p {
-        font-size: .9rem;
-        font-weight: 600;
-        margin: 0;
-    }
-
-    /* ── Loading skeleton ─────────────────────────────────────────── */
-    .sp-skeleton {
-        background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
-        border-radius: 8px;
-    }
+    .sp-no-results__reset:hover { background: #eef2ff; border-color: #c7d2fe; }
 
     /* ── Responsive ───────────────────────────────────────────────── */
     @media (max-width: 640px) {
         .sp-toolbar__right { width: 100%; }
         .sp-search__input  { width: 100%; }
         .sp-search__input:focus { width: 100%; }
-        .sp-search         { flex: 1; }
+        .sp-search         { flex: 1; width: 100%; }
         .sp-grid           { grid-template-columns: 1fr; }
         .sp-summary        { grid-template-columns: repeat(2, 1fr); }
         .sp-sort           { display: none; }
+        .list-view .s-card-inner {
+            grid-template-columns: auto 1fr;
+            row-gap: 8px;
+        }
+        .list-view .s-card__footer { grid-column: 1 / -1; }
+    }
+
+    /* ── Editorial dashboard treatment ─────────────────────────── */
+    .sp {
+        --ink: #172033;
+        --coral: #f27a5b;
+        --mint: #54c7ad;
+        max-width: 1480px;
+        margin: 0 auto;
+        padding: .75rem clamp(.5rem, 2vw, 1.5rem) 4rem;
+    }
+
+    .sp::before {
+        height: 360px;
+        background: linear-gradient(120deg, rgba(23,32,51,.98) 0%, rgba(38,54,83,.96) 58%, rgba(52,79,103,.9) 100%);
+        border-radius: 0 0 34px 34px;
+        box-shadow: 0 18px 50px rgba(23,32,51,.18);
+    }
+
+    .sp::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 5%;
+        width: 280px;
+        height: 280px;
+        border: 1px solid rgba(255,255,255,.12);
+        border-radius: 50%;
+        box-shadow: 0 0 0 36px rgba(255,255,255,.025), 0 0 0 72px rgba(255,255,255,.02);
+        pointer-events: none;
+    }
+
+    .sp-toolbar {
+        min-height: 188px;
+        margin: 0 -1px 1.1rem;
+        padding: 1.8rem clamp(1rem, 3vw, 2.2rem);
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        backdrop-filter: none;
+        color: #fff;
+    }
+
+    .sp-toolbar__left { align-self: flex-start; padding-top: .2rem; }
+    .sp-toolbar__left::before {
+        content: 'TEACHING OVERVIEW';
+        display: block;
+        margin-bottom: .7rem;
+        color: #7ee0c8;
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .16em;
+    }
+    .sp-toolbar__title { color: #fff; font-size: clamp(1.65rem, 3vw, 2.35rem); letter-spacing: -.045em; }
+    .sp-toolbar__sub { color: rgba(255,255,255,.68); max-width: 430px; }
+    .sp-toolbar__right { align-self: flex-end; }
+
+    .sp-search__input,
+    .sp-sort { border-color: rgba(255,255,255,.18); background-color: rgba(255,255,255,.1); color: #fff; }
+    .sp-search__input::placeholder { color: rgba(255,255,255,.58); }
+    .sp-search__icon { color: rgba(255,255,255,.64); }
+    .sp-search__input:focus,
+    .sp-sort:focus { background-color: rgba(255,255,255,.16); border-color: #7ee0c8; box-shadow: 0 0 0 3px rgba(126,224,200,.18); }
+    .sp-sort { color: #fff; }
+    .sp-sort option { color: #172033; background: #fff; }
+    .sp-count { color: #172033; background: #f7c978; border-color: #f7c978; box-shadow: 0 8px 20px rgba(247,201,120,.22); }
+
+    .sp-summary { gap: 12px; margin-top: -1px; }
+    .sp-stat { min-height: 126px; padding: 1rem 1.1rem; border-color: rgba(226,232,240,.8); border-radius: 14px; box-shadow: 0 12px 24px rgba(23,32,51,.08); }
+    .sp-stat:nth-child(1) { border-top: 3px solid var(--coral); }
+    .sp-stat:nth-child(2) { border-top: 3px solid var(--mint); }
+    .sp-stat:nth-child(3) { border-top: 3px solid #f7c978; }
+    .sp-stat:nth-child(4) { border-top: 3px solid #6d91e8; }
+    .sp-stat:nth-child(5) { border-top: 3px solid #9b83db; }
+    .sp-stat:nth-child(6) { border-top: 3px solid var(--mint); }
+    .sp-view-toggle { padding: .25rem .15rem; }
+    .sp-filter-btn.is-active { background: var(--ink); border-color: var(--ink); box-shadow: 0 5px 14px rgba(23,32,51,.24); }
+    .sp-filter-btn:hover { color: var(--ink); border-color: #9ab1c9; background: #eef5f4; }
+    .sp-toggle-group { background: #e8eef3; }
+    .sp-grid { gap: 16px; }
+    .s-card { border-color: #e3e9ee; border-radius: 14px; box-shadow: 0 10px 24px rgba(23,32,51,.07); }
+    .s-card:hover { border-color: #a9c7c7; box-shadow: 0 18px 34px rgba(23,32,51,.13); }
+    .s-card::before { height: 4px; }
+    .s-card__name { color: var(--ink); }
+    .s-progress__track { background: #edf2f4; }
+
+    @media (max-width: 640px) {
+        .sp { padding-left: 0; padding-right: 0; }
+        .sp::before { border-radius: 0 0 24px 24px; }
+        .sp-toolbar { margin-left: 0; margin-right: 0; padding-top: 1.35rem; min-height: 255px; }
+        .sp-toolbar__right { align-self: stretch; }
+        .sp-summary { padding: 0 .1rem; }
     }
 
     /* ── Scrollbar polish ─────────────────────────────────────────── */
@@ -859,25 +828,46 @@
 @section('content')
 
 @php
+    use Illuminate\Support\Str;
+    use Illuminate\Support\Carbon;
+
     /* ── Metrics ────────────────────────────────────────────── */
     $enrollments = $enrollments ?? collect();
-    $total       = $enrollments->count();
-    $active      = $enrollments->where('status', 'Active')->count();
-    $pending     = $enrollments->where('status', 'Pending')->count();
-    $inactive    = $enrollments->where('status', 'Inactive')->count();
-    $dropped     = $enrollments->where('status', 'Dropped')->count();
-    $avgProg     = $total > 0
-        ? (int) round($enrollments->avg(fn($e) => (int) ($e->progress ?? 0)))
-        : 0;
-    $highProg    = $total > 0
-        ? $enrollments->filter(fn($e) => (int)($e->progress ?? 0) >= 75)->count()
-        : 0;
-    $completions = $total > 0
-        ? $enrollments->filter(fn($e) => (int)($e->progress ?? 0) >= 100)->count()
-        : 0;
 
-    /* Unique courses */
-    $courseCount = $enrollments->unique('course_id')->count();
+    $normalizedEnrollments = $enrollments->map(function ($enrollment) {
+        $progress  = max(0, min(100, (int) ($enrollment->progress ?? 0)));
+        $rawStatus = ucfirst(strtolower((string) ($enrollment->status ?? '')));
+
+        $validStatuses = ['Active', 'Pending', 'Inactive', 'Dropped', 'Completed'];
+        if (in_array($rawStatus, $validStatuses, true)) {
+            $status = $rawStatus;
+        } elseif (!empty($enrollment->completed) || $progress >= 100) {
+            $status = 'Completed';
+        } else {
+            $status = $progress > 0 ? 'Active' : 'Pending';
+        }
+
+        if ($progress >= 100 && $status !== 'Dropped' && $status !== 'Inactive') {
+            $status = 'Completed';
+        }
+
+        $enrollment->status   = $status;
+        $enrollment->progress = $progress;
+
+        return $enrollment;
+    });
+
+    $total     = $normalizedEnrollments->count();
+    $active    = $normalizedEnrollments->where('status', 'Active')->count();
+    $pending   = $normalizedEnrollments->where('status', 'Pending')->count();
+    $inactive  = $normalizedEnrollments->where('status', 'Inactive')->count();
+    $dropped   = $normalizedEnrollments->where('status', 'Dropped')->count();
+    $completed = $normalizedEnrollments->where('status', 'Completed')->count();
+
+    $avgProg  = $total > 0 ? (int) round($normalizedEnrollments->avg(fn ($e) => (int) ($e->progress ?? 0))) : 0;
+    $highProg = $total > 0 ? $normalizedEnrollments->filter(fn ($e) => (int) ($e->progress ?? 0) >= 75)->count() : 0;
+
+    $courseCount = $normalizedEnrollments->filter(fn ($e) => isset($e->course_id))->unique('course_id')->count();
 @endphp
 
 <div class="sp" id="studentsPage">
@@ -886,14 +876,12 @@
     <div class="sp-toolbar">
         <div class="sp-toolbar__left">
             <h2 class="sp-toolbar__title">Enrolled students</h2>
-            <p class="sp-toolbar__sub">
-                Review learners across your courses and track engagement at a glance.
-            </p>
+            <p class="sp-toolbar__sub">Review learners across your courses and track engagement at a glance.</p>
         </div>
 
         <div class="sp-toolbar__right">
             {{-- Search --}}
-            <div class="sp-search">
+            <div class="sp-search" id="searchWrap">
                 <svg class="sp-search__icon" width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                     <circle cx="7" cy="7" r="4.5" stroke="currentColor" stroke-width="1.6"/>
                     <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
@@ -902,10 +890,15 @@
                     class="sp-search__input"
                     id="studentSearch"
                     type="search"
-                    placeholder="Search students…"
+                    placeholder="Search students… ( / )"
                     autocomplete="off"
                     aria-label="Search students"
                 >
+                <button type="button" class="sp-search__clear" id="searchClear" aria-label="Clear search" title="Clear search">
+                    <svg width="10" height="10" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                        <path d="M2 2l12 12M14 2L2 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
             </div>
 
             {{-- Sort --}}
@@ -918,7 +911,7 @@
                 <option value="oldest">Oldest first</option>
             </select>
 
-            @if($total)
+            @if ($total)
                 <span class="sp-count" id="visibleCount">
                     👤&nbsp;<span id="visibleNum">{{ $total }}</span>&nbsp;{{ Str::plural('student', $total) }}
                 </span>
@@ -926,7 +919,7 @@
         </div>
     </div>
 
-    @if($total)
+    @if ($total)
 
         {{-- ── Summary stats ──────────────────────────────── --}}
         <div class="sp-summary" role="list" aria-label="Student summary">
@@ -938,14 +931,14 @@
                 <div class="sp-stat__sub">{{ $courseCount }} {{ Str::plural('course', $courseCount) }}</div>
             </div>
 
-            <div class="sp-stat" style="animation-delay:.1s" role="listitem">
+            <div class="sp-stat" data-clickable="true" tabindex="0" role="button" data-filter-target="active" style="animation-delay:.1s">
                 <span class="sp-stat__icon" aria-hidden="true">✅</span>
                 <div class="sp-stat__label">Active</div>
                 <div class="sp-stat__value clr-green">{{ $active }}</div>
                 <div class="sp-stat__sub">{{ $total > 0 ? round($active / $total * 100) : 0 }}% of total</div>
             </div>
 
-            <div class="sp-stat" style="animation-delay:.15s" role="listitem">
+            <div class="sp-stat" data-clickable="true" tabindex="0" role="button" data-filter-target="pending" style="animation-delay:.15s">
                 <span class="sp-stat__icon" aria-hidden="true">⏳</span>
                 <div class="sp-stat__label">Pending</div>
                 <div class="sp-stat__value clr-amber">{{ $pending }}</div>
@@ -966,13 +959,13 @@
                 <div class="sp-stat__sub">High performers</div>
             </div>
 
-            @if($completions > 0)
-            <div class="sp-stat" style="animation-delay:.3s" role="listitem">
-                <span class="sp-stat__icon" aria-hidden="true">🎓</span>
-                <div class="sp-stat__label">Completed</div>
-                <div class="sp-stat__value clr-green">{{ $completions }}</div>
-                <div class="sp-stat__sub">100% progress</div>
-            </div>
+            @if ($completed > 0)
+                <div class="sp-stat" data-clickable="true" tabindex="0" role="button" data-filter-target="completed" style="animation-delay:.3s">
+                    <span class="sp-stat__icon" aria-hidden="true">🎓</span>
+                    <div class="sp-stat__label">Completed</div>
+                    <div class="sp-stat__value clr-green">{{ $completed }}</div>
+                    <div class="sp-stat__sub">100% progress</div>
+                </div>
             @endif
 
         </div>
@@ -980,14 +973,17 @@
         {{-- ── Filter pills + view toggle ──────────────────── --}}
         <div class="sp-view-toggle">
             <div class="sp-filters" role="group" aria-label="Filter by status">
-                <button class="sp-filter-btn is-active" data-filter="all">All</button>
-                <button class="sp-filter-btn" data-filter="active">Active</button>
-                <button class="sp-filter-btn" data-filter="pending">Pending</button>
-                @if($inactive > 0)
-                <button class="sp-filter-btn" data-filter="inactive">Inactive</button>
+                <button type="button" class="sp-filter-btn is-active" data-filter="all">All</button>
+                <button type="button" class="sp-filter-btn" data-filter="active">Active</button>
+                <button type="button" class="sp-filter-btn" data-filter="pending">Pending</button>
+                @if ($completed > 0)
+                    <button type="button" class="sp-filter-btn" data-filter="completed">Completed</button>
                 @endif
-                @if($dropped > 0)
-                <button class="sp-filter-btn" data-filter="dropped">Dropped</button>
+                @if ($inactive > 0)
+                    <button type="button" class="sp-filter-btn" data-filter="inactive">Inactive</button>
+                @endif
+                @if ($dropped > 0)
+                    <button type="button" class="sp-filter-btn" data-filter="dropped">Dropped</button>
                 @endif
             </div>
 
@@ -996,7 +992,7 @@
                     Showing <strong id="filterCount">{{ $total }}</strong> of {{ $total }}
                 </span>
                 <div class="sp-toggle-group" role="group" aria-label="View mode">
-                    <button class="sp-toggle-btn is-active" id="gridViewBtn" aria-pressed="true" title="Grid view">
+                    <button type="button" class="sp-toggle-btn is-active" id="gridViewBtn" aria-pressed="true" title="Grid view">
                         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                             <rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/>
                             <rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/>
@@ -1005,7 +1001,7 @@
                         </svg>
                         Grid
                     </button>
-                    <button class="sp-toggle-btn" id="listViewBtn" aria-pressed="false" title="List view">
+                    <button type="button" class="sp-toggle-btn" id="listViewBtn" aria-pressed="false" title="List view">
                         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                             <path d="M1 4h14M1 8h14M1 12h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
                         </svg>
@@ -1018,58 +1014,60 @@
         {{-- ── Student cards ────────────────────────────────── --}}
         <div class="sp-grid" id="studentGrid" role="list">
 
-            @foreach($enrollments as $i => $enrollment)
+            @foreach ($normalizedEnrollments as $i => $enrollment)
                 @php
-                    /* ── Data extraction ─────────────────────────── */
-                    $name     = $enrollment->user->name      ?? 'Student';
-                    $email    = $enrollment->user->email     ?? '';
-                    $course   = $enrollment->course->title   ?? 'Course';
-                    $status   = $enrollment->status          ?? 'Active';
-                    $progress = (int) ($enrollment->progress ?? 0);
-                    $lessons  = (int) ($enrollment->lessons_done ?? 0);
-                    $totalLessons = (int) ($enrollment->total_lessons ?? 0);
-                    $grade    = $enrollment->grade           ?? null;
-                    $joined   = isset($enrollment->created_at)
-                                    ? $enrollment->created_at->format('M j, Y')
-                                    : null;
-                    $lastSeen = isset($enrollment->last_activity_at)
-                                    ? $enrollment->last_activity_at->diffForHumans()
-                                    : null;
+                    $name   = $enrollment->user->name  ?? 'Student';
+                    $email  = $enrollment->user->email ?? '';
+                    $course = $enrollment->course->title ?? 'Course';
 
-                    /* ── Initials ────────────────────────────────── */
-                    $parts    = explode(' ', trim($name));
+                    $status = $enrollment->status; // already normalized above
+                    $progress = $enrollment->progress;
+
+                    $lessons      = (int) ($enrollment->completed_lessons ?? 0);
+                    $totalLessons = (int) ($enrollment->total_lessons ?? 0);
+                    $grade        = $enrollment->final_grade ?? null;
+
+                    $joined = ($enrollment->created_at ?? null) instanceof \Illuminate\Support\Carbon
+                        ? $enrollment->created_at->format('M j, Y')
+                        : null;
+
+                    $lastActivity = $enrollment->last_activity_at ?? null;
+                    $updatedAt    = $enrollment->updated_at ?? null;
+
+                    $parts = preg_split('/\s+/', trim($name)) ?: [];
                     $initials = strtoupper(
-                        substr($parts[0], 0, 1) .
+                        (isset($parts[0]) ? substr($parts[0], 0, 1) : '') .
                         (isset($parts[1]) ? substr($parts[1], 0, 1) : '')
                     );
+                    $initials = $initials !== '' ? $initials : '·';
 
-                    $av          = 'av-' . ($i % 5);
-                    $cardDelay   = ($i * 65 + 100) . 'ms';
-                    $barDelay    = ($i * 65 + 330) . 'ms';
+                    $av        = 'av-' . ($i % 5);
+                    $cardDelay = min($i * 55, 900) . 'ms';
+                    $barDelay  = (min($i * 55, 900) + 250) . 'ms';
 
-                    /* ── Accent / bar colour ─────────────────────── */
-                    [$accentClass, $barClass] = match(true) {
+                    [$accentClass, $barClass] = match (true) {
                         $progress >= 75 => ['ac-green',  'bar-high'],
                         $progress >= 40 => ['ac-blue',   'bar-mid'],
                         $progress > 0   => ['ac-amber',  'bar-low'],
                         default         => ['ac-indigo', 'bar-zero'],
                     };
 
-                    /* ── Status pill ─────────────────────────────── */
                     $statusLower = strtolower($status);
-                    $pillClass   = match($statusLower) {
-                        'active'   => 'pill-active',
-                        'pending'  => 'pill-pending',
-                        'dropped'  => 'pill-dropped',
-                        default    => 'pill-inactive',
+                    $pillClass = match ($statusLower) {
+                        'active'    => 'pill-active',
+                        'pending'   => 'pill-pending',
+                        'completed' => 'pill-completed',
+                        'dropped'   => 'pill-dropped',
+                        default     => 'pill-inactive',
                     };
 
-                    /* ── Online indicator (demo-based logic) ─────── */
-                    $onlineCls = match($i % 3) {
-                        0 => 'online',
-                        1 => 'away',
-                        default => 'offline',
-                    };
+                    $hoursSince = $lastActivity ? $lastActivity->diffInHours(now()) : null;
+                    $onlineCls  = $hoursSince === null ? 'offline' : ($hoursSince <= 6 ? 'online' : ($hoursSince <= 72 ? 'away' : 'offline'));
+
+                    $hasProfileRoute = \Illuminate\Support\Facades\Route::has('teacher.students.show');
+                    $joinedTimestamp = ($enrollment->created_at ?? null) instanceof \Illuminate\Support\Carbon
+                        ? $enrollment->created_at->timestamp
+                        : 0;
                 @endphp
 
                 <article
@@ -1077,11 +1075,11 @@
                     style="animation-delay: {{ $cardDelay }}"
                     role="listitem"
                     aria-label="{{ $name }}, {{ $progress }}% progress, {{ $status }}"
-                    data-name="{{ strtolower($name) }}"
-                    data-course="{{ strtolower($course) }}"
+                    data-name="{{ Str::lower($name) }}"
+                    data-course="{{ Str::lower($course) }}"
                     data-status="{{ $statusLower }}"
                     data-progress="{{ $progress }}"
-                    data-joined="{{ $enrollment->created_at->timestamp ?? 0 }}"
+                    data-joined="{{ $joinedTimestamp }}"
                 >
                     <div class="s-card-inner">
                         {{-- Top: avatar + identity --}}
@@ -1092,7 +1090,7 @@
                             </div>
                             <div class="s-card__identity">
                                 <div class="s-card__name" title="{{ $name }}">{{ $name }}</div>
-                                @if($email)
+                                @if ($email)
                                     <div class="s-card__email" title="{{ $email }}">{{ $email }}</div>
                                 @endif
                                 <div class="s-card__course" title="{{ $course }}">
@@ -1120,7 +1118,7 @@
                             <div class="s-micro">
                                 <div class="s-micro__label">Lessons</div>
                                 <div class="s-micro__val">
-                                    @if($totalLessons > 0)
+                                    @if ($totalLessons > 0)
                                         {{ $lessons }}/{{ $totalLessons }}
                                     @else
                                         —
@@ -1146,10 +1144,7 @@
                             aria-valuemax="100"
                             aria-label="{{ $name }}: {{ $progress }}% complete"
                         >
-                            <div
-                                class="s-progress__bar {{ $barClass }}"
-                                style="--pw:{{ $progress }}%; --pd:{{ $barDelay }}"
-                            ></div>
+                            <div class="s-progress__bar {{ $barClass }}" style="--pw:{{ $progress }}%; --pd:{{ $barDelay }}"></div>
                         </div>
 
                         {{-- Footer --}}
@@ -1159,57 +1154,39 @@
                                     <rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
                                     <path d="M5 1v3M11 1v3M2 7h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
                                 </svg>
-                                @if($joined) Joined {{ $joined }} @else No date @endif
+                                @if ($joined) Joined {{ $joined }} @else No date @endif
                             </span>
 
-                            <div class="s-card__actions">
-                                {{-- View profile --}}
-                                <a
-                                    href="{{ route('teacher.students.show', $enrollment->id) }}"
-                                    class="s-action-btn"
-                                    data-tip="View profile"
-                                    aria-label="View {{ $name }}'s profile"
-                                >
-                                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                                        <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
-                                        <path d="M2.5 13.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                    </svg>
-                                </a>
-
-                                {{-- Send message --}}
-                                <a
-                                    href="{{ route('teacher.students.show', $enrollment->id) }}"
-                                    class="s-action-btn"
-                                    data-tip="Message"
-                                    aria-label="Open {{ $name }}'s profile"
-                                >
-                                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                                        <path d="M2 2.5h12a1 1 0 0 1 1 1V10a1 1 0 0 1-1 1H9l-3 2.5V11H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
-                                    </svg>
-                                </a>
-
-                                {{-- Progress detail --}}
-                                <a
-                                    href="{{ route('teacher.students.show', $enrollment->id) }}"
-                                    class="s-action-btn"
-                                    data-tip="Progress"
-                                    aria-label="See {{ $name }}'s progress detail"
-                                >
-                                    <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                                        <path d="M2 12L5.5 7 9 9.5 13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                    </svg>
-                                </a>
-                            </div>
+                            @if ($hasProfileRoute)
+                                <div class="s-card__actions">
+                                    <a href="{{ route('teacher.students.show', $enrollment->id) }}" class="s-action-btn" data-tip="View profile" aria-label="View {{ $name }}'s profile">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                                            <circle cx="8" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
+                                            <path d="M2.5 13.5c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                    </a>
+                                    <a href="{{ route('teacher.students.show', $enrollment->id) }}" class="s-action-btn" data-tip="Message" aria-label="Open {{ $name }}'s profile to message">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                                            <path d="M2 2.5h12a1 1 0 0 1 1 1V10a1 1 0 0 1-1 1H9l-3 2.5V11H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+                                        </svg>
+                                    </a>
+                                    <a href="{{ route('teacher.students.show', $enrollment->id) }}" class="s-action-btn" data-tip="Progress" aria-label="See {{ $name }}'s progress detail">
+                                        <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                                            <path d="M2 12L5.5 7 9 9.5 13 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                        </svg>
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 </article>
-
             @endforeach
 
             {{-- No-results placeholder (shown by JS) --}}
             <div class="sp-no-results" id="noResults" style="display:none;" role="status" aria-live="polite">
                 <span class="sp-no-results__icon" aria-hidden="true">🔍</span>
                 <p>No students match your search or filter.</p>
+                <button type="button" class="sp-no-results__reset" id="resetFilters">Reset filters</button>
             </div>
 
         </div>
@@ -1233,168 +1210,202 @@
 (function () {
     'use strict';
 
-    /* ── Selectors ────────────────────────────────────────────── */
-    const grid       = document.getElementById('studentGrid');
-    if (!grid) return;                         // no students – bail
+    const grid = document.getElementById('studentGrid');
+    if (!grid) return; // no students on this page
 
-    const searchEl   = document.getElementById('studentSearch');
-    const sortEl     = document.getElementById('studentSort');
-    const filterBtns = document.querySelectorAll('.sp-filter-btn');
-    const gridBtn    = document.getElementById('gridViewBtn');
-    const listBtn    = document.getElementById('listViewBtn');
-    const countEl    = document.getElementById('visibleNum');
-    const filterCnt  = document.getElementById('filterCount');
-    const noResults  = document.getElementById('noResults');
-    const cards      = () => Array.from(grid.querySelectorAll('.s-card'));
+    const searchEl    = document.getElementById('studentSearch');
+    const searchWrap  = document.getElementById('searchWrap');
+    const searchClear = document.getElementById('searchClear');
+    const sortEl      = document.getElementById('studentSort');
+    const filterBtns  = Array.from(document.querySelectorAll('.sp-filter-btn'));
+    const gridBtn     = document.getElementById('gridViewBtn');
+    const listBtn     = document.getElementById('listViewBtn');
+    const countEl     = document.getElementById('visibleNum');
+    const filterCnt   = document.getElementById('filterCount');
+    const noResults   = document.getElementById('noResults');
+    const resetBtn    = document.getElementById('resetFilters');
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const cards = () => Array.from(grid.querySelectorAll('.s-card'));
 
     let activeFilter = 'all';
     let searchQuery  = '';
 
-    /* ── Debounce ─────────────────────────────────────────────── */
     function debounce(fn, ms) {
         let t;
         return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
     }
 
-    /* ── Apply filter + search ────────────────────────────────── */
+    function setActiveFilterButton(filter) {
+        filterBtns.forEach(b => {
+            const on = b.dataset.filter === filter;
+            b.classList.toggle('is-active', on);
+            b.setAttribute('aria-pressed', String(on));
+        });
+    }
+
     function applyFilters() {
-        const q   = searchQuery.trim().toLowerCase();
+        const q = searchQuery.trim().toLowerCase();
         let shown = 0;
 
         cards().forEach((card, idx) => {
-            const name    = card.dataset.name    || '';
-            const course  = card.dataset.course  || '';
-            const status  = card.dataset.status  || '';
+            const name     = card.dataset.name     || '';
+            const course   = card.dataset.course   || '';
+            const status   = card.dataset.status   || '';
+            const progress = Number(card.dataset.progress || 0);
 
-            const matchFilter = activeFilter === 'all' || status === activeFilter;
+            const matchFilter = activeFilter === 'all'
+                || (activeFilter === 'completed' ? (status === 'completed' || progress >= 100) : status === activeFilter);
             const matchSearch = !q || name.includes(q) || course.includes(q);
-            const visible     = matchFilter && matchSearch;
+            const visible = matchFilter && matchSearch;
 
             if (visible) {
                 card.style.display = '';
-                /* stagger re-appearance */
-                card.style.animationName = 'none';
-                requestAnimationFrame(() => {
-                    card.style.animationDelay = (idx * 40 + 60) + 'ms';
-                    card.style.animationName  = '';
-                });
+                if (!reduceMotion) {
+                    card.style.animationName = 'none';
+                    requestAnimationFrame(() => {
+                        card.style.animationDelay = Math.min(idx * 35, 500) + 'ms';
+                        card.style.animationName = '';
+                    });
+                }
                 shown++;
             } else {
                 card.style.display = 'none';
             }
         });
 
-        noResults.style.display = shown === 0 ? 'block' : 'none';
-        if (countEl)    countEl.textContent  = shown;
-        if (filterCnt)  filterCnt.textContent = shown;
+        if (noResults) noResults.style.display = shown === 0 ? 'block' : 'none';
+        if (countEl)   countEl.textContent = shown;
+        if (filterCnt) filterCnt.textContent = shown;
     }
 
-    /* ── Sort ────────────────────────────────────────────────── */
     function applySort(value) {
         const items = cards();
         items.sort((a, b) => {
             switch (value) {
-                case 'name-asc':
-                    return a.dataset.name.localeCompare(b.dataset.name);
-                case 'name-desc':
-                    return b.dataset.name.localeCompare(a.dataset.name);
-                case 'prog-desc':
-                    return +b.dataset.progress - +a.dataset.progress;
-                case 'prog-asc':
-                    return +a.dataset.progress - +b.dataset.progress;
-                case 'newest':
-                    return +b.dataset.joined - +a.dataset.joined;
-                case 'oldest':
-                    return +a.dataset.joined - +b.dataset.joined;
-                default:
-                    return 0;
+                case 'name-asc':  return a.dataset.name.localeCompare(b.dataset.name);
+                case 'name-desc': return b.dataset.name.localeCompare(a.dataset.name);
+                case 'prog-desc': return Number(b.dataset.progress) - Number(a.dataset.progress);
+                case 'prog-asc':  return Number(a.dataset.progress) - Number(b.dataset.progress);
+                case 'newest':    return Number(b.dataset.joined) - Number(a.dataset.joined);
+                case 'oldest':    return Number(a.dataset.joined) - Number(b.dataset.joined);
+                default:          return 0;
             }
         });
-        items.forEach(card => grid.appendChild(card));
+        const frag = document.createDocumentFragment();
+        items.forEach(card => frag.appendChild(card));
+        grid.appendChild(frag);
         applyFilters();
     }
 
-    /* ── View toggle ─────────────────────────────────────────── */
     function setView(mode) {
-        if (mode === 'list') {
-            grid.classList.add('list-view');
-            gridBtn.classList.remove('is-active');
-            gridBtn.setAttribute('aria-pressed', 'false');
-            listBtn.classList.add('is-active');
-            listBtn.setAttribute('aria-pressed', 'true');
-        } else {
-            grid.classList.remove('list-view');
-            listBtn.classList.remove('is-active');
-            listBtn.setAttribute('aria-pressed', 'false');
-            gridBtn.classList.add('is-active');
-            gridBtn.setAttribute('aria-pressed', 'true');
-        }
+        const isList = mode === 'list';
+        grid.classList.toggle('list-view', isList);
+        if (gridBtn) { gridBtn.classList.toggle('is-active', !isList); gridBtn.setAttribute('aria-pressed', String(!isList)); }
+        if (listBtn) { listBtn.classList.toggle('is-active', isList); listBtn.setAttribute('aria-pressed', String(isList)); }
+        try { localStorage.setItem('sp-view-mode', mode); } catch (e) {}
     }
 
-    /* ── Filter buttons ──────────────────────────────────────── */
+    function updateSearchUI() {
+        if (searchWrap) searchWrap.classList.toggle('has-value', searchQuery.length > 0);
+    }
+
+    // Filter buttons
     filterBtns.forEach(btn => {
         btn.addEventListener('click', () => {
-            filterBtns.forEach(b => b.classList.remove('is-active'));
-            btn.classList.add('is-active');
             activeFilter = btn.dataset.filter;
+            setActiveFilterButton(activeFilter);
             applyFilters();
         });
     });
 
-    /* ── Search input ────────────────────────────────────────── */
+    // Search input
     if (searchEl) {
-        searchEl.addEventListener('input', debounce(e => {
-            searchQuery = e.target.value;
+        const handleInput = debounce(value => {
+            searchQuery = value;
             applyFilters();
-        }, 200));
+        }, 180);
+
+        searchEl.addEventListener('input', e => {
+            updateSearchUI();
+            handleInput(e.target.value);
+        });
     }
 
-    /* ── Sort select ─────────────────────────────────────────── */
-    if (sortEl) {
-        sortEl.addEventListener('change', e => applySort(e.target.value));
+    if (searchClear) {
+        searchClear.addEventListener('click', () => {
+            if (!searchEl) return;
+            searchEl.value = '';
+            searchQuery = '';
+            updateSearchUI();
+            applyFilters();
+            searchEl.focus();
+        });
     }
 
-    /* ── View toggle buttons ─────────────────────────────────── */
+    // Sort select
+    if (sortEl) sortEl.addEventListener('change', e => applySort(e.target.value));
+
+    // View toggle
     if (gridBtn) gridBtn.addEventListener('click', () => setView('grid'));
     if (listBtn) listBtn.addEventListener('click', () => setView('list'));
+    try {
+        const savedView = localStorage.getItem('sp-view-mode');
+        if (savedView === 'list') setView('list');
+    } catch (e) {}
 
-    /* ── Keyboard shortcut: / → focus search ────────────────── */
+    // Reset filters
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            activeFilter = 'all';
+            searchQuery = '';
+            if (searchEl) searchEl.value = '';
+            updateSearchUI();
+            setActiveFilterButton('all');
+            applyFilters();
+        });
+    }
+
+    // Keyboard shortcuts: "/" focuses search, Escape clears it
     document.addEventListener('keydown', e => {
-        if (e.key === '/' && document.activeElement !== searchEl) {
+        const tag = document.activeElement && document.activeElement.tagName;
+        const typing = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT';
+
+        if (e.key === '/' && !typing) {
             e.preventDefault();
-            searchEl?.focus();
+            if (searchEl) searchEl.focus();
         }
         if (e.key === 'Escape' && document.activeElement === searchEl) {
             searchEl.value = '';
             searchQuery = '';
+            updateSearchUI();
             applyFilters();
             searchEl.blur();
         }
     });
 
-    /* ── Stat card click → auto-filter ──────────────────────── */
-    document.querySelectorAll('.sp-stat').forEach(stat => {
-        const label = stat.querySelector('.sp-stat__label')?.textContent.trim().toLowerCase();
-        if (['active', 'pending', 'completed', 'inactive'].includes(label)) {
-            stat.style.cursor = 'pointer';
-            stat.addEventListener('click', () => {
-                const match = document.querySelector(`.sp-filter-btn[data-filter="${label}"]`);
-                if (match) match.click();
-            });
-        }
+    // Clickable stat cards drive the filter pills
+    document.querySelectorAll('.sp-stat[data-filter-target]').forEach(stat => {
+        const target = stat.dataset.filterTarget;
+        const activate = () => {
+            const match = document.querySelector(`.sp-filter-btn[data-filter="${target}"]`);
+            if (match) match.click();
+        };
+        stat.addEventListener('click', activate);
+        stat.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); activate(); }
+        });
     });
 
-    /* ── Progress bar re-trigger on scroll (Intersection) ───── */
-    if ('IntersectionObserver' in window) {
+    // Re-trigger progress bar fill animation as cards enter the viewport
+    if ('IntersectionObserver' in window && !reduceMotion) {
         const obs = new IntersectionObserver(entries => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const bar = entry.target.querySelector('.s-progress__bar');
                     if (bar) {
                         bar.style.animationName = 'none';
-                        requestAnimationFrame(() => {
-                            bar.style.animationName = '';
-                        });
+                        requestAnimationFrame(() => { bar.style.animationName = ''; });
                     }
                     obs.unobserve(entry.target);
                 }
@@ -1404,9 +1415,8 @@
         cards().forEach(card => obs.observe(card));
     }
 
-    /* ── Initial render ──────────────────────────────────────── */
+    // Initial render
     applyFilters();
-
 })();
 </script>
 @endpush

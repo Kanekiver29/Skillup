@@ -23,6 +23,18 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Admin User',
                 'password' => Hash::make('admin1234?'),
                 'is_admin' => true,
+                'role' => 'admin',
+            ]
+        );
+
+        // Create a superadmin-style account for local/dev use
+        User::updateOrCreate(
+            ['email' => 'superadmin@skillup.test'],
+            [
+                'name' => 'Super Admin',
+                'password' => Hash::make('superadmin1234?'),
+                'is_admin' => true,
+                'role' => 'admin',
             ]
         );
 
@@ -44,6 +56,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Staff Teacher',
                 'password' => Hash::make('staff1234?'),
                 'is_admin' => false,
+                'role' => 'staff',
                 'staff_type' => 'teacher',
             ]
         );
@@ -90,6 +103,14 @@ class DatabaseSeeder extends Seeder
         // Run module and quiz seeders
         $this->call(ModuleSeeder::class);
         $this->call(QuizSeeder::class);
+
+        // Seed SIAS accounts
+        $this->call(SiasAccountSeeder::class);
+
+        // Optional demo data for students (enrollments, submissions, attendance, announcements)
+        if (class_exists(\Database\Seeders\SiasDemoSeeder::class)) {
+            $this->call(\Database\Seeders\SiasDemoSeeder::class);
+        }
     }
 }
 

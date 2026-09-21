@@ -1,0 +1,1 @@
+<?php /**PATH C:\xampp\htdocs\skillupv2\resources\views\layout\Admin\mobile.blade.php ENDPATH**/ ?>

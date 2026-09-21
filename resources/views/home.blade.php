@@ -2255,11 +2255,11 @@ details.faq-item[open] .faq-chevron {
         </div>
  <div class="institute-banner">
             <div class="institute-banner__logo">
-                <img src="{{ asset('image\logo new.jpg') }}" alt="APARRI Polytechnic Institute logo">
+                <img src="{{ asset('image/logo new.jpg') }}" alt="APARRI Polytechnic Institute logo">
             </div>
             <div class="institute-banner__text">
-                <p class="institute-banner__title">APARRI POLYTECHIC INSTITUTE</p>
-                <p class="institute-banner__subtitle">The "Center of technical Excellence"</p>
+                <p class="institute-banner__title">APARRI POLYTECHNIC INSTITUTE</p>
+                <p class="institute-banner__subtitle">The "Center of Technical Excellence"</p>
             </div>
             <div class="institute-banner__logo">
                 <img src="{{ asset('image/hello.png') }}" alt="Right-side logo">

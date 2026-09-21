@@ -146,7 +146,7 @@
                         <span id="roadmap-progress-label">{{ $averageProgress }}%</span>
                     </div>
                     <div class="h-3 bg-white/10 rounded-full overflow-hidden border border-white/10">
-                        <div id="roadmap-main-progress" class="roadmap-progress-bar h-full rounded-full bg-gradient-to-r from-sky-400 to-blue-300" style="width: 0" data-width="{{ $averageProgress }}"></div>
+                        <div id="roadmap-main-progress" class="roadmap-progress-bar h-full rounded-fullbg-gradient-to-r from-sky-400 to-blue-300" style="width: 0" data-width="{{ $averageProgress }}"></div>
                     </div>
                 </div>
             @endif
@@ -183,7 +183,7 @@
 
             {{-- Continue next --}}
             @if($nextEnrollment)
-                <div data-animate class="delay-200 roadmap-next-card mb-8 rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50 to-slate-50 p-6 shadow-sm">
+                <div data-animate class="delay-200 roadmap-next-card mb-8 rounded-2xl border border-blue-200bg-gradient-to-r from-blue-50 to-slate-50 p-6 shadow-sm">
                     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div class="flex items-start gap-4">
                             <div class="w-14 h-14 rounded-2xl bg-[#003a8f] text-white flex items-center justify-center shrink-0 shadow-lg">
@@ -200,7 +200,7 @@
                         </a>
                     </div>
                     <div class="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div class="roadmap-progress-bar h-full rounded-full bg-gradient-to-r from-[#003a8f] to-sky-500" style="width: 0" data-width="{{ $nextEnrollment->progress }}"></div>
+                        <div class="roadmap-progress-bar h-full rounded-fullbg-gradient-to-r from-[#003a8f] to-sky-500" style="width: 0" data-width="{{ $nextEnrollment->progress }}"></div>
                     </div>
                 </div>
             @endif
@@ -348,7 +348,7 @@
                 </h2>
 
                 <div class="relative pl-2 md:pl-4">
-                    <div class="absolute left-4 md:left-6 top-2 bottom-2 w-0.5 bg-gradient-to-b from-green-400 via-orange-400 to-slate-300 rounded-full"></div>
+                    <div class="absolute left-4 md:left-6 top-2 bottom-2 w-0.5bg-gradient-to-b from-green-400 via-orange-400 to-slate-300 rounded-full"></div>
 
                     <div id="roadmap-timeline" class="space-y-5">
                         @foreach($enrollments as $enrollment)
@@ -383,7 +383,7 @@
 
                                         @if($status === 'in-progress')
                                             <div class="mt-4 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                                <div class="roadmap-progress-bar h-full rounded-full bg-gradient-to-r from-[#003a8f] to-sky-500" style="width: 0" data-width="{{ $enrollment->progress }}"></div>
+                                                <div class="roadmap-progress-bar h-full rounded-fullbg-gradient-to-r from-[#003a8f] to-sky-500" style="width: 0" data-width="{{ $enrollment->progress }}"></div>
                                             </div>
                                         @endif
 
@@ -411,7 +411,7 @@
                     <h2 class="text-xl font-bold text-gray-800 mb-4">Skills Development</h2>
                     <div class="flex flex-wrap gap-2">
                         @foreach($userSkills as $skill)
-                            <span class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-slate-100 to-blue-50 border border-blue-100 rounded-full text-sm font-medium text-gray-700 roadmap-hover-lift">
+                            <span class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-rfrom-slate-100 to-blue-50 border border-blue-100 rounded-full text-sm font-medium text-gray-700 roadmap-hover-lift">
                                 <i class="fas fa-star text-amber-400 text-xs"></i>{{ $skill }}
                             </span>
                         @endforeach
@@ -492,7 +492,8 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = document.documentElement.dataset.skillupReducedMotion === 'true'
+        || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // Scroll animations
     const animateEls = document.querySelectorAll('[data-animate]');

@@ -92,7 +92,11 @@ class SystemLogController extends Controller
         // --- Level counts (on filtered+non-paginated set for badge accuracy) ---
         $levelCounts  = $entries->countBy('level');
 
-        return view('Admin.systemlog', compact(
+        $view = $request->routeIs('sias.admin.audit-logs')
+            ? 'sias.admin.audit-logs.index'
+            : 'Admin.systemlog';
+
+        return view($view, compact(
             'logExists',
             'logSize',
             'lastModified',

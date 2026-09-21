@@ -1,12 +1,9 @@
 import './bootstrap';
 import './echo';
-// Ensure Alpine is available when assets are built (also kept as CDN fallback in layout)
-try {
-	import('alpinejs');
-} catch (e) {
-	// dynamic import may fail in older environments; CDN fallback exists in layout
-	console.warn('Alpine dynamic import failed, relying on CDN fallback.');
-}
+import Alpine from 'alpinejs';
+
+window.Alpine = Alpine;
+Alpine.start();
 
 document.addEventListener('DOMContentLoaded', () => {
 	// Header nav is initialized inline in layout.app (works without Vite build).

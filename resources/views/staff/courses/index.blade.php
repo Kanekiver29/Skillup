@@ -9,11 +9,11 @@
    Design: futuristic glass / neon-indigo, dense data table
    ============================================================ */
 :root {
-    --cr-bg:            #05070f;
-    --cr-surface:       rgba(16, 21, 38, 0.62);
-    --cr-surface-solid: #0c1120;
-    --cr-surface-alt:   rgba(255,255,255,0.03);
-    --cr-border:        rgba(129, 140, 248, 0.16);
+    --cr-bg:            var(--body-bg);
+    --cr-surface:       var(--surface);
+    --cr-surface-solid: var(--surface);
+    --cr-surface-alt:   var(--topbar-control-bg);
+    --cr-border:        var(--border);
     --cr-border-strong: rgba(129, 140, 248, 0.45);
 
     --cr-accent:        #818CF8;
@@ -29,16 +29,30 @@
     --cr-danger:        #FB7185;
     --cr-danger-bg:     rgba(251, 113, 133, 0.10);
 
-    --cr-text:          #EAF0FF;
-    --cr-text-dim:      #93A0C3;
-    --cr-text-faint:    #5B6788;
+    --cr-text:          var(--text);
+    --cr-text-dim:      var(--muted);
+    --cr-text-faint:    var(--muted);
 
     --cr-radius:        14px;
     --cr-radius-sm:     10px;
     --cr-radius-lg:     18px;
+    --cr-shadow:        0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 30px -14px rgba(0,0,0,0.18);
+    --cr-shadow-md:     0 30px 70px -30px rgba(0,0,0,0.22);
+    --cr-font:          'Inter', system-ui, -apple-system, sans-serif;
+}
+
+html[data-staff-theme="dark"] .cr-page {
+    --cr-bg:            #05070f;
+    --cr-surface:       rgba(16, 21, 38, 0.62);
+    --cr-surface-solid: #0c1120;
+    --cr-surface-alt:   rgba(255,255,255,0.03);
+    --cr-border:        rgba(129, 140, 248, 0.16);
+    --cr-border-strong: rgba(129, 140, 248, 0.45);
+    --cr-text:          #EAF0FF;
+    --cr-text-dim:      #93A0C3;
+    --cr-text-faint:    #5B6788;
     --cr-shadow:        0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 30px -14px rgba(0,0,0,0.55);
     --cr-shadow-md:     0 30px 70px -30px rgba(0,0,0,0.7);
-    --cr-font:          'Inter', system-ui, -apple-system, sans-serif;
 }
 
 /* ── Keyframes ── */
@@ -137,10 +151,8 @@
     font-weight: 800;
     letter-spacing: -.5px;
     line-height: 1.2;
-    background: linear-gradient(90deg, #ffffff, #c7d5ff 55%, var(--cr-accent-2));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    color: var(--cr-text);
+    text-shadow: none;
 }
 .cr-header__subtitle {
     margin-top: 6px;
@@ -220,11 +232,11 @@
 }
 .cr-stat {
     position: relative;
-    background: var(--cr-surface);
-    border: 1px solid var(--cr-border);
+    background: rgba(255,255,255,0.78);
+    border: 1px solid rgba(148, 163, 184, 0.32);
     border-radius: var(--cr-radius);
     padding: 20px 20px 18px;
-    box-shadow: var(--cr-shadow);
+    box-shadow: 0 14px 30px -24px rgba(15,23,42,0.45);
     backdrop-filter: blur(16px) saturate(140%);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
     overflow: hidden;
@@ -271,8 +283,8 @@
 
 /* ── Toolbar ── */
 .cr-toolbar {
-    background: var(--cr-surface);
-    border: 1px solid var(--cr-border);
+    background: rgba(255,255,255,0.76);
+    border: 1px solid rgba(148, 163, 184, 0.32);
     border-radius: var(--cr-radius);
     padding: 14px 16px;
     margin-bottom: 16px;
@@ -280,7 +292,7 @@
     gap: 12px;
     flex-wrap: wrap;
     align-items: center;
-    box-shadow: var(--cr-shadow);
+    box-shadow: 0 14px 32px -26px rgba(15,23,42,0.4);
     backdrop-filter: blur(16px) saturate(140%);
     -webkit-backdrop-filter: blur(16px) saturate(140%);
 }
@@ -845,18 +857,45 @@ input[type="checkbox"] {
 }
 
 /* ── Responsive ── */
+@media (max-width: 1024px) {
+    .cr-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cr-header__actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .cr-header__subtitle {
+        max-width: 100%;
+    }
+}
+
 @media (max-width: 900px) {
     .cr-stats { grid-template-columns: repeat(3, 1fr); }
 }
-@media (max-width: 640px) {
+
+@media (max-width: 760px) {
     .cr-stats { grid-template-columns: 1fr 1fr; }
-    .cr-header { flex-direction: column; }
-    .cr-field-row { grid-template-columns: 1fr; }
     .cr-toolbar { flex-direction: column; align-items: stretch; }
+    .cr-search { min-width: 100%; }
     .cr-toolbar__count { margin-left: 0; }
 }
-@media (max-width: 420px) {
-    .cr-stats { grid-template-columns: 1fr; }
+
+@media (max-width: 520px) {
+    .cr-header__title {
+        font-size: 32px;
+    }
+
+    .cr-stats {
+        grid-template-columns: 1fr;
+    }
+
+    .cr-header__actions {
+        flex-wrap: wrap;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {

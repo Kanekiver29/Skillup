@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Announcements | SIAS Admin')
+@section('page_title', 'Announcements')
+@section('subtitle', 'Allows administrators to publish important school announcements to teachers and students.')
+@section('content')
+@php($title = 'Announcements')
+@php($purpose = 'Allows administrators to publish important school announcements to teachers and students.')
+@php($items = ['Published announcements', 'Drafts', 'Create announcement'])
+@include('sias.admin.modules._workspace')
+@endsection

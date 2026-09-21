@@ -13,18 +13,51 @@ class AdminSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create or update the admin user (idempotent)
-        $adminEmail = 'admin@skillup.test';
-
-        User::updateOrCreate(
-            ['email' => $adminEmail],
+        $accounts = [
             [
+                'email' => 'admin@skillup.test',
                 'name' => 'Admin User',
-                'password' => Hash::make('admin1234?'),
+                'password' => 'admin1234?',
                 'is_admin' => true,
-            ]
-        );
+                'role' => 'admin',
+            ],
+            [
+                'email' => 'superadmin@skillup.test',
+                'name' => 'Super Admin',
+                'password' => 'superadmin1234?',
+                'is_admin' => true,
+                'role' => 'admin',
+            ],
+            [
+                'email' => 'siasadmin@skillup.test',
+                'name' => 'SIAS Admin',
+                'password' => 'siasadmin1234?',
+                'is_admin' => true,
+                'role' => 'sias_admin',
+            ],
+            [
+                'email' => 'staff@skillup.test',
+                'name' => 'Staff User',
+                'password' => 'staff1234?',
+                'is_admin' => false,
+                'role' => 'staff',
+                'staff_type' => 'teacher',
+            ],
+        ];
 
-        echo "Admin user created/updated: {$adminEmail}\n";
+        foreach ($accounts as $account) {
+            $user = User::updateOrCreate(
+                ['email' => $account['email']],
+                [
+                    'name' => $account['name'],
+                    'password' => Hash::make($account['password']),
+                    'is_admin' => $account['is_admin'],
+                    'role' => $account['role'],
+                    'staff_type' => $account['staff_type'] ?? null,
+                ]
+            );
+
+            echo "Account created/updated: {$user->email} ({$user->role})\n";
+        }
     }
 }

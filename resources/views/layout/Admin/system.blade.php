@@ -15,6 +15,14 @@
     <link rel="stylesheet" href="/css/admin.css">
     <meta name="admin-chats-notifications" content="{{ route('admin.chats.notifications') }}">
 
+    <script>
+        (function () {
+            if (localStorage.getItem('skillup_admin_theme') === 'light') {
+                document.documentElement.classList.add('light-mode');
+            }
+        })();
+    </script>
+
     <style>
         /* ══════════════════════════════════════════
            TOKENS
@@ -80,6 +88,58 @@
             --ease-spring:       cubic-bezier(.34,1.56,.64,1);
             --ease-out:          cubic-bezier(.16,1,.3,1);
         }
+
+        html.light-mode {
+            --bg-base:           #eef3f8;
+            --bg-surface:        #f8fafc;
+            --bg-card:           #ffffff;
+            --bg-card-hover:     #f1f5f9;
+            --bg-input:          #ffffff;
+
+            --border:            rgba(15,23,42,0.08);
+            --border-mid:        rgba(15,23,42,0.14);
+            --border-strong:     rgba(15,23,42,0.2);
+
+            --accent:            #2563eb;
+            --accent-2:          #6d5ce7;
+            --accent-soft:       rgba(37,99,235,0.10);
+            --accent-glow:       rgba(37,99,235,0.18);
+            --accent-dark:       #1d4ed8;
+
+            --gold:              #b7791f;
+            --gold-soft:         rgba(183,121,31,0.12);
+            --gold-glow:         rgba(183,121,31,0.2);
+
+            --text-primary:      #172033;
+            --text-secondary:    #334155;
+            --text-muted:        #64748b;
+            --text-subtle:       #94a3b8;
+
+            --sidebar-bg:        #ffffff;
+            --sidebar-border:    rgba(15,23,42,0.1);
+            --sb-track:          #f1f5f9;
+            --sb-thumb:          rgba(37,99,235,0.2);
+            --sb-thumb-hover:    rgba(37,99,235,0.36);
+
+            --shadow-glow:       0 0 32px rgba(37,99,235,0.12);
+            --shadow-drop:       0 22px 60px rgba(15,23,42,0.16);
+            --shadow-elev-1:     0 1px 0 rgba(255,255,255,0.8) inset, 0 8px 24px rgba(15,23,42,.08);
+            --shadow-elev-2:     0 1px 0 rgba(255,255,255,0.9) inset, 0 16px 44px rgba(15,23,42,.12);
+        }
+
+        html.light-mode body::before { opacity: .18; }
+        html.light-mode body::after { background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, rgba(183,121,31,0.04) 45%, transparent 72%); }
+        html.light-mode .hud-grid { background-image: linear-gradient(rgba(37,99,235,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(37,99,235,0.05) 1px, transparent 1px); }
+        html.light-mode .topbar { background: rgba(248,250,252,0.9); box-shadow: 0 4px 32px rgba(15,23,42,0.1); }
+        html.light-mode .nav-section { background: rgba(15,23,42,.025); border-color: rgba(15,23,42,.07); box-shadow: inset 0 1px 0 rgba(255,255,255,.8); }
+        html.light-mode .nav-link:hover, html.light-mode .sidebar-footer a:hover { background: rgba(37,99,235,.07); }
+        html.light-mode .nav-link::before { background: linear-gradient(90deg, transparent 0%, rgba(37,99,235,.08) 50%, transparent 100%); }
+        html.light-mode .sidebar-fade-mask { background: linear-gradient(to top, var(--sidebar-bg) 40%, transparent); }
+        html.light-mode #fx-canvas { opacity: .28; }
+        html.light-mode .topbar-btn, html.light-mode .user-chip { box-shadow: 0 2px 8px rgba(15,23,42,.05); }
+
+        .theme-toggle i { transition: transform .35s var(--ease-spring); }
+        .theme-toggle:hover i { transform: rotate(18deg) scale(1.08); }
 
         /* ══════════════════════════════════════════
            BASE
@@ -945,6 +1005,11 @@
             <div class="search-kbd" aria-hidden="true"><kbd>⌘</kbd><kbd>K</kbd></div>
         </div>
 
+        <button class="topbar-btn theme-toggle ripple-host" id="themeToggle" type="button"
+                aria-label="Switch to light mode" title="Switch to light mode">
+            <i class="fas fa-sun" aria-hidden="true"></i>
+        </button>
+
         <!-- Notifications -->
         <div style="position:relative;" x-data="{ open: false }">
             <button class="topbar-btn ripple-host" id="notifBellBtn" @click="open = !open" :aria-expanded="open.toString()" aria-label="Notifications">
@@ -1145,6 +1210,13 @@
                         <i class="fas fa-box-archive" aria-hidden="true"></i>
                         <span class="nav-link-text">Archive</span>
                     </a>
+                    <a href="{{ route('admin.news.index') }}"
+                       class="nav-link {{ request()->routeIs('admin.news*') ? 'active' : '' }}"
+                       data-tip="News"
+                       @if(request()->routeIs('admin.news*')) aria-current="page" @endif>
+                        <i class="fas fa-newspaper" aria-hidden="true"></i>
+                        <span class="nav-link-text">News</span>
+                    </a>
                     <a href="{{ route('admin.backup.index') }}"
                        class="nav-link {{ request()->routeIs('admin.backup*') ? 'active' : '' }}"
                        data-tip="Backup & Recovery"
@@ -1234,6 +1306,26 @@
     var more        = document.getElementById('scrollMore');
     var mobileBtn   = document.getElementById('mobileMenuBtn');
     var scrim       = document.getElementById('sidebarScrim');
+    var themeToggle = document.getElementById('themeToggle');
+
+    function updateThemeToggle() {
+        if (!themeToggle) return;
+        var isLight = document.documentElement.classList.contains('light-mode');
+        var icon = themeToggle.querySelector('i');
+        var label = isLight ? 'Switch to dark mode' : 'Switch to light mode';
+        if (icon) icon.className = isLight ? 'fas fa-moon' : 'fas fa-sun';
+        themeToggle.setAttribute('aria-label', label);
+        themeToggle.setAttribute('title', label);
+    }
+
+    updateThemeToggle();
+    if (themeToggle) {
+        themeToggle.addEventListener('click', function () {
+            var isLight = document.documentElement.classList.toggle('light-mode');
+            localStorage.setItem('skillup_admin_theme', isLight ? 'light' : 'dark');
+            updateThemeToggle();
+        });
+    }
 
     /* ── Restore persisted state (desktop only) ── */
     if (localStorage.getItem(STORAGE_KEY) === '1' && window.innerWidth > 900) {

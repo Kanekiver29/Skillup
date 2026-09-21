@@ -10,6 +10,8 @@ use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 use ZipArchive;
 use App\Services\BackupService;
+use App\Models\Backup;
+use App\Models\RecoveryLog;
 use Illuminate\Support\Facades\Log;
 
 class BackupController extends Controller
@@ -21,23 +23,9 @@ class BackupController extends Controller
         $this->authorizeAdmin($request);
         $this->ensureBackupDirectory();
 
-        $backupFiles = collect(Storage::disk('local')->files($this->backupDir))
-            ->filter(fn ($file) => in_array(strtolower(pathinfo($file, PATHINFO_EXTENSION)), ['sql', 'sqlite', 'dump', 'gz', 'zip', 'tar', 'tgz']))
-            ->map(function ($file) {
-                $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
-                $type = in_array($extension, ['zip', 'gz', 'tgz', 'tar']) ? 'Full Backup' : 'Database';
-                
-                return [
-                    'name' => basename($file),
-                    'path' => $file,
-                    'size' => Storage::disk('local')->size($file),
-                    'modified' => Storage::disk('local')->lastModified($file),
-                    'type' => $type,
-                    'extension' => $extension,
-                ];
-            })
-            ->sortByDesc('modified')
-            ->values();
+        $backups = Backup::latest()->paginate(20)->withQueryString();
+        $lastSuccessfulBackup = Backup::where('status', 'success')->latest('completed_at')->first();
+        $recentRecoveryLogs = RecoveryLog::with('user')->latest()->limit(10)->get();
 
         $connection = config('database.default');
         $driver = config("database.connections.{$connection}.driver");
@@ -49,12 +37,19 @@ class BackupController extends Controller
         $backupDirWritable = $backupDirExists ? is_writable($backupDirPath) : is_writable(dirname($backupDirPath));
 
         $logPath = storage_path('logs/laravel.log');
-        $logTail = null;
+        $logSummary = null;
         if (file_exists($logPath)) {
             $lines = @file($logPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
             if (is_array($lines)) {
-                $tail = array_slice($lines, -40);
-                $logTail = implode("\n", $tail);
+                foreach (array_reverse($lines) as $line) {
+                    if (preg_match('/^\[[^]]+\]\s+\w+\.(ERROR|CRITICAL|ALERT|EMERGENCY):\s*(.+)$/i', $line, $matches)) {
+                        $logSummary = trim($matches[2]);
+                        if (strlen($logSummary) > 240) {
+                            $logSummary = substr($logSummary, 0, 237) . '...';
+                        }
+                        break;
+                    }
+                }
             }
         }
 
@@ -67,121 +62,138 @@ class BackupController extends Controller
             'backup_dir' => $backupDirPath,
             'backup_dir_exists' => $backupDirExists,
             'backup_dir_writable' => $backupDirWritable,
-            'log_tail' => $logTail,
+            'log_summary' => $logSummary,
         ];
 
-        return view('Admin.backup', compact('backupFiles', 'connection', 'driver', 'databaseName', 'diagnostics'));
+        $view = 'Admin.backup';
+
+        return view($view, compact('backups', 'lastSuccessfulBackup', 'recentRecoveryLogs', 'connection', 'driver', 'databaseName', 'diagnostics'));
     }
 
     public function store(Request $request)
     {
         $this->authorizeAdmin($request);
-        $connection = config('database.default');
-        $driver = config("database.connections.{$connection}.driver");
-        $timestamp = now()->format('Ymd_His');
-        $filename = "backup_{$timestamp}_{$connection}." . ($driver === 'sqlite' ? 'sqlite' : 'sql');
-        $this->ensureBackupDirectory();
-        $targetPath = $this->getBackupPath($filename);
-
         try {
-            if ($driver === 'mysql') {
-                $this->createMysqlBackup($targetPath);
-            } elseif ($driver === 'sqlite') {
-                $sqlitePath = config('database.connections.sqlite.database');
-                if (!$sqlitePath || $sqlitePath === ':memory:' || ! file_exists($sqlitePath)) {
-                    throw new \RuntimeException('SQLite database file is not available for backup.');
-                }
-                copy($sqlitePath, $targetPath);
-            } else {
-                throw new \RuntimeException('Backup is only supported for MySQL and SQLite drivers in this environment.');
-            }
-
-            return redirect()->route('admin.backup.index')->with('success', "Backup created successfully: {$filename}");
+            $record = (new BackupService())->runRecordedBackup('manual', $request->user()->id, false);
+            return redirect()->back()->with('success', "Backup created successfully: {$record->filename}");
         } catch (\Throwable $exception) {
-            return redirect()->route('admin.backup.index')->with('error', 'Backup failed: ' . $exception->getMessage());
+            return redirect()->back()->with('error', 'Backup failed: ' . $exception->getMessage());
         }
     }
 
     public function fullBackup(Request $request)
     {
         $this->authorizeAdmin($request);
-        $timestamp = now()->format('Ymd_His');
-        $this->ensureBackupDirectory();
-
-        // Prefer ZipArchive when available
-        if (extension_loaded('zip')) {
-            // Quick smoke test for ZipArchive functionality (some systems have ext-zip but broken bindings)
-            $zipTestPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'sk_backup_test_' . uniqid() . '.zip';
-            $zipOk = false;
-            try {
-                $z = new ZipArchive();
-                $res = $z->open($zipTestPath, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-                if ($res === true) {
-                    $z->addFromString('sk_test.txt', 'ok');
-                    $z->close();
-                    $zipOk = true;
-                } else {
-                    Log::warning('ZipArchive smoke test failed to open', ['res' => $res]);
-                }
-            } catch (\Throwable $t) {
-                Log::warning('ZipArchive smoke test exception', ['exception' => $t]);
-            } finally {
-                if (file_exists($zipTestPath)) {
-                    @unlink($zipTestPath);
-                }
-            }
-
-            if ($zipOk) {
-                $filename = "full_backup_{$timestamp}.zip";
-                $zipPath = $this->getBackupPath($filename);
-                try {
-                    $includeAll = (bool) $request->input('include_all');
-                    $service = new BackupService();
-                    $service->ensureBackupDirectory();
-                    $service->createFullBackup($zipPath, $includeAll);
-                    return redirect()->route('admin.backup.index')->with('success', "Full backup created successfully: {$filename}");
-                } catch (\Throwable $exception) {
-                    Log::error('Full backup (zip) failed', ['zipPath' => $zipPath, 'exception' => $exception]);
-                    // fall through to Phar fallback or DB-only fallback below
-                }
-            } else {
-                Log::warning('ZipArchive appears unusable; falling back to Phar or DB-only backup.');
-            }
-        }
-
-        // Fallback to PharData (.tar.gz) if available and writable
-        if (class_exists('PharData') && ini_get('phar.readonly') != '1') {
-            $tarName = "full_backup_{$timestamp}.tar";
-            $tarPath = $this->getBackupPath($tarName);
-            try {
-                $includeAll = (bool) $request->input('include_all');
-                $compressed = $this->createFullBackupPhar($tarPath, $includeAll);
-                $basename = basename($compressed);
-                return redirect()->route('admin.backup.index')->with('success', "Full backup created successfully: {$basename}");
-            } catch (\Throwable $e) {
-                Log::error('Full backup (phar) failed', ['tarPath' => $tarPath, 'exception' => $e]);
-                return redirect()->route('admin.backup.index')->with('error', 'Full backup failed (phar): ' . $e->getMessage());
-            }
-        }
-
-        // Last resort: create database-only backup and inform the user
         try {
-            $connection = config('database.default');
-            $driver = config("database.connections.{$connection}.driver");
-            $filename = "backup_{$timestamp}_{$connection}." . ($driver === 'sqlite' ? 'sqlite' : 'sql');
-            $targetPath = $this->getBackupPath($filename);
-            if ($driver === 'mysql') {
-                $this->createMysqlBackup($targetPath);
-            } elseif ($driver === 'sqlite') {
-                $sqlitePath = config('database.connections.sqlite.database');
-                if ($sqlitePath && $sqlitePath !== ':memory:' && file_exists($sqlitePath)) {
-                    copy($sqlitePath, $targetPath);
-                }
-            }
-            return redirect()->route('admin.backup.index')->with('success', "ZIP not available; created DB-only backup: {$filename}");
+            $record = (new BackupService())->runRecordedBackup('manual', $request->user()->id, (bool) $request->input('include_all'));
+            return redirect()->back()->with('success', "Full backup created successfully: {$record->filename}");
         } catch (\Throwable $e) {
-            Log::error('Full backup fallback DB-only failed', ['exception' => $e]);
-            return redirect()->route('admin.backup.index')->with('error', 'Full backup unavailable and DB backup failed: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Full backup failed: ' . $e->getMessage());
+        }
+    }
+
+    public function upload(Request $request)
+    {
+        $this->authorizeAdmin($request);
+        $validated = $request->validate([
+            'backup' => ['required', 'file', 'max:512000', 'mimes:zip,7z,tar,gz,tgz'],
+        ]);
+
+        $this->ensureBackupDirectory();
+        $file = $validated['backup'];
+        $filename = 'uploaded_' . now()->format('Ymd_His') . '_' . bin2hex(random_bytes(6)) . '.' . strtolower($file->getClientOriginalExtension());
+        $stored = $file->storeAs($this->backupDir, $filename, 'local');
+        $path = Storage::disk('local')->path($stored);
+        $record = Backup::create([
+            'filename' => $filename,
+            'path' => $stored,
+            'size' => filesize($path) ?: 0,
+            'checksum' => hash_file('sha256', $path),
+            'type' => 'uploaded',
+            'status' => 'success',
+            'message' => 'Backup uploaded and ready for verification.',
+            'completed_at' => now(),
+            'created_by' => $request->user()->id,
+        ]);
+
+        RecoveryLog::create([
+            'user_id' => $request->user()->id,
+            'backup_id' => $record->id,
+            'action' => 'upload',
+            'filename' => $filename,
+            'ip_address' => $request->ip(),
+            'status' => 'success',
+        ]);
+
+        return redirect()->back()->with('success', 'Backup uploaded. Verify its password before restoring.');
+    }
+
+    public function delete(Request $request, Backup $backup)
+    {
+        $this->authorizeAdmin($request);
+        $path = $this->getBackupPath(basename($backup->filename));
+        if (is_file($path)) {
+            @unlink($path);
+        }
+
+        $backup->delete();
+        RecoveryLog::create([
+            'user_id' => $request->user()->id,
+            'action' => 'delete',
+            'filename' => $backup->filename,
+            'ip_address' => $request->ip(),
+            'status' => 'success',
+        ]);
+
+        return redirect()->back()->with('success', 'Backup deleted.');
+    }
+
+    public function wholeSystemBackup(Request $request)
+    {
+        $this->authorizeAdmin($request);
+
+        $service = new BackupService();
+        $service->ensureBackupDirectory();
+
+        $timestamp = now()->format('Ymd_His');
+        $filename = "whole_laravel_backup_{$timestamp}.zip";
+        $destination = $service->getBackupPath($filename);
+        $databaseDump = $service->getBackupPath("database_whole_laravel_{$timestamp}.sql");
+        $temporaryArchive = sys_get_temp_dir() . DIRECTORY_SEPARATOR . $filename;
+
+        try {
+            $service->createMysqlBackup($databaseDump);
+
+            $process = new Process([
+                'tar',
+                '-a',
+                '-c',
+                '-f',
+                $temporaryArchive,
+                '--exclude=storage/app/private/backups/*.zip',
+                '.',
+            ], base_path());
+            $process->setTimeout(3600);
+            $process->run();
+
+            if (! $process->isSuccessful() || ! file_exists($temporaryArchive)) {
+                throw new \RuntimeException('Whole-system archive failed: ' . trim($process->getErrorOutput()));
+            }
+
+            if (! @copy($temporaryArchive, $destination)) {
+                throw new \RuntimeException('The completed archive could not be copied into the backup directory.');
+            }
+
+            @unlink($temporaryArchive);
+
+            return redirect()->route('sias.admin.backup-restore')
+                ->with('success', "Whole Laravel system backup created successfully: {$filename}");
+        } catch (\Throwable $exception) {
+            @unlink($temporaryArchive);
+            Log::error('Whole Laravel system backup failed', ['exception' => $exception]);
+
+            return redirect()->route('sias.admin.backup-restore')
+                ->with('error', 'Whole-system backup failed: ' . $exception->getMessage());
         }
     }
 
@@ -206,11 +218,14 @@ class BackupController extends Controller
     {
         $this->authorizeAdmin($request);
         $request->validate([
-            'backup_file' => ['required', 'string'],
+            'backup_file' => ['required', 'string', 'max:255'],
+            'password' => ['nullable', 'string', 'max:512'],
+            'confirm' => ['accepted'],
         ]);
 
         $filename = basename($request->input('backup_file'));
         $backupPath = $this->getBackupPath($filename);
+        $backup = Backup::where('filename', $filename)->first();
 
         if (! file_exists($backupPath)) {
             return redirect()->route('admin.backup.index')->with('error', 'Selected backup file does not exist.');
@@ -226,34 +241,50 @@ class BackupController extends Controller
                 }
 
                 $overwriteEnv = (bool) $request->input('overwrite_env', false);
-                $result = $service->restoreFullBackup($backupPath, ['overwrite_env' => $overwriteEnv]);
+                $result = $service->restoreFullBackup($backupPath, [
+                    'overwrite_env' => false,
+                    'password' => $request->input('password'),
+                ]);
                 $msg = "Full restore completed. Files copied: {$result['copied']}, skipped: {$result['skipped']}";
                 if (! empty($result['pre_backup'])) {
                     $msg .= ". Pre-restore snapshot saved: " . basename($result['pre_backup']);
                 }
-                return redirect()->route('admin.backup.index')->with('success', $msg);
+                RecoveryLog::create([
+                    'user_id' => $request->user()->id,
+                    'backup_id' => $backup?->id,
+                    'action' => 'restore',
+                    'filename' => $filename,
+                    'ip_address' => $request->ip(),
+                    'status' => 'success',
+                    'metadata' => ['copied' => $result['copied'], 'skipped' => $result['skipped']],
+                ]);
+                return redirect()->back()->with('success', $msg);
             }
 
-            // Otherwise treat as DB-only backup
-            $connection = config('database.default');
-            $driver = config("database.connections.{$connection}.driver");
+            // Otherwise treat it as a database-only backup through the shared service.
+            $service->restoreDatabaseBackup($backupPath);
 
-            if ($driver === 'mysql') {
-                $this->restoreMysqlBackup($backupPath);
-            } elseif ($driver === 'sqlite') {
-                $sqlitePath = config('database.connections.sqlite.database');
-                if (! $sqlitePath || $sqlitePath === ':memory:' || ! file_exists($sqlitePath)) {
-                    throw new \RuntimeException('SQLite database destination is not available for restore.');
-                }
-                copy($backupPath, $sqlitePath);
-            } else {
-                throw new \RuntimeException('Recovery is only supported for MySQL and SQLite drivers in this environment.');
-            }
-
-            return redirect()->route('admin.backup.index')->with('success', "Recovery completed from: {$filename}");
+            RecoveryLog::create([
+                'user_id' => $request->user()->id,
+                'backup_id' => $backup?->id,
+                'action' => 'restore',
+                'filename' => $filename,
+                'ip_address' => $request->ip(),
+                'status' => 'success',
+            ]);
+            return redirect()->back()->with('success', "Recovery completed from: {$filename}");
         } catch (\Throwable $exception) {
             Log::error('Restore failed', ['file' => $backupPath, 'exception' => $exception]);
-            return redirect()->route('admin.backup.index')->with('error', 'Recovery failed: ' . $exception->getMessage());
+            RecoveryLog::create([
+                'user_id' => $request->user()->id,
+                'backup_id' => $backup?->id,
+                'action' => 'restore',
+                'filename' => $filename,
+                'ip_address' => $request->ip(),
+                'status' => 'failed',
+                'error_message' => $exception->getMessage(),
+            ]);
+            return redirect()->back()->with('error', 'Recovery failed: ' . $exception->getMessage());
         }
     }
 
@@ -273,160 +304,10 @@ class BackupController extends Controller
         return Storage::disk('local')->path($this->backupDir . '/' . $filename);
     }
 
-    protected function createMysqlBackup(string $targetPath): void
-    {
-        $config = config('database.connections.mysql');
-        if (! $config) {
-            throw new \RuntimeException('MySQL configuration is missing.');
-        }
-
-        if ($this->commandExists('mysqldump')) {
-            $process = new Process([
-                'mysqldump',
-                '--host=' . ($config['host'] ?? '127.0.0.1'),
-                '--port=' . ($config['port'] ?? 3306),
-                '--user=' . ($config['username'] ?? ''),
-                '--password=' . ($config['password'] ?? ''),
-                '--single-transaction',
-                '--routines',
-                '--triggers',
-                '--databases',
-                $config['database'] ?? '',
-            ]);
-
-            $process->setTimeout(3600);
-            $process->run();
-
-            if (! $process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
-
-            file_put_contents($targetPath, $process->getOutput());
-            return;
-        }
-
-        $this->createMysqlBackupFromQuery($targetPath);
-    }
-
-    protected function createMysqlBackupFromQuery(string $targetPath): void
-    {
-        $pdo = DB::connection('mysql')->getPdo();
-        $database = $pdo->query('select database()')->fetchColumn();
-
-        if (! $database) {
-            throw new \RuntimeException('Unable to determine the current MySQL database.');
-        }
-
-        $output = [];
-        $output[] = '-- PHP generated MySQL backup';
-        $output[] = 'SET FOREIGN_KEY_CHECKS = 0;';
-        $output[] = 'SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";';
-        $output[] = 'SET AUTOCOMMIT = 0;';
-        $output[] = 'START TRANSACTION;';
-        $output[] = "USE `{$database}`;";
-        $output[] = '';
-
-        $tables = $pdo->query('SHOW FULL TABLES WHERE Table_Type = "BASE TABLE"')->fetchAll(\PDO::FETCH_COLUMN);
-        foreach ($tables as $table) {
-            $row = $pdo->query("SHOW CREATE TABLE `{$table}`")->fetch(\PDO::FETCH_ASSOC);
-            if (! isset($row['Create Table'])) {
-                continue;
-            }
-
-            $output[] = "DROP TABLE IF EXISTS `{$table}`;";
-            $output[] = $row['Create Table'] . ';';
-            $output[] = '';
-
-            $stmt = $pdo->query("SELECT * FROM `{$table}`", \PDO::FETCH_ASSOC);
-            $rows = $stmt->fetchAll();
-
-            if (empty($rows)) {
-                continue;
-            }
-
-            $columns = array_map(fn ($column) => "`{$column}`", array_keys($rows[0]));
-            $columnList = implode(', ', $columns);
-            $insertChunks = [];
-
-            foreach ($rows as $rowData) {
-                $values = array_map(function ($value) use ($pdo) {
-                    if ($value === null) {
-                        return 'NULL';
-                    }
-                    if (is_bool($value)) {
-                        return $value ? '1' : '0';
-                    }
-                    return $pdo->quote((string) $value);
-                }, array_values($rowData));
-
-                $insertChunks[] = '(' . implode(', ', $values) . ')';
-            }
-
-            foreach (array_chunk($insertChunks, 100) as $chunk) {
-                $output[] = 'INSERT INTO `' . $table . '` (' . $columnList . ') VALUES ' . implode(', ', $chunk) . ';';
-            }
-
-            $output[] = '';
-        }
-
-        $output[] = 'COMMIT;';
-        $output[] = 'SET FOREIGN_KEY_CHECKS = 1;';
-
-        $content = implode("\n", $output) . "\n";
-        file_put_contents($targetPath, $content);
-    }
-
-    protected function restoreMysqlBackup(string $backupPath): void
-    {
-        $config = config('database.connections.mysql');
-        if (! $config) {
-            throw new \RuntimeException('MySQL configuration is missing.');
-        }
-
-        $sql = file_get_contents($backupPath);
-        if ($sql === false) {
-            throw new \RuntimeException('Unable to read backup file for recovery.');
-        }
-
-        if ($this->commandExists('mysql')) {
-            $process = new Process([
-                'mysql',
-                '--host=' . ($config['host'] ?? '127.0.0.1'),
-                '--port=' . ($config['port'] ?? 3306),
-                '--user=' . ($config['username'] ?? ''),
-                '--password=' . ($config['password'] ?? ''),
-                $config['database'] ?? '',
-            ]);
-            $process->setInput($sql);
-            $process->setTimeout(3600);
-            $process->run();
-
-            if (! $process->isSuccessful()) {
-                throw new ProcessFailedException($process);
-            }
-
-            return;
-        }
-
-        DB::unprepared($sql);
-    }
-
-    protected function commandExists(string $command): bool
-    {
-        $check = PHP_OS_FAMILY === 'Windows'
-            ? ['where', $command]
-            : ['command', '-v', $command];
-
-        $process = new Process($check);
-        $process->run();
-
-        return $process->isSuccessful();
-    }
-
     protected function authorizeAdmin(Request $request): void
     {
         $user = $request->user();
-        if (! $user || (! $user->is_admin && ($user->role ?? '') !== 'admin')) {
+        if (! $user || ! $user->isAdmin()) {
             abort(403, 'Unauthorized. Admins only.');
         }
     }

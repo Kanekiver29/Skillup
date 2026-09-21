@@ -28,17 +28,23 @@ class EnsureUserHasRole
             return $next($request);
         }
 
+        $normalizedRole = strtolower(trim((string) ($user->role ?? '')));
+        $staffType = strtolower(trim((string) ($user->staff_type ?? '')));
+
         $allowed = false;
 
         if ($role === 'admin') {
-            $allowed = in_array($user->role ?? '', ['admin', 'staff']) || $isAdmin;
+            $allowed = in_array($normalizedRole, ['admin', 'staff'], true) || $isAdmin;
         } elseif ($role === 'staff') {
-            $allowed = in_array($user->role ?? '', ['staff', 'admin', 'teacher']) || $isAdmin;
+            $allowed = in_array($normalizedRole, ['staff', 'admin', 'teacher', 'instructor'], true) || $isAdmin;
         } elseif ($role === 'teacher') {
-            $allowed = (method_exists($user, 'isTeacher') && $user->isTeacher()) || $isAdmin;
+            $allowed = (method_exists($user, 'isTeacher') && $user->isTeacher())
+                    || $isAdmin
+                    || in_array($normalizedRole, ['teacher', 'admin', 'staff', 'instructor'], true)
+                    || in_array($staffType, ['teacher', 'instructor'], true);
         } else {
             // Generic match against user->role
-            $allowed = ($user->role === $role);
+            $allowed = ($normalizedRole === strtolower(trim($role)));
         }
 
         if (! $allowed) {

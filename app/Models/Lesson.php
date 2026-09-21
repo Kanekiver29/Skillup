@@ -4,11 +4,29 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 
 class Lesson extends Model
 {
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::saving(function (Lesson $lesson): void {
+            if (blank($lesson->slug)) {
+                $baseSlug = Str::slug($lesson->title) ?: 'lesson';
+                $slug = $baseSlug;
+                $counter = 1;
+
+                while (static::where('slug', $slug)->where('id', '!=', $lesson->getKey())->exists()) {
+                    $slug = $baseSlug . '-' . $counter++;
+                }
+
+                $lesson->slug = $slug;
+            }
+        });
+    }
 
     protected $fillable = [
         'course_id',

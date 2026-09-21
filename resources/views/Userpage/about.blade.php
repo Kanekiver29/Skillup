@@ -1675,7 +1675,8 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = document.documentElement.dataset.skillupReducedMotion === 'true'
+        || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const supportsIO = 'IntersectionObserver' in window;
     const fine = window.matchMedia('(pointer: fine)').matches;
 

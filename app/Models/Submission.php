@@ -12,7 +12,7 @@ class Submission extends Model
 
     protected $fillable = [
         'assignment_id',
-        'student_id',
+        'user_id',
         'submitted_at',
         'grade',
         'feedback',
@@ -34,6 +34,6 @@ class Submission extends Model
      */
     public function student()
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 }

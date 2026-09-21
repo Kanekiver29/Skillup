@@ -66,6 +66,11 @@
                 <span>Messages</span>
             </a>
 
+            <a href="{{ route('admin.news.index') }}" class="admin-sidebar-link flex items-center px-4 py-3 text-sm font-medium text-blue-100 hover:text-white hover:bg-blue-700 rounded-lg transition {{ request()->is('admin/news*') ? 'bg-blue-700 text-white border-l-4 border-cyan-400' : '' }}">
+                <i class="fas fa-newspaper w-5 mr-3"></i>
+                <span>News</span>
+            </a>
+
             @if(auth()->user()->is_admin)
                 <div class="my-4 border-t border-blue-700"></div>
 

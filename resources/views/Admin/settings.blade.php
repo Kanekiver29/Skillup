@@ -185,21 +185,27 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <div class="bg-white rounded-lg shadow-sm border border-gray-100 p-6">
                         <h2 class="text-lg font-semibold">Maintenance Mode</h2>
-                        <p class="text-sm text-gray-500 mt-2">Take the application offline for updates.</p>
-                        <form action="{{ route('admin.settings.maintenance') }}" method="POST" class="mt-4 ajax-action-form" data-action-type="maintenance">@csrf<button type="submit" onclick="return confirm('{{ app()->isDownForMaintenance() ? 'Bring application online?' : 'Enable maintenance mode?' }}')" class="w-full px-4 py-3 rounded-lg {{ app()->isDownForMaintenance() ? 'bg-green-600 text-white' : 'bg-red-600 text-white' }}">{{ app()->isDownForMaintenance() ? 'Disable Maintenance Mode' : 'Enable Maintenance Mode' }}</button></form>
+                        <p class="text-sm text-gray-500 mt-2">This site will remain under maintenance only while the update is running.</p>
+                        <form action="{{ route('admin.settings.maintenance') }}" method="POST" class="mt-4 ajax-action-form" data-action-type="maintenance">
+                            @csrf
+                            <label for="maintenance_reason" class="block text-sm font-medium text-gray-700 mb-2">Specific maintenance details</label>
+                            <textarea id="maintenance_reason" name="maintenance_reason" rows="4" class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500" placeholder="Example: Upgrading the student database and syncing course records from 10:00 PM to 12:00 AM.">{{ old('maintenance_reason', env('APP_MAINTENANCE_REASON', 'Scheduled system maintenance in progress.')) }}</textarea>
+                            <button type="submit" onclick="return confirm('{{ app()->isDownForMaintenance() ? 'Disable public maintenance mode?' : 'Enable maintenance for public site?' }}')" class="mt-4 w-full px-4 py-3 rounded-lg {{ app()->isDownForMaintenance() ? 'bg-green-600 text-white' : 'bg-red-600 text-white' }}">{{ app()->isDownForMaintenance() ? 'Disable Public Maintenance' : 'Enable Maintenance for Public Site' }}</button>
+                        </form>
                     </div>
                     <div class="space-y-4">
                         <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-5">
                             <h3 class="font-semibold text-yellow-800">Before Enabling</h3>
                             <ul class="text-sm text-yellow-700 list-disc list-inside mt-2">
-                                <li>Public visitors will see a 503 page.</li>
-                                <li>Logged-in admins are not affected.</li>
+                                <li>The public site will remain under maintenance only.</li>
+                                <li>The maintenance reason will be shown to visitors.</li>
                                 <li>Queued jobs continue to run.</li>
                             </ul>
                         </div>
                         <div class="bg-blue-50 border border-blue-200 rounded-lg p-5">
-                            <h3 class="font-semibold text-blue-800">Server Details</h3>
-                            <dl class="mt-2 text-sm">
+                            <h3 class="font-semibold text-blue-800">Current Maintenance Notice</h3>
+                            <p class="mt-2 text-sm text-blue-700">{{ env('APP_MAINTENANCE_REASON', 'Scheduled system maintenance in progress.') }}</p>
+                            <dl class="mt-3 text-sm">
                                 <div class="flex justify-between"><dt>Server Time</dt><dd>{{ now()->format('d M Y, H:i:s') }} UTC</dd></div>
                                 <div class="flex justify-between"><dt>App Timezone</dt><dd>{{ config('app.timezone') }}</dd></div>
                                 <div class="flex justify-between"><dt>PHP Version</dt><dd>{{ PHP_VERSION }}</dd></div>

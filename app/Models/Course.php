@@ -35,12 +35,31 @@ class Course extends Model
         'instructor_id',
         'title',
         'slug',
+        'code',
+        'department',
+        'sector_industry',
+        'major_id',
+        'is_primary',
+        'duration',
+        'curriculum',
+        'is_active',
         'lms_local_id',
         'description',
+        'qualification_description',
         'short_description',
         'category',
+        'qualification_level',
         'level',
         'duration_hours',
+        'nominal_training_duration',
+        'delivery_mode',
+        'maximum_batch_capacity',
+        'training_regulations_version',
+        'program_registration_no',
+        'registration_status',
+        'registration_date',
+        'competencies',
+        'program_status',
         'instructor_name',
         'instructor_title',
         'image_url',
@@ -51,7 +70,13 @@ class Course extends Model
 
     protected $casts = [
         'is_published' => 'boolean',
+        'is_primary' => 'boolean',
         'rating' => 'float',
+        'registration_date' => 'date',
+        'nominal_training_duration' => 'decimal:2',
+        'maximum_batch_capacity' => 'integer',
+        'competencies' => 'array',
+        'is_active' => 'boolean',
     ];
 
     public function lessons()
@@ -70,6 +95,14 @@ class Course extends Model
     }
 
     /**
+     * Subjects related to this course
+     */
+    public function subjects()
+    {
+        return $this->hasMany(Subject::class);
+    }
+
+    /**
      * Students enrolled in the course
      */
     public function students()
@@ -83,6 +116,14 @@ class Course extends Model
         return $this->belongsTo(User::class, 'instructor_id')->withDefault(function () {
             return (object) ['name' => $this->instructor_name ?? 'Instructor'];
         });
+    }
+
+    /**
+     * Get the major this course belongs to
+     */
+    public function major()
+    {
+        return $this->belongsTo(Major::class);
     }
 
     /**

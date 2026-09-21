@@ -859,20 +859,6 @@
                     </div>
                 </section>
 
-                <section data-page-animate class="page-delay-3 profile-tint-indigo rounded-2xl p-6">
-                    <h2 class="text-lg font-bold profile-text-strong mb-4 flex items-center gap-2">
-                        <i class="fas fa-user-tie" style="color: var(--fx-indigo);"></i> My Mentor
-                    </h2>
-                    <div class="text-center mb-4">
-                        <div class="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-white text-xl font-bold" style="background: linear-gradient(135deg, var(--fx-indigo), var(--fx-violet)); box-shadow: 0 0 20px rgba(99,102,241,0.45);">SK</div>
-                        <h3 class="font-semibold profile-text-strong">Sarah Kim</h3>
-                        <p class="text-sm profile-text-body">Senior Product Designer</p>
-                    </div>
-                    <a href="{{ route('mentors') }}" class="profile-btn-primary w-full inline-flex items-center justify-center py-2.5 rounded-xl text-sm min-h-0">
-                        <i class="fas fa-calendar mr-2"></i> Schedule Session
-                    </a>
-                </section>
-
                 <section data-page-animate class="page-delay-4 profile-tint-amber rounded-2xl p-6">
                     <h2 class="text-lg font-bold profile-text-strong mb-4 flex items-center gap-2">
                         <span class="profile-streak-flame"><i class="fas fa-fire" style="color: var(--fx-amber);"></i></span> Learning Streak
@@ -959,7 +945,8 @@
     }
 
     (function () {
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        if (document.documentElement.dataset.skillupReducedMotion === 'true'
+            || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
         document.querySelectorAll('[data-countup]').forEach(function (el) {
             var target = parseInt(el.getAttribute('data-countup'), 10);
             if (isNaN(target)) return;

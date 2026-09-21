@@ -1,0 +1,10 @@
+@extends('sias.admin.layouts.master')
+@section('title', 'Subjects | SIAS Admin')
+@section('page_title', 'Subjects')
+@section('subtitle', 'Creates subjects under a course and manages teacher assignments and schedules.')
+@section('content')
+@php($title = 'Subjects')
+@php($purpose = 'Creates subjects under a course and manages teacher assignments and schedules.')
+@php($items = ['Subject List', 'Add Subject', 'Assign Teacher', 'Subject Schedule'])
+@include('sias.admin.modules._workspace')
+@endsection

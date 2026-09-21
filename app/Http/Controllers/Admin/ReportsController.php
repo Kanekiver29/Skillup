@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Course;
 use App\Models\Enrollment;
+use App\Models\Subject;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Schema;
 use DateTime;
 
 class ReportsController extends Controller
@@ -78,6 +81,77 @@ class ReportsController extends Controller
             'totalEnrollments', 'completedEnrollments', 'avgProgress',
             'chartLabels', 'monthlySignups', 'monthlyEnrollments', 'monthlyCompletions',
             'topCourses', 'recentEnrollments',
+        ));
+    }
+
+    public function siaSIndex(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        $selectedDepartment = trim((string) $request->query('department', ''));
+        $selectedCourseId = $request->query('course_id');
+        $selectedSubjectId = $request->query('subject_id');
+        $hasDepartmentColumn = Schema::hasTable('courses') && Schema::hasColumn('courses', 'department');
+        $hasCourseIdColumn = Schema::hasTable('subjects') && Schema::hasColumn('subjects', 'course_id');
+
+        $departmentQuery = Course::query();
+        if ($selectedDepartment !== '') {
+            $departmentQuery->where(function ($query) use ($selectedDepartment, $hasDepartmentColumn) {
+                if ($hasDepartmentColumn) {
+                    $query->where('department', 'like', '%' . $selectedDepartment . '%');
+                }
+                $query->orWhere('category', 'like', '%' . $selectedDepartment . '%');
+            });
+        }
+
+        $courses = $departmentQuery
+            ->withCount('enrollments')
+            ->orderByRaw('CASE WHEN category IS NULL OR category = "" THEN 1 ELSE 0 END, category ASC, title ASC')
+            ->get();
+
+        $departments = $courses
+            ->map(function ($course) {
+                return $course->department ?? $course->category ?? 'General';
+            })
+            ->filter(fn ($value) => ! empty($value))
+            ->unique()
+            ->sort()
+            ->values();
+
+        $activeCourse = null;
+        if ($selectedCourseId) {
+            $activeCourse = $courses->firstWhere('id', (int) $selectedCourseId);
+        }
+
+        if (! $activeCourse && $courses->isNotEmpty()) {
+            $activeCourse = $courses->first();
+        }
+
+        $selectedCourseId = $activeCourse?->id;
+
+        $subjects = Subject::query()
+            ->when($selectedCourseId && $hasCourseIdColumn, function ($query) use ($selectedCourseId) {
+                $query->where('course_id', $selectedCourseId);
+            })
+            ->with('teacher')
+            ->orderBy('title')
+            ->get();
+
+        if ($selectedSubjectId && $subjects->contains('id', (int) $selectedSubjectId)) {
+            $activeSubject = $subjects->firstWhere('id', (int) $selectedSubjectId);
+        } else {
+            $activeSubject = $subjects->first();
+        }
+
+        return view('sias.admin.reports.index', compact(
+            'departments',
+            'courses',
+            'subjects',
+            'activeCourse',
+            'activeSubject',
+            'selectedDepartment',
+            'selectedCourseId',
+            'selectedSubjectId',
         ));
     }
 

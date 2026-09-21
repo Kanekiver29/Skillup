@@ -21,6 +21,28 @@
     --db-danger-bg:     rgba(255,93,108,.12);
     --db-rose:          #FF5EC4;
     --db-rose-bg:       rgba(255,94,196,.12);
+    --db-gray-50:       #f5f8ff;
+    --db-gray-100:      #edf3ff;
+    --db-gray-200:      #dfe9f8;
+    --db-gray-300:      #c9d7ef;
+    --db-gray-400:      #6e7ea1;
+    --db-gray-500:      #4d5d80;
+    --db-gray-600:      #334260;
+    --db-gray-700:      #1d2b45;
+    --db-gray-900:      #0f1a2b;
+    --db-bg-deep:       var(--body-bg, #eef3fc);
+    --db-card-bg:       var(--surface, rgba(255,255,255,.92));
+    --db-radius:        14px;
+    --db-radius-sm:     8px;
+    --db-radius-lg:     22px;
+    --db-shadow:        0 4px 20px -6px rgba(15,26,43,.18);
+    --db-shadow-md:     0 16px 44px -12px rgba(34,226,255,.2), 0 6px 20px -4px rgba(15,26,43,.18);
+    --db-font:          'Inter', system-ui, -apple-system, sans-serif;
+    --db-font-display:  'Space Grotesk', sans-serif;
+    --db-font-mono:     'JetBrains Mono', monospace;
+}
+
+html[data-staff-theme="dark"] {
     --db-gray-50:       #0C111F;
     --db-gray-100:      #141B2E;
     --db-gray-200:      #202A44;
@@ -32,14 +54,8 @@
     --db-gray-900:      #E7ECF9;
     --db-bg-deep:       #0A0E1A;
     --db-card-bg:       rgba(15,21,36,.72);
-    --db-radius:        14px;
-    --db-radius-sm:     8px;
-    --db-radius-lg:     22px;
     --db-shadow:        0 4px 20px -6px rgba(0,0,0,.45);
     --db-shadow-md:     0 16px 44px -12px rgba(34,226,255,.18), 0 6px 20px -4px rgba(0,0,0,.5);
-    --db-font:          'Inter', system-ui, -apple-system, sans-serif;
-    --db-font-display:  'Space Grotesk', sans-serif;
-    --db-font-mono:     'JetBrains Mono', monospace;
 }
 
 /* ── Keyframes ── */
@@ -158,7 +174,7 @@
     font-family: var(--db-font-display);
     font-size: 23px;
     font-weight: 700;
-    color: #fff;
+    color: var(--db-gray-900);
     letter-spacing: -.3px;
     line-height: 1.2;
     text-shadow: 0 0 26px rgba(34,226,255,.25);
@@ -166,7 +182,7 @@
 .db-banner__sub {
     margin-top: 6px;
     font-size: 13.5px;
-    color: rgba(231,236,249,.7);
+    color: var(--db-gray-500);
 }
 .db-banner__right {
     display: flex;
@@ -184,14 +200,14 @@
     border-radius: 99px;
     font-size: 12.5px;
     font-weight: 500;
-    color: #fff;
+    color: var(--db-gray-900);
     backdrop-filter: blur(4px);
     transition: background .2s ease, border-color .2s ease;
 }
 .db-clock-badge.is-out {
     background: rgba(255,255,255,.04);
     border-color: rgba(255,255,255,.1);
-    color: rgba(231,236,249,.6);
+    color: var(--db-gray-500);
 }
 .db-clock-dot {
     width: 7px; height: 7px;
@@ -204,7 +220,7 @@
 .db-banner__date {
     font-family: var(--db-font-mono);
     font-size: 12px;
-    color: rgba(231,236,249,.55);
+    color: var(--db-gray-500);
     white-space: nowrap;
 }
 

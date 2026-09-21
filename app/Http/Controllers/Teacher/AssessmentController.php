@@ -16,7 +16,14 @@ class AssessmentController extends Controller
     {
         $course = $request->route('course');
         $module = $request->route('module');
-        return view('teacher.assessments.index', compact('course', 'module'));
+        if ($module && ! $module instanceof Module) {
+            $module = Module::findOrFail($module);
+        }
+        $assessments = $module
+            ? $module->assessments()->latest()->get()
+            : collect();
+
+        return view('teacher.assessments.index', compact('course', 'module', 'assessments'));
     }
 
     public function create(Request $request)
@@ -37,11 +44,13 @@ class AssessmentController extends Controller
         $moduleParam = $request->route('module');
         $module = $moduleParam instanceof Module ? $moduleParam : Module::findOrFail($moduleParam);
 
-        // ensure teacher owns the parent course
-        $teacherName = auth()->user()->name ?? '';
+        // Admins can manage all assessments; teachers remain restricted to their own course modules.
         $course = $module->course;
-        if (!($course && ((($course->instructor_id ?? null) === auth()->id()) || (($course->instructor_id === null) && ($course->instructor_name ?? '') === $teacherName)))) {
-            abort(403);
+        if (!auth()->user()->is_admin) {
+            $teacherName = auth()->user()->name ?? '';
+            if (!($course && ((($course->instructor_id ?? null) === auth()->id()) || (($course->instructor_id === null) && ($course->instructor_name ?? '') === $teacherName)))) {
+                abort(403);
+            }
         }
 
         $data = $request->only(['title','description','passing_score','time_limit_minutes','is_published']);
@@ -91,9 +100,11 @@ class AssessmentController extends Controller
         $assessment = Assessment::findOrFail($id);
         $module = $assessment->module;
         $course = $module->course;
-        $teacherName = auth()->user()->name ?? '';
-        if (!($course && ((($course->instructor_id ?? null) === auth()->id()) || (($course->instructor_id === null) && ($course->instructor_name ?? '') === $teacherName)))) {
-            abort(403);
+        if (!auth()->user()->is_admin) {
+            $teacherName = auth()->user()->name ?? '';
+            if (!($course && ((($course->instructor_id ?? null) === auth()->id()) || (($course->instructor_id === null) && ($course->instructor_name ?? '') === $teacherName)))) {
+                abort(403);
+            }
         }
 
         $data = $request->only(['title','description','passing_score','time_limit_minutes','is_published']);
@@ -113,9 +124,11 @@ class AssessmentController extends Controller
         $assessment = Assessment::findOrFail($id);
         $module = $assessment->module;
         $course = $module->course;
-        $teacherName = auth()->user()->name ?? '';
-        if (!($course && ((($course->instructor_id ?? null) === auth()->id()) || (($course->instructor_id === null) && ($course->instructor_name ?? '') === $teacherName)))) {
-            abort(403);
+        if (!auth()->user()->is_admin) {
+            $teacherName = auth()->user()->name ?? '';
+            if (!($course && ((($course->instructor_id ?? null) === auth()->id()) || (($course->instructor_id === null) && ($course->instructor_name ?? '') === $teacherName)))) {
+                abort(403);
+            }
         }
 
         $assessment->delete();

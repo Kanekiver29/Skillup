@@ -6,6 +6,14 @@ use Illuminate\Support\Facades\Hash;
 
 uses(RefreshDatabase::class);
 
+it('renders the student login field as a student id by default', function () {
+    $response = $this->get('/login');
+
+    $response->assertOk();
+    $response->assertSee('Student ID', false);
+    $response->assertSee('type="text"', false);
+});
+
 it('allows staff teachers to log in as teachers', function () {
     $teacher = User::factory()->create([
         'name' => 'Teacher User',
@@ -46,4 +54,24 @@ it('allows accounts flagged as teachers by staff_type to log in as teachers even
 
     $response->assertRedirect(route('teacher.dashboard'));
     $this->assertAuthenticatedAs($teacher);
+});
+
+it('redirects SIAS admins to the SIAS admin dashboard', function () {
+    $admin = User::factory()->create([
+        'name' => 'SIAS Admin User',
+        'email' => 'sias-admin-login@example.com',
+        'role' => 'admin',
+        'is_admin' => true,
+        'email_verified_at' => null,
+        'password' => Hash::make('password123'),
+    ]);
+
+    $response = $this->post('/sias/login', [
+        'email' => $admin->email,
+        'password' => 'password123',
+        'login_as' => 'admin',
+    ]);
+
+    $response->assertRedirect(route('sias.admin.dashboard'));
+    $this->assertAuthenticatedAs($admin);
 });
